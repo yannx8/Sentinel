@@ -107,7 +107,7 @@ router.post('/', async (req: any, res, next) => {
     if (!site) throw new AppError('FORBIDDEN_TENANT', 403, 'Site is not available');
     const i = await prisma.$transaction(async (tx) => {
       const x = await tx.incident.create({
-        data: { ...d, organizationId: a.organizationId, reporterId: a.userId }
+        data: { ...d, latitude: d.latitude ?? 0, longitude: d.longitude ?? 0, locationSource: d.locationSource ?? 'GPS', organizationId: a.organizationId, reporterId: a.userId }
       });
       await audit(tx, x.id, a.userId, 'CREATED', { status: 'NEW' });
       return x;
