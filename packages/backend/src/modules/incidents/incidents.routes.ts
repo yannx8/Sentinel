@@ -105,7 +105,7 @@ router.post('/', async (req: any, res, next) => {
       where: { id: d.siteId, organizationId: a.organizationId, isActive: true }
     });
     if (!site) throw new AppError('FORBIDDEN_TENANT', 403, 'Site is not available');
-    const i = await prisma.$transaction(async (tx) => {
+    const i = await prisma.$transaction(async (tx: any) => {
       const x = await tx.incident.create({
         data: { ...d, latitude: d.latitude ?? 0, longitude: d.longitude ?? 0, locationSource: d.locationSource ?? 'GPS', organizationId: a.organizationId, reporterId: a.userId }
       });
@@ -123,7 +123,7 @@ router.patch('/:id/triage', requireRole('ADMINISTRATOR'), async (req: any, res, 
     const { a, i } = await getOrgIncident(req);
     const d = createIncident.pick({ category: true, priority: true }).partial().parse(req.body);
     if (i.status === 'CLOSED') throw new AppError('CONFLICT_STATE', 409, 'Closed incident is read-only');
-    const x = await prisma.$transaction(async (tx) => {
+    const x = await prisma.$transaction(async (tx: any) => {
       const n = await tx.incident.update({ where: { id: i.id }, data: d });
       await audit(tx, i.id, a.userId, 'TRIAGE', d);
       return n;
@@ -137,7 +137,7 @@ router.patch('/:id/triage', requireRole('ADMINISTRATOR'), async (req: any, res, 
 router.post('/:id/verify', requireRole('ADMINISTRATOR'), async (req: any, res, next) => {
   try {
     const { a, i } = await getOrgIncident(req);
-    const x = await prisma.$transaction(async (tx) => {
+    const x = await prisma.$transaction(async (tx: any) => {
       const n = await tx.incident.update({ where: { id: i.id }, data: { verifiedAt: new Date() } });
       await audit(tx, i.id, a.userId, 'VERIFIED', {});
       return n;
@@ -156,7 +156,7 @@ router.post('/:id/assign', requireRole('ADMINISTRATOR'), async (req: any, res, n
       where: { id: req.body.responsableProfileId, organizationId: a.organizationId, isActive: true }
     });
     if (!r) throw new AppError('FORBIDDEN_TENANT', 403, 'Responsable not in tenant');
-    const x = await prisma.$transaction(async (tx) => {
+    const x = await prisma.$transaction(async (tx: any) => {
       // Optimistic concurrency via updateMany: the WHERE clause includes both the
       // current version and expected status, so concurrent assigns are rejected
       // (count === 0) without a pessimistic lock. The version is bumped on success
@@ -195,7 +195,7 @@ router.post('/:id/resolution', requireRole('RESPONSABLE'), async (req: any, res,
     // The route also checks for an ACTIVE, ACCEPTED assignment above, so a responsable
     // who was reassigned mid-flight cannot close someone else's work.
     assertTransition(i.status, 'RESOLVED');
-    const x = await prisma.$transaction(async (tx) => {
+    const x = await prisma.$transaction(async (tx: any) => {
       const n = await tx.incident.update({
         where: { id: i.id },
         data: { status: 'RESOLVED', resolutionText: d.resolutionText, version: { increment: 1 } }
@@ -220,7 +220,7 @@ router.post('/:id/reject-resolution', requireRole('ADMINISTRATOR'), async (req: 
     const { a, i } = await getOrgIncident(req);
     const d = reject.parse(req.body);
     assertTransition(i.status, 'IN_PROGRESS');
-    const x = await prisma.$transaction(async (tx) => {
+    const x = await prisma.$transaction(async (tx: any) => {
       const n = await tx.incident.update({
         where: { id: i.id },
         data: { status: 'IN_PROGRESS', version: { increment: 1 } }
@@ -245,7 +245,7 @@ router.post('/:id/closure', requireRole('ADMINISTRATOR'), async (req: any, res, 
   try {
     const { a, i } = await getOrgIncident(req);
     assertTransition(i.status, 'CLOSED');
-    const x = await prisma.$transaction(async (tx) => {
+    const x = await prisma.$transaction(async (tx: any) => {
       const n = await tx.incident.update({
         where: { id: i.id },
         data: { status: 'CLOSED', version: { increment: 1 } }
@@ -279,7 +279,7 @@ router.post('/:id/progress', requireRole('RESPONSABLE'), async (req: any, res, n
       throw new AppError('VALIDATION_ERROR', 400, 'Invalid progress type');
     const note = String(req.body.note || '').trim();
     if (note.length < 1 || note.length > 3000) throw new AppError('VALIDATION_ERROR', 400, 'Invalid progress note');
-    const p = await prisma.$transaction(async (tx) => {
+    const p = await prisma.$transaction(async (tx: any) => {
       const x = await tx.progressUpdate.create({
         data: { incidentId: i.id, authorId: a.userId, type, note }
       });
@@ -299,7 +299,7 @@ router.post('/:id/comments', async (req: any, res, next) => {
     if (!i) throw new AppError('NOT_FOUND', 404, 'Incident not found');
     if (i.status === 'CLOSED') throw new AppError('CONFLICT_STATE', 409, 'Closed incident');
     const d = comment.parse(req.body);
-    const c = await prisma.$transaction(async (tx) => {
+    const c = await prisma.$transaction(async (tx: any) => {
       const x = await tx.comment.create({
         data: { incidentId: i.id, authorId: a.userId, body: d.body },
         include: { author: true }

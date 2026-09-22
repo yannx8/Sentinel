@@ -23,6 +23,7 @@ export const createIncident = z.object({
   category: z.enum(categories),
   priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']),
   siteId: z.string().uuid(),
+
   latitude: z.number().min(-90).max(90).optional(),
   longitude: z.number().min(-180).max(180).optional(),
   locationSource: z.enum(['GPS', 'SITE_FALLBACK', 'MANUAL_PIN']).optional().default('GPS')
