@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { apiClient } from '../api';
 
 export default function RegisterScreen({ navigation }: any) {
@@ -45,14 +45,60 @@ export default function RegisterScreen({ navigation }: any) {
         onChangeText={setPassword}
         secureTextEntry
       />
-      <Button title="Register" onPress={handleRegister} />
-      <Button title="Back to Login" onPress={() => navigation?.navigate('Login')} />
+      <TouchableOpacity style={styles.primaryButton} onPress={handleRegister}>
+        <Text style={styles.primaryButtonText}>Register</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.secondaryButton} onPress={() => navigation?.navigate('Login')}>
+        <Text style={styles.secondaryButtonText}>Back to Login</Text>
+      </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, justifyContent: 'center' },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
-  input: { borderWidth: 1, borderColor: '#ccc', padding: 10, marginBottom: 15, borderRadius: 5 },
+  container: { 
+    flex: 1, 
+    padding: 24, 
+    justifyContent: 'center',
+    backgroundColor: '#FAF9F8' 
+  },
+  title: { 
+    fontSize: 28, 
+    fontWeight: '600', 
+    marginBottom: 24, 
+    textAlign: 'center',
+    color: '#242424'
+  },
+  input: { 
+    borderWidth: 1, 
+    borderColor: '#D1D1D1', 
+    padding: 12, 
+    marginBottom: 16, 
+    borderRadius: 4,
+    backgroundColor: '#FFFFFF',
+    fontSize: 16,
+    color: '#242424'
+  },
+  primaryButton: {
+    backgroundColor: '#0F6CBD',
+    paddingVertical: 12,
+    borderRadius: 4,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  primaryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  secondaryButton: {
+    backgroundColor: 'transparent',
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  secondaryButtonText: {
+    color: '#0F6CBD',
+    fontSize: 16,
+    fontWeight: '500',
+  }
 });

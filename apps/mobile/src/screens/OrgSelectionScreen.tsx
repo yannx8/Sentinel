@@ -59,9 +59,41 @@ export default function OrgSelectionScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20 },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, textAlign: 'center', marginTop: 40 },
-  item: { padding: 15, borderBottomWidth: 1, borderBottomColor: '#ccc' },
-  itemText: { fontSize: 18 },
+  container: { 
+    flex: 1, 
+    padding: 24,
+    backgroundColor: '#FAF9F8' 
+  },
+  centered: { 
+    flex: 1, 
+    justifyContent: 'center', 
+    alignItems: 'center',
+    backgroundColor: '#FAF9F8'
+  },
+  title: { 
+    fontSize: 28, 
+    fontWeight: '600', 
+    marginBottom: 24, 
+    textAlign: 'center', 
+    marginTop: 48,
+    color: '#242424'
+  },
+  item: { 
+    padding: 16, 
+    marginBottom: 12,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#EBEBEB'
+  },
+  itemText: { 
+    fontSize: 16,
+    color: '#242424',
+    fontWeight: '500'
+  },
 });
