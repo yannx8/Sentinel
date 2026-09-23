@@ -43,7 +43,7 @@ router.post('/incidents/:id/assignments', requireRole('ADMINISTRATOR'), async (r
 
     await assertResponsableEligible(prisma, responsableId, i.siteId, a.organizationId);
 
-    const x = await prisma.$transaction(async (tx) => {
+    const x = await prisma.$transaction(async (tx: any) => {
       // Deactivate ALL current active assignments for this incident before creating
       // the new one. Using updateMany (not delete) preserves the audit trail: the old
       // assignment is soft-deleted with an endedAt timestamp.
@@ -87,7 +87,7 @@ router.post('/:id/accept', requireRole('RESPONSABLE'), async (req: any, res, nex
       include: { incident: true }
     });
     if (!as) throw new AppError('FORBIDDEN_NOT_ASSIGNED', 403, 'Assignment not assigned to you');
-    const x = await prisma.$transaction(async (tx) => {
+    const x = await prisma.$transaction(async (tx: any) => {
       const n = await tx.assignment.update({ where: { id: as.id }, data: { status: 'ACCEPTED' } });
       // Accepting moves the incident from ASSIGNED to IN_PROGRESS. The assignment
       // status and incident status are updated atomically: if either fails, both roll back.
@@ -121,7 +121,7 @@ router.post('/:id/reassign', requireRole('RESPONSABLE'), async (req: any, res, n
     // REASSIGNMENT_REQUESTED status so an administrator can review and reassign
     // without losing the reason/request audit trail. The incident stays in its
     // current status; the admin creates a new assignment via the admin route.
-    const x = await prisma.$transaction(async (tx) => {
+    const x = await prisma.$transaction(async (tx: any) => {
       const n = await tx.assignment.update({
         where: { id: as.id },
         data: { status: 'REASSIGNMENT_REQUESTED', reassignReason: reason }

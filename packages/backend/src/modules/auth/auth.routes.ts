@@ -126,6 +126,10 @@ router.post('/register', registerLimiter, async (req, res, next) => {
       }
     });
     setRefreshCookie(res, refresh);
+    if (req.headers['x-client-type'] === 'mobile') {
+      res.status(201).json({ refreshToken: refresh, accessToken: tok(user.id, org.id, sessionId, env.JWT_SECRET, env.ACCESS_TOKEN_TTL), user: { id: user.id, name: user.name, email: user.email, isVerified: true, roles: m?.roles || ['USER'], organizationId: org.id, organizationName: org.name } });
+      return;
+    }
     res.status(201).json({
       accessToken: tok(user.id, org.id, sessionId, env.JWT_SECRET, env.ACCESS_TOKEN_TTL),
       user: {
@@ -210,6 +214,10 @@ router.post('/login', loginLimiter, async (req, res, next) => {
       }
     });
     setRefreshCookie(res, refresh, refreshTtlDays);
+    if (req.headers['x-client-type'] === 'mobile') {
+      res.status(200).json({ refreshToken: refresh, accessToken: tok(u.id, m.organizationId, sessionId, env.JWT_SECRET, env.ACCESS_TOKEN_TTL), user: { id: u.id, name: u.name, email: u.email, isVerified: u.isVerified, roles: m.roles, organizationId: m.organizationId, organizationName: m.organization.name } });
+      return;
+    }
     res.json({
       accessToken: tok(u.id, m.organizationId, sessionId, env.JWT_SECRET, env.ACCESS_TOKEN_TTL),
       user: {
@@ -286,7 +294,7 @@ router.patch('/me', authenticate, async (req: any, res, next) => {
  */
 router.post('/refresh', refreshLimiter, async (req, res, next) => {
   try {
-    const refresh = cookie(req, refreshCookie);
+    const refresh = req.headers['x-client-type'] === 'mobile' ? req.body.refreshToken : cookie(req, refreshCookie);
     if (!refresh) throw new AppError('AUTH_INVALID', 401, 'Refresh session missing');
     const p = jwt.verify(refresh, env.JWT_REFRESH_SECRET) as any;
     // Verify session exists, matches the token hash, and has not been revoked or expired.
@@ -312,7 +320,7 @@ router.post('/refresh', refreshLimiter, async (req, res, next) => {
       }
     });
     setRefreshCookie(res, nextRefresh);
-    res.json({ accessToken: tok(p.userId, p.organizationId, p.sessionId, env.JWT_SECRET, env.ACCESS_TOKEN_TTL) });
+    if (req.headers['x-client-type'] === 'mobile') { res.json({ refreshToken: nextRefresh, accessToken: tok(p.userId, p.organizationId, p.sessionId, env.JWT_SECRET, env.ACCESS_TOKEN_TTL) }); } else { res.json({ accessToken: tok(p.userId, p.organizationId, p.sessionId, env.JWT_SECRET, env.ACCESS_TOKEN_TTL) }); }
   } catch (e) {
     next(new AppError('AUTH_INVALID', 401, 'Invalid refresh session'));
   }
