@@ -5,18 +5,20 @@ import { requireRole } from '../../middleware/requireRole.js';
 
 const router = Router();
 
+import { getAuth } from '@clerk/express';
 function ctx(req: any) {
-  if (!req.auth) throw new AppError('AUTH_REQUIRED', 401, 'Authentication required');
-  return req.auth;
+  const auth = getAuth(req);
+  if (!auth.userId || !auth.orgId) throw new AppError('AUTH_REQUIRED', 401, 'Authentication required');
+  return { organizationId: auth.orgId, userId: auth.userId };
 }
 
 // Dashboard aggregates are all independent read-only queries against the same
 // org scope. Promise.all lets the database resolve them concurrently rather
 // than serially, which matters when each query touches the incidents table.
-router.get('/', requireRole('ADMINISTRATOR'), async (req: any, res, next) => {
+router.get('/', requireRole('SUPERVISOR'), async (req: any, res, next) => {
   try {
-    const a = ctx(req);
-    const where = { organizationId: a.organizationId };
+    const a = req.ctx;
+    const where = { organizationId: a.orgId };
 
     const [all, active, critical, toReview, closed, statuses, priorities, categories, recentTrend] = await Promise.all([
       prisma.incident.count({ where }),
@@ -26,7 +28,7 @@ router.get('/', requireRole('ADMINISTRATOR'), async (req: any, res, next) => {
       prisma.incident.count({ where: { ...where, status: 'CLOSED' } }),
       prisma.incident.groupBy({ by: ['status'], where, _count: true }),
       prisma.incident.groupBy({ by: ['priority'], where, _count: true }),
-      prisma.incident.groupBy({ by: ['category'], where, _count: true }),
+      prisma.incident.groupBy({ by: ['categoryId'], where, _count: true }),
       getRecentTrend(where)
     ]);
 

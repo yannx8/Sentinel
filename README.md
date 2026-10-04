@@ -1,4 +1,4 @@
-# Nexus Incidents
+# Sentinel
 
 Production-oriented incident reporting and tracking platform for multi-tenant organizations.
 

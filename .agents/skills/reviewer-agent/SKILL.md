@@ -98,7 +98,8 @@ Evaluate every acceptance criterion from the Linear issue and `docs/CAHIER_DES_C
 ### B. Security & Isolation Review
 Explicitly verify all security invariants:
 - Tenant Isolation: Every database query, update, or delete must resolve within the authenticated tenant (`organizationId`). Check for horizontal privilege escalation (e.g., User A accessing Organization B resources).
-- Server-Side Authority: Ensure `organizationId`, user IDs, roles, and site permissions originate strictly from trusted session context via `constructServerSideAuthContext`. Reject any implementation relying on client-provided IDs for authorization.
+- Server-Side Authority: Ensure `organizationId`, user IDs, roles, and site permissions originate strictly from trusted session context via Clerk's `getAuth(req)`. Reject any implementation relying on client-provided IDs for authorization.
+- Webhook Security: Ensure any Clerk webhooks properly verify Svix headers (`svix-id`, `svix-timestamp`, `svix-signature`) using the `svix` package.
 - Role-Based Access Control (RBAC):
   - `USER`: May only submit incidents and view their own reported incidents. Cannot reassign, triage, or close.
   - `RESPONSABLE`: May only access incidents assigned to them on sites where their profile has an active access record (`ResponsableSite.isActive`). Cannot close incidents.

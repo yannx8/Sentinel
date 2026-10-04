@@ -1,33 +1,17 @@
 import { AuthUser } from '../types';
 
 const base = '/api';
-let accessToken: string | null = null;
-// Deduplicates concurrent refresh calls so only one request hits the server
-let refreshPromise: Promise<string | null> | null = null;
+let tokenResolver: (() => Promise<string | null>) | null = null;
 
-export function setAccessToken(token: string | null) {
-  accessToken = token;
+export function setTokenResolver(resolver: () => Promise<string | null>) {
+  tokenResolver = resolver;
 }
 
-async function refresh() {
-  if (refreshPromise) return refreshPromise;
-  refreshPromise = fetch(base + '/auth/refresh', { method: 'POST', credentials: 'include' })
-    .then(async (r) => {
-      if (!r.ok) {
-        accessToken = null;
-        // Refresh token expired or revoked - clear state so the app
-        // can redirect to login on the next auth check
-        window.dispatchEvent(new Event('auth:logout'));
-        return null;
-      }
-      const d = await r.json();
-      accessToken = d.accessToken;
-      return accessToken;
-    })
-    .finally(() => {
-      refreshPromise = null;
-    });
-  return refreshPromise;
+// Keeping this for backwards compatibility if needed during migration, though we won't use it directly
+export function setAccessToken(token: string | null) {
+  if (!tokenResolver) {
+    tokenResolver = async () => token;
+  }
 }
 
 export async function api<T = any>(path: string, opts: RequestInit = {}, retry = true): Promise<T> {
@@ -35,21 +19,18 @@ export async function api<T = any>(path: string, opts: RequestInit = {}, retry =
   if (opts.body && !(opts.body instanceof FormData) && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json');
   }
-  if (accessToken) {
-    headers.set('Authorization', `Bearer ${accessToken}`);
+  
+  if (tokenResolver) {
+    const token = await tokenResolver();
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
   }
+  
   const controller = new AbortController();
-  // 8s timeout prevents stale connections from blocking the UI; backend
-  // health checks and simple queries should always finish well under this
   const timeout = setTimeout(() => controller.abort(), 8000);
   try {
     let r = await fetch(base + path, { ...opts, headers, credentials: 'include', signal: controller.signal });
-    // Silent refresh on first 401; retry=false avoids infinite loop if
-    // the refresh token itself is expired
-    if (r.status === 401 && retry && path !== '/auth/refresh') {
-      const t = await refresh();
-      if (t) return api<T>(path, opts, false);
-    }
     if (!r.ok) {
       const e = await r.json().catch(() => ({ error: { message: r.statusText } }));
       const err: any = new Error(e.error?.message || 'Request failed');
@@ -62,54 +43,4 @@ export async function api<T = any>(path: string, opts: RequestInit = {}, retry =
   } finally {
     clearTimeout(timeout);
   }
-}
-
-export async function bootstrap() {
-  return refresh();
-}
-
-export async function apiLogin(email: string, password: string, rememberMe = false): Promise<AuthUser> {
-  const r = await fetch(base + '/auth/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
-    body: JSON.stringify({ email, password, rememberMe })
-  });
-  const d = await r.json().catch(() => ({}));
-  if (!r.ok) {
-    const err: any = new Error(d.error?.message || 'Identifiants invalides');
-    err.code = d.error?.code;
-    err.status = r.status;
-    err.organizations = d.error?.organizations;
-    throw err;
-  }
-  setAccessToken(d.accessToken);
-  return d.user;
-}
-
-export async function apiRegister(
-  name: string,
-  email: string,
-  password: string,
-  organizationSlug = 'horizon'
-): Promise<void> {
-  const r = await fetch(base + '/auth/register', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
-    body: JSON.stringify({ name, email, password, organizationSlug })
-  });
-  const d = await r.json().catch(() => ({}));
-  if (!r.ok) {
-    const err: any = new Error(d.error?.message || "Erreur lors de l'inscription");
-    err.code = d.error?.code;
-    err.status = r.status;
-    throw err;
-  }
-  if (d.accessToken) setAccessToken(d.accessToken);
-}
-
-export async function apiGetMe(): Promise<AuthUser> {
-  const d = await api<{ user: AuthUser }>('/auth/me');
-  return d.user;
 }

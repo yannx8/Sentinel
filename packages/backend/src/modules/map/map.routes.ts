@@ -1,13 +1,15 @@
 import { Router } from 'express';
 import { prisma } from '../../lib/prisma.js';
 import { AppError } from '../../lib/errors.js';
-import { incidentScope } from '../incidents/incidents.routes.js';
+import { incidentScope } from '../incidents/incidents.service.js';
 
 const router = Router();
 
+import { getAuth } from '@clerk/express';
 function ctx(req: any) {
-  if (!req.auth) throw new AppError('AUTH_REQUIRED', 401, 'Authentication required');
-  return req.auth;
+  const auth = getAuth(req);
+  if (!auth.userId || !auth.orgId) throw new AppError('AUTH_REQUIRED', 401, 'Authentication required');
+  return { organizationId: auth.orgId, userId: auth.userId };
 }
 
 // Single endpoint returns both sites and incidents for the map view.
@@ -16,9 +18,9 @@ function ctx(req: any) {
 // (e.g. responsables see only their assigned incidents).
 router.get('/data', async (req: any, res, next) => {
   try {
-    const a = ctx(req);
+    const a = req.ctx;
     res.json({
-      sites: await prisma.site.findMany({ where: { organizationId: a.organizationId } }),
+      sites: await prisma.site.findMany({ where: { organizationId: a.orgId } }),
       incidents: await prisma.incident.findMany({
         where: incidentScope(a),
         select: { id: true, title: true, status: true, priority: true, latitude: true, longitude: true }

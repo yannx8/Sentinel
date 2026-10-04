@@ -1,5 +1,5 @@
 {
-  "name": "nexus-incidents",
+  "name": "sentinel",
   "private": true,
   "packageManager": "pnpm@10.15.0",
   "scripts": {

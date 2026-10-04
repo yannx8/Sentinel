@@ -3,10 +3,11 @@ import cors from 'cors';
 import { env } from './env.js';
 import { prisma } from './lib/prisma.js';
 import { AppError } from './lib/errors.js';
-import { authenticate } from './middleware/authenticate.js';
 import { errorHandler } from './middleware/errorHandler.js';
+import { contextResolver } from './middleware/contextResolver.js';
 import { apiLimiter } from './lib/rateLimiter.js';
-import authRoutes from './modules/auth/auth.routes.js';
+import { clerkMiddleware } from '@clerk/express';
+import { Webhook } from 'svix';
 import siteRoutes from './modules/sites/sites.routes.js';
 import responsableRoutes from './modules/responsables/responsables.routes.js';
 import incidentRoutes from './modules/incidents/incidents.routes.js';
@@ -17,12 +18,8 @@ import dashboardRoutes from './modules/dashboard/dashboard.routes.js';
 import attachmentRoutes from './modules/attachments/attachments.routes.js';
 
 const app = express();
-// Trust proxy is configurable to support reverse proxies (nginx, ALB) in production
-// while avoiding false IP spoofing in local development
 app.set('trust proxy', env.TRUST_PROXY);
 app.disable('x-powered-by');
-// Security headers: defense-in-depth against common web vulnerabilities
-// CSP allows OpenStreetMap tiles for incident map views
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
@@ -46,13 +43,15 @@ app.use(
     allowedHeaders: ['Content-Type', 'Authorization']
   })
 );
+
+import webhooksRoutes from './modules/webhooks/webhooks.routes.js';
+
+app.use('/webhooks', webhooksRoutes);
+
 app.use(express.json({ limit: '1mb' }));
-// Global rate limiter applied to all routes; separate per-route limiters exist for auth
 app.use(apiLimiter);
 
-// Health: always 200 if process is alive (for load balancers)
-app.get('/health', (_q, res) => res.json({ status: 'ok', service: 'nexus-incidents' }));
-// Ready: 200 only when database is reachable (for k8s readiness probes)
+app.get('/health', (_q, res) => res.json({ status: 'ok', service: 'sentinel' }));
 app.get('/ready', async (_q, res, next) => {
   try {
     await prisma.$queryRaw`SELECT 1`;
@@ -65,8 +64,8 @@ app.get('/ready', async (_q, res, next) => {
 app.get('/organizations', async (_req, res, next) => {
   try {
     const orgs = await prisma.organization.findMany({
-      select: { id: true, name: true, slug: true },
-      orderBy: { name: 'asc' }
+      select: { id: true, displayName: true, slug: true },
+      orderBy: { displayName: 'asc' }
     });
     res.json(orgs);
   } catch (e) {
@@ -74,10 +73,12 @@ app.get('/organizations', async (_req, res, next) => {
   }
 });
 
-// Auth routes mounted before authenticate middleware (login/register don't need auth)
-app.use('/auth', authRoutes);
-// Everything below requires authentication
-app.use(authenticate);
+app.use(clerkMiddleware());
+app.use(contextResolver);
+
+import platformRoutes from './modules/platform/platform.routes.js';
+
+app.use('/platform', platformRoutes);
 app.use('/sites', siteRoutes);
 app.use('/responsables', responsableRoutes);
 app.use('/incidents', incidentRoutes);
@@ -85,9 +86,8 @@ app.use('/assignments', assignmentRoutes);
 app.use('/notifications', notificationRoutes);
 app.use('/map', mapRoutes);
 app.use('/dashboard', dashboardRoutes);
-// Attachments share the /incidents prefix; mounted separately to keep module boundaries
 app.use('/incidents', attachmentRoutes);
 
-// Error handler must be last to catch all thrown errors
 app.use(errorHandler);
 export default app;
+Notification par défaut et essayez de l'améliorer.

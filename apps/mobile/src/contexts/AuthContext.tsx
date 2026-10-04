@@ -1,64 +1,77 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { apiClient, loadAuthToken, setAuthToken as apiSetAuthToken } from '../api';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import * as SecureStore from 'expo-secure-store';
+import { apiClient, setAuthToken } from '../api';
 
-import { User, UserRole } from '@sentinel/shared';
+type UserData = {
+  id: string;
+  email: string;
+  role: string;
+  firstName?: string;
+  lastName?: string;
+};
 
-interface AuthContextData {
-  user: User | null;
-  isLoading: boolean;
-  login: (token: string, user: User) => Promise<void>;
-  logout: () => Promise<void>;
+interface AuthContextType {
+  user: UserData | null;
+  orgRole: string | null;
+  isLoaded: boolean;
+  signIn: (token: string, userData: UserData) => Promise<void>;
+  signOut: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextData>({
-  user: null,
-  isLoading: true,
-  login: async () => {},
-  logout: async () => {},
-});
+const AuthContext = createContext<AuthContextType | null>(null);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const [user, setUser] = useState<UserData | null>(null);
+  const [orgRole, setOrgRole] = useState<string | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    const bootstrapAsync = async () => {
+    const loadToken = async () => {
       try {
-        await loadAuthToken();
-        const storedUser = await SecureStore.getItemAsync('auth_user');
-        if (storedUser) {
-          setUser(JSON.parse(storedUser));
+        const token = await SecureStore.getItemAsync('auth_token');
+        if (token) {
+          setAuthToken(token);
+          // Fetch user data
+          const me = await apiClient.get<UserData>('/auth/me');
+          setUser(me);
+          setOrgRole(me.role);
         }
-      } catch (e) {
-        // Restoring token failed
-        console.error('Failed to load session', e);
+      } catch (err) {
+        console.error('Failed to load token or user', err);
+        await SecureStore.deleteItemAsync('auth_token');
+        setAuthToken(null);
       } finally {
-        setIsLoading(false);
+        setIsLoaded(true);
       }
     };
-
-    bootstrapAsync();
+    loadToken();
   }, []);
 
-  const login = async (token: string, userData: User) => {
-    await apiSetAuthToken(token);
-    await SecureStore.setItemAsync('auth_user', JSON.stringify(userData));
+  const signIn = async (token: string, userData: UserData) => {
+    await SecureStore.setItemAsync('auth_token', token);
+    setAuthToken(token);
     setUser(userData);
+    setOrgRole(userData.role);
   };
 
-  const logout = async () => {
+  const signOut = async () => {
     await SecureStore.deleteItemAsync('auth_token');
-    await SecureStore.deleteItemAsync('auth_user');
-    apiClient.setToken('');
+    setAuthToken(null);
     setUser(null);
+    setOrgRole(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ user, orgRole, isLoaded, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};

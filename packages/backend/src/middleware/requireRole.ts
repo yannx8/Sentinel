@@ -1,12 +1,17 @@
 import { Request, Response, NextFunction } from 'express';
-import { UserRole } from '@prisma/client';
+import { MembershipRole } from '@prisma/client';
 import { AppError } from '../lib/errors.js';
 
-/** Middleware factory: restrict access to users with at least one of the specified roles.
- *  Must be used after authenticate middleware. */
-export const requireRole = (...roles: UserRole[]) => (req: Request, _res: Response, next: NextFunction) => {
-  if (!req.auth || !roles.some(r => req.auth!.roles.includes(r))) {
+export const requireRole = (...roles: MembershipRole[]) => (req: Request, _res: Response, next: NextFunction) => {
+  if (!req.ctx?.userId) {
+    return next(new AppError('AUTH_REQUIRED', 401, 'Authentication required'));
+  }
+
+  const userRole = req.ctx.role as MembershipRole;
+  
+  if (!userRole || !roles.includes(userRole)) {
     return next(new AppError('FORBIDDEN_ROLE', 403, 'Insufficient role'));
   }
+  
   next();
 };

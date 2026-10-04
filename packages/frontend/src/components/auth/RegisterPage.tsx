@@ -1,98 +1,84 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../../store/authStore';
-import { BrandMark } from '../shared/BrandMark';
-import { Spinner } from '../shared/Spinner';
-import { useI18n } from '../../i18n';
-
-interface Org {
-  id: string;
-  name: string;
-  slug: string;
-}
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export function RegisterPage() {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [orgSlug, setOrgSlug] = useState('');
-  const [organizations, setOrganizations] = useState<Org[]>([]);
-  const [orgsLoading, setOrgsLoading] = useState(true);
-  const { register, isLoading, error, clearError } = useAuthStore();
+  const [step, setStep] = useState(1);
   const navigate = useNavigate();
-  const t = useI18n((s) => s.t);
-
-  useEffect(() => {
-    fetch('/api/organizations')
-      .then((r) => r.json())
-      .then((d) => {
-        setOrganizations(d);
-        if (d.length === 1) setOrgSlug(d[0].slug);
-      })
-      .catch(() => {})
-      .finally(() => setOrgsLoading(false));
-  }, []);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await register(name, email, password, orgSlug);
-      navigate('/');
-    } catch {}
-  };
 
   return (
-    <div className="auth-shell">
-      <div className="auth-card">
-        <div className="auth-brand">
-          <BrandMark />
+    <div>
+      <h2 className="mb-6 text-center text-xl font-bold text-[var(--ink)]">Register Organization</h2>
+      
+      <div className="mb-6 flex justify-between gap-2">
+        <div className={`h-2 flex-1 rounded ${step >= 1 ? 'bg-[var(--brand)]' : 'bg-[var(--border)]'}`} />
+        <div className={`h-2 flex-1 rounded ${step >= 2 ? 'bg-[var(--brand)]' : 'bg-[var(--border)]'}`} />
+        <div className={`h-2 flex-1 rounded ${step >= 3 ? 'bg-[var(--brand)]' : 'bg-[var(--border)]'}`} />
+      </div>
+
+      {step === 1 && (
+        <div className="flex flex-col gap-4">
+          <h3 className="text-lg font-medium">Company Details</h3>
           <div>
-            <strong>NEXUS</strong>
-            <small>INCIDENTS</small>
+            <label className="mb-1 block text-sm font-medium text-[var(--ink-2)]">Organization Name</label>
+            <input className="w-full rounded border border-[var(--border)] bg-[var(--canvas)] p-2 focus:border-[var(--brand)]" placeholder="Acme Corp" />
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-[var(--ink-2)]">Industry</label>
+            <select className="w-full rounded border border-[var(--border)] bg-[var(--canvas)] p-2 focus:border-[var(--brand)]">
+              <option>Construction</option>
+              <option>Manufacturing</option>
+              <option>Logistics</option>
+            </select>
+          </div>
+          <button onClick={() => setStep(2)} className="mt-4 w-full rounded bg-[var(--brand)] py-2 font-semibold text-white hover:bg-[var(--brand-hover)]">Next</button>
+        </div>
+      )}
+
+      {step === 2 && (
+        <div className="flex flex-col gap-4">
+          <h3 className="text-lg font-medium">Primary Contact</h3>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-[var(--ink-2)]">Full Name</label>
+            <input className="w-full rounded border border-[var(--border)] bg-[var(--canvas)] p-2 focus:border-[var(--brand)]" placeholder="Jane Doe" />
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-[var(--ink-2)]">Email</label>
+            <input className="w-full rounded border border-[var(--border)] bg-[var(--canvas)] p-2 focus:border-[var(--brand)]" type="email" placeholder="jane@acme.com" />
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-[var(--ink-2)]">Password</label>
+            <input className="w-full rounded border border-[var(--border)] bg-[var(--canvas)] p-2 focus:border-[var(--brand)]" type="password" />
+          </div>
+          <div className="mt-4 flex gap-2">
+            <button onClick={() => setStep(1)} className="flex-1 rounded border border-[var(--border)] bg-transparent py-2 font-semibold text-[var(--ink)] hover:bg-[var(--surface-sunken)]">Back</button>
+            <button onClick={() => setStep(3)} className="flex-1 rounded bg-[var(--brand)] py-2 font-semibold text-white hover:bg-[var(--brand-hover)]">Next</button>
           </div>
         </div>
+      )}
 
-        <h1 className="auth-heading">{t('auth.createAccount')}</h1>
-        <p className="auth-subtitle">{t('auth.joinSubtitle')}</p>
-
-        {error && <div className="auth-error">{error}</div>}
-
-        <form className="auth-form" onSubmit={handleSubmit}>
-          <div className="auth-field">
-            <label htmlFor="name">{t('auth.name')}</label>
-            <input id="name" type="text" required placeholder={t('auth.namePlaceholder')} value={name} onChange={(e) => { setName(e.target.value); clearError(); }} />
+      {step === 3 && (
+        <div className="flex flex-col gap-4">
+          <h3 className="text-lg font-medium">Review & Submit</h3>
+          <div className="rounded bg-[var(--canvas)] p-4 text-sm">
+            <p><strong>Organization:</strong> Acme Corp</p>
+            <p><strong>Admin:</strong> Jane Doe</p>
           </div>
-          <div className="auth-field">
-            <label htmlFor="reg-email">{t('auth.email')}</label>
-            <input id="reg-email" type="email" required placeholder={t('auth.emailPlaceholder')} value={email} onChange={(e) => { setEmail(e.target.value); clearError(); }} />
+          <p className="text-sm text-[var(--ink-disabled)]">By submitting, you agree to the Terms of Service.</p>
+          <div className="mt-4 flex gap-2">
+            <button onClick={() => setStep(2)} className="flex-1 rounded border border-[var(--border)] bg-transparent py-2 font-semibold text-[var(--ink)] hover:bg-[var(--surface-sunken)]">Back</button>
+            <button onClick={() => {
+              alert('Mock Registration Complete');
+              navigate('/login');
+            }} className="flex-1 rounded bg-[var(--success)] py-2 font-semibold text-white hover:bg-[#0f603f]">Register</button>
           </div>
-          <div className="auth-field">
-            <label htmlFor="reg-password">{t('auth.password')}</label>
-            <input id="reg-password" type="password" required minLength={12} placeholder={t('auth.minChars12')} value={password} onChange={(e) => { setPassword(e.target.value); clearError(); }} />
-          </div>
-          <div className="auth-field">
-            <label htmlFor="org-slug">{t('auth.organization')}</label>
-            {orgsLoading ? (
-              <div style={{ padding: '14px 16px', background: '#fafafa', borderRadius: 10, border: '1.5px solid #e0e0e0' }}><Spinner size={16} /></div>
-            ) : organizations.length === 0 ? (
-              <input id="org-slug" type="text" required placeholder={t('auth.orgPlaceholder')} value={orgSlug} onChange={(e) => { setOrgSlug(e.target.value); clearError(); }} />
-            ) : (
-              <select id="org-slug" value={orgSlug} onChange={(e) => { setOrgSlug(e.target.value); clearError(); }} required style={{ width: '100%', border: '1.5px solid #e0e0e0', borderRadius: 10, padding: '14px 16px', fontSize: 15, color: '#1a1a1a', background: '#fafafa', outline: 'none', appearance: 'auto' }}>
-                <option value="">{t('auth.selectOrg')}</option>
-                {organizations.map((o) => <option key={o.id} value={o.slug}>{o.name}</option>)}
-              </select>
-            )}
-          </div>
-          <button type="submit" className="button button-primary" style={{ width: '100%', marginTop: 8, padding: '14px 24px', fontSize: 15 }} disabled={isLoading || !orgSlug}>
-            {isLoading ? <Spinner /> : t('auth.createAccount')}
-          </button>
-        </form>
-
-        <div style={{ marginTop: 24, textAlign: 'center' }}>
-          <span className="auth-link">
-            {t('auth.hasAccount')} <Link to="/login">{t('auth.signInLink')}</Link>
-          </span>
         </div>
+      )}
+
+      <div className="mt-6 text-center text-sm text-[var(--ink-3)]">
+        Already have an account?{' '}
+        <button onClick={() => navigate('/login')} className="font-semibold text-[var(--brand)] hover:underline">
+          Sign in
+        </button>
       </div>
     </div>
   );

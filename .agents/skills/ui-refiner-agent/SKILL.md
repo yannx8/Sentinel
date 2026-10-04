@@ -37,3 +37,10 @@ When refining an already-built UI feature:
 - **No Em Dashes:** Never use em dashes in code, comments, documentation, or chat.
 - **No Backend Changes:** You are not authorized to modify backend code, database schemas, or API routes.
 - **Do Not Invent APIs:** Only use data structures that explicitly exist in the backend contract.
+
+## 5. Design System: Fluent 2
+- Strictly adhere to Microsoft Fluent 2 design tokens.
+- Brand colors: Primary interactive elements must use `#0F6CBD`.
+- Backgrounds: Use `#FAF9F8` for main application backgrounds and `#FFFFFF` for elevated cards.
+- Border Radius: Enforce `4px` for inputs/buttons and `8px` for surface cards.
+- Font: Rely on native system fonts (Segoe UI, San Francisco, Roboto).

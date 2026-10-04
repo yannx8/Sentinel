@@ -7,12 +7,13 @@ import { AuditEventType } from './types.js';
  */
 export function audit(
   tx: any,
+  organizationId: string,
   incidentId: string | undefined,
   actorId: string,
   eventType: AuditEventType,
   payload: any
 ) {
   return tx.auditEvent.create({
-    data: { incidentId, actorId, eventType, payload }
+    data: { organizationId, incidentId, actorMembershipId: actorId, eventType, payload }
   });
 }

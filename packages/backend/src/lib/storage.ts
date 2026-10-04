@@ -11,7 +11,7 @@ export async function saveFile(buffer: Buffer, mimeType: string) {
   await fs.mkdir(env.STORAGE_PATH, { recursive: true });
   const ref = `${crypto.randomUUID()}.${({ 'image/jpeg':'jpg','image/png':'png','image/webp':'webp' } as Record<string,string>)[mimeType]}`;
   // 'wx' flag fails atomically if file already exists, preventing silent overwrites
-  await fs.writeFile(path.join(env.STORAGE_PATH, ref), buffer, { flag:'wx' });
+  await fs.writeFile(path.join(env.STORAGE_PATH, ref), new Uint8Array(buffer), { flag:'wx' });
   return ref;
 }
 

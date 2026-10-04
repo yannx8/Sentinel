@@ -4,15 +4,17 @@ import { AppError } from '../../lib/errors.js';
 
 const router = Router();
 
+import { getAuth } from '@clerk/express';
 function ctx(req: any) {
-  if (!req.auth) throw new AppError('AUTH_REQUIRED', 401, 'Authentication required');
-  return req.auth;
+  const auth = getAuth(req);
+  if (!auth.userId || !auth.orgId) throw new AppError('AUTH_REQUIRED', 401, 'Authentication required');
+  return { organizationId: auth.orgId, userId: auth.userId };
 }
 
 router.get('/', async (req: any, res, next) => {
   try {
-    const a = ctx(req);
-    res.json(await prisma.notification.findMany({ where: { recipientId: a.userId }, orderBy: { createdAt: 'desc' }, take: 50 }));
+    const a = req.ctx;
+    res.json(await prisma.notification.findMany({ where: { recipientMembershipId: a.membershipId }, orderBy: { createdAt: 'desc' }, take: 50 }));
   } catch (e) {
     next(e);
   }
@@ -22,9 +24,9 @@ router.get('/', async (req: any, res, next) => {
 // which doubles as an ownership check without a separate SELECT.
 router.patch('/:id/read', async (req: any, res, next) => {
   try {
-    const a = ctx(req);
+    const a = req.ctx;
     const n = await prisma.notification.updateMany({
-      where: { id: req.params.id, recipientId: a.userId },
+      where: { id: req.params.id, recipientMembershipId: a.membershipId },
       data: { readAt: new Date() }
     });
     if (!n.count) throw new AppError('FORBIDDEN', 403, 'Notification not yours');

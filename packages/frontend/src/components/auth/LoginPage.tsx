@@ -1,94 +1,77 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff } from 'lucide-react';
-import { useAuthStore } from '../../store/authStore';
-import { BrandMark } from '../shared/BrandMark';
-import { Spinner } from '../shared/Spinner';
-import { useI18n } from '../../i18n';
+import { useNavigate } from 'react-router-dom';
+import { useSignIn } from '@clerk/clerk-react';
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPwd, setShowPwd] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
-  const { login, isLoading, error, clearError } = useAuthStore();
+  const [error, setError] = useState('');
+  const { signIn, isLoaded, setActive } = useSignIn();
   const navigate = useNavigate();
-  const t = useI18n((s) => s.t);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isLoaded) return;
     try {
-      await login(email, password, rememberMe);
-      // Read user directly from the store after login to confirm auth succeeded
-      // before navigating, avoiding a flash of unauthenticated state.
-      if (useAuthStore.getState().user) navigate('/');
-    } catch {}
+      const result = await signIn.create({
+        identifier: email,
+        password,
+      });
+
+      if (result.status === "complete") {
+        await setActive({ session: result.createdSessionId });
+        navigate("/");
+      } else {
+        setError("Invalid credentials");
+      }
+    } catch (err: any) {
+      setError(err.errors?.[0]?.message || 'An error occurred during login');
+    }
   };
 
   return (
-    <div className="auth-shell">
-      <div className="auth-card">
-        <div className="auth-brand">
-          <BrandMark />
-          <div>
-            <strong>NEXUS</strong>
-            <small>INCIDENTS</small>
-          </div>
+    <div>
+      <h2 className="mb-6 text-center text-xl font-bold text-[var(--ink)]">Sign in to your account</h2>
+      {error && (
+        <div className="mb-4 rounded bg-[var(--critical-tint)] p-3 text-sm text-[var(--critical)]">
+          {error}
         </div>
-
-        <h1 className="auth-heading">{t('auth.welcomeBack')}</h1>
-        <p className="auth-subtitle">{t('auth.welcomeSubtitle')}</p>
-
-        {error && <div className="auth-error">{error}</div>}
-
-        <form className="auth-form" onSubmit={handleSubmit}>
-          <div className="auth-field">
-            <label htmlFor="email">{t('auth.email')}</label>
-            <input
-              id="email"
-              type="email"
-              required
-              placeholder={t('auth.emailPlaceholder')}
-              value={email}
-              onChange={(e) => { setEmail(e.target.value); clearError(); }}
-            />
-          </div>
-
-          <div className="auth-field">
-            <label htmlFor="password">{t('auth.password')}</label>
-            <div className="auth-pwd-wrapper">
-              <input
-                id="password"
-                type={showPwd ? 'text' : 'password'}
-                required
-                placeholder={t('auth.passwordPlaceholder')}
-                value={password}
-                onChange={(e) => { setPassword(e.target.value); clearError(); }}
-              />
-              <button type="button" className="pwd-toggle" onClick={() => setShowPwd(!showPwd)} tabIndex={-1}>
-                {showPwd ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
-          </div>
-
-          <div className="auth-row">
-            <label className="auth-checkbox">
-              <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} />
-              <span>{t('auth.rememberMe')}</span>
-            </label>
-            <a href="#" className="auth-forgot">{t('auth.forgotPassword')}</a>
-          </div>
-
-          <button type="submit" className="button button-primary" style={{ width: '100%', marginTop: 8, padding: '14px 24px', fontSize: 15 }} disabled={isLoading}>
-            {isLoading ? <Spinner /> : t('auth.signIn')}
-          </button>
-        </form>
-
-        <div style={{ marginTop: 24, textAlign: 'center' }}>
-          <span className="auth-link">
-            {t('auth.noAccount')} <Link to="/register">{t('auth.createOne')}</Link>
-          </span>
+      )}
+      <form onSubmit={handleLogin} className="flex flex-col gap-4">
+        <div>
+          <label className="mb-1 block text-sm font-medium text-[var(--ink-2)]" htmlFor="email">Email</label>
+          <input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full rounded border border-[var(--border)] bg-[var(--canvas)] p-2 focus:border-[var(--brand)] focus:outline-none focus:ring-1 focus:ring-[var(--brand)]"
+            required
+          />
         </div>
+        <div>
+          <label className="mb-1 block text-sm font-medium text-[var(--ink-2)]" htmlFor="password">Password</label>
+          <input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full rounded border border-[var(--border)] bg-[var(--canvas)] p-2 focus:border-[var(--brand)] focus:outline-none focus:ring-1 focus:ring-[var(--brand)]"
+            required
+          />
+        </div>
+        <button
+          type="submit"
+          className="mt-2 w-full rounded bg-[var(--brand)] py-2 text-white font-semibold hover:bg-[var(--brand-hover)]"
+        >
+          Sign In
+        </button>
+      </form>
+      <div className="mt-6 text-center text-sm text-[var(--ink-3)]">
+        Don't have an account?{' '}
+        <button onClick={() => navigate('/register')} className="font-semibold text-[var(--brand)] hover:underline">
+          Register
+        </button>
       </div>
     </div>
   );

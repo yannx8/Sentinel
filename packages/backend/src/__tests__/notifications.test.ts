@@ -20,8 +20,9 @@ describe('notifications service', () => {
     prisma.notification.create = mockCreate;
 
     await createNotification(
-      'user-123',
-      'ASSIGNMENT',
+      'org-1',
+      'membership-123',
+      'ASSIGNED',
       'Test Title',
       'Test Body',
       'incident-456'
@@ -29,8 +30,9 @@ describe('notifications service', () => {
 
     expect(mockCreate).toHaveBeenCalledWith({
       data: {
-        recipientId: 'user-123',
-        eventType: 'ASSIGNMENT',
+        organizationId: 'org-1',
+        recipientMembershipId: 'membership-123',
+        eventType: 'ASSIGNED',
         title: 'Test Title',
         body: 'Test Body',
         incidentId: 'incident-456'
@@ -43,7 +45,7 @@ describe('notifications service', () => {
     prisma.notification.create = vi.fn().mockRejectedValue(new Error('DB error'));
 
     await expect(
-      createNotification('user-123', 'ASSIGNMENT', 'Title', 'Body')
+      createNotification('org-1', 'membership-123', 'ASSIGNED', 'Title', 'Body')
     ).resolves.not.toThrow();
   });
 });

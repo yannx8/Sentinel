@@ -31,7 +31,7 @@ export function ProfilePage() {
     }
   };
 
-  const initials = u.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
+  const initials = u.name.split(' ').map((w: any) => w[0]).join('').slice(0, 2).toUpperCase();
 
   return (
     <div className="page">
@@ -53,7 +53,7 @@ export function ProfilePage() {
               <div style={{ fontFamily: 'Manrope, sans-serif', fontSize: 20, fontWeight: 700, color: '#0f172a' }}>{u.name}</div>
               <div style={{ fontSize: 13, color: '#64748b', marginTop: 2 }}>{u.email}</div>
               <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                {u.roles.map((r) => (
+                {u.roles.map((r: any) => (
                   <span key={r} style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 6, background: r === 'ADMINISTRATOR' ? '#eff6ff' : r === 'RESPONSABLE' ? '#f5f3ff' : '#f1f5f9', color: r === 'ADMINISTRATOR' ? '#2563eb' : r === 'RESPONSABLE' ? '#7c3aed' : '#334155' }}>
                     {t(`roles.${r}` as any) || r}
                   </span>

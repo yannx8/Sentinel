@@ -1,337 +1,359 @@
-import { useState, useEffect, useCallback } from 'react';
-import { X, AlertTriangle, Send } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, MapPin, Calendar, CheckCircle, AlertTriangle, MessageSquare, Clock, Paperclip } from 'lucide-react';
 import { api } from '../../api/client';
 import { useAuth } from '../../store/authStore';
 import { useI18n } from '../../i18n';
-import { timeAgo } from '../../lib/utils';
-import { CATEGORY_LABELS, timelineDotClass } from '../../constants';
-import { Spinner } from '../shared/Spinner';
 
-function getDrawerBadgeClass(status: string): string {
-  const map: Record<string, string> = {
-    NEW: 'drawer-badge-new',
-    ASSIGNED: 'drawer-badge-assigned',
-    IN_PROGRESS: 'drawer-badge-progress',
-    RESOLVED: 'drawer-badge-resolved',
-    CLOSED: 'drawer-badge-closed',
-  };
-  return map[status] || 'drawer-badge-new';
-}
+const priorityColors: Record<string, string> = {
+  CRITICAL: 'bg-red-100 text-red-800 border-red-200',
+  HIGH: 'bg-orange-100 text-orange-800 border-orange-200',
+  MEDIUM: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+  LOW: 'bg-green-100 text-green-800 border-green-200'
+};
 
-function getDrawerPriorityClass(priority: string): string {
-  const map: Record<string, string> = {
-    CRITICAL: 'drawer-badge-critical',
-    HIGH: 'drawer-badge-high',
-    MEDIUM: 'drawer-badge-medium',
-    LOW: 'drawer-badge-low',
-  };
-  return map[priority] || 'drawer-badge-new';
-}
+const statusColors: Record<string, string> = {
+  NEW: 'bg-red-100 text-red-800',
+  ASSIGNED: 'bg-blue-100 text-blue-800',
+  IN_PROGRESS: 'bg-blue-100 text-blue-800',
+  RESOLVED: 'bg-yellow-100 text-yellow-800',
+  CLOSED: 'bg-green-100 text-green-800'
+};
 
-function formatEventType(type: string, t: (key: string) => string): string {
-  const map: Record<string, string> = {
-    CREATED: t('eventTypes.INCIDENT_CREATED'),
-    TRIAGE: t('eventTypes.TRIAGE'),
-    VERIFIED: t('eventTypes.VERIFIED'),
-    ASSIGNMENT: t('eventTypes.INCIDENT_ASSIGNED'),
-    ACCEPTANCE: t('eventTypes.INCIDENT_ACCEPTED'),
-    STATUS: t('eventTypes.STATUS_CHANGED'),
-    RESOLUTION: t('eventTypes.RESOLUTION_SUBMITTED'),
-    REJECTED: t('eventTypes.RESOLUTION_REJECTED'),
-    CLOSED: t('eventTypes.INCIDENT_CLOSED'),
-    PROGRESS: t('eventTypes.PROGRESS_ADDED'),
-    COMMENT: t('eventTypes.COMMENT_ADDED'),
-    ATTACHMENT: t('eventTypes.ATTACHMENT_ADDED'),
-    REASSIGNMENT: t('eventTypes.REASSIGNMENT_REQUESTED'),
-  };
-  return map[type] || type.replace(/_/g, ' ').toLowerCase();
-}
-
-export function Drawer({ id, onClose }: { id: string; onClose: () => void }) {
+export function Drawer({ id, onClose, onUpdate }: { id: string; onClose: () => void, onUpdate?: () => void }) {
   const [incident, setIncident] = useState<any>(null);
-  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<'overview' | 'timeline' | 'evidence'>('overview');
+  
   const u = useAuth((s) => s.user)!;
   const t = useI18n((s) => s.t);
-  const [responsables, setResponsables] = useState<any[]>([]);
-  const [actionLoading, setActionLoading] = useState(false);
-  const [comment, setComment] = useState('');
-  const [showAssign, setShowAssign] = useState(false);
-  const [selectedResp, setSelectedResp] = useState('');
 
-  const load = useCallback(() => {
-    setError('');
-    api<any>('/incidents/' + id)
-      .then(setIncident)
-      .catch((err) => setError(err.message || t('drawer.error')));
-  }, [id, t]);
+  const [showReassign, setShowReassign] = useState(false);
+  const [reassignReason, setReassignReason] = useState('');
+  const [showResolve, setShowResolve] = useState(false);
+  const [resolveText, setResolveText] = useState('');
+  const [showReject, setShowReject] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
 
-  useEffect(() => { load(); }, [load]);
-  useEffect(() => {
-    if (u.roles.includes('ADMINISTRATOR')) {
-      api<any[]>('/responsables').then(setResponsables).catch(() => setResponsables([]));
-    }
-  }, [u.roles]);
+  const fetchIncident = () => {
+    setLoading(true);
+    api<any>(`/incidents/${id}`)
+      .then(res => setIncident(res))
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  };
 
   useEffect(() => {
-    document.body.classList.add('no-scroll');
-    return () => { document.body.classList.remove('no-scroll'); };
-  }, []);
+    fetchIncident();
+  }, [id]);
 
-  useEffect(() => {
-    const h = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', h);
-    return () => document.removeEventListener('keydown', h);
-  }, [onClose]);
+  if (!incident && loading) {
+    return (
+      <div className="fixed inset-0 z-50 flex justify-end">
+        <div className="absolute inset-0 bg-slate-900/20 backdrop-blur-sm" onClick={onClose} />
+        <div className="relative w-full max-w-xl bg-white shadow-2xl h-full flex items-center justify-center">
+          <span className="text-slate-500">Chargement...</span>
+        </div>
+      </div>
+    );
+  }
 
-  const withActionLoading = async (fn: () => Promise<void>) => {
+  if (!incident) return null;
+
+  const activeAssignment = incident.assignments?.find((a: any) => a.isActive);
+  const isAssignedToMe = activeAssignment?.responsable?.userId === u.id;
+  const isAdmin = u.roles.includes('ADMINISTRATOR') || u.roles.includes('PLATFORM_ADMIN');
+
+  const executeAction = async (action: () => Promise<void>) => {
     setActionLoading(true);
-    try { await fn(); } finally { setActionLoading(false); }
+    try {
+      await action();
+      fetchIncident();
+      if (onUpdate) onUpdate();
+    } catch (e) {
+      console.error(e);
+      alert('Action failed');
+    } finally {
+      setActionLoading(false);
+    }
   };
 
-  const handleAssign = async () => {
-    if (!selectedResp) return;
-    await withActionLoading(async () => {
-      await api('/incidents/' + id + '/assign', {
-        method: 'POST',
-        body: JSON.stringify({ responsableProfileId: selectedResp, expectedVersion: incident.version }),
-      });
-      setShowAssign(false);
-      setSelectedResp('');
-      load();
-    });
-  };
-
-  const handleAccept = async () => {
-    const a = incident.assignments?.find((x: any) => x.isActive);
-    if (!a) return;
-    await withActionLoading(async () => {
-      await api('/assignments/' + a.id + '/accept', {
-        method: 'POST',
-        body: JSON.stringify({ expectedVersion: incident.version }),
-      });
-      load();
-    });
-  };
-
-  const handleResolve = async () => {
-    await withActionLoading(async () => {
-      await api('/incidents/' + id + '/resolution', {
-        method: 'POST',
-        body: JSON.stringify({ resolutionText: 'Resolved by ' + u.name, expectedVersion: incident.version }),
-      });
-      load();
-    });
-  };
-
-  const handleCloseIncident = async () => {
-    await withActionLoading(async () => {
-      await api('/incidents/' + id + '/closure', {
-        method: 'POST',
-        body: JSON.stringify({ expectedVersion: incident.version }),
-      });
-      load();
-    });
-  };
-
-  const handleComment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (comment.trim().length < 1) return;
-    await withActionLoading(async () => {
-      await api('/incidents/' + id + '/comments', {
-        method: 'POST',
-        body: JSON.stringify({ body: comment.trim() }),
-      });
-      setComment('');
-      load();
-    });
-  };
-
-  if (error && !incident) {
-    return (
-      <>
-        <div className="drawer-backdrop" onClick={onClose} />
-        <div className="incident-drawer">
-          <div className="drawer-header">
-            <div />
-            <button className="drawer-close" onClick={onClose} aria-label={t('common.close')}><X size={18} /></button>
-          </div>
-          <div className="empty-state">
-            <AlertTriangle size={32} className="empty-icon" />
-            <div className="empty-title">{t('drawer.error')}</div>
-            <div className="empty-desc">{error}</div>
-            <button className="button button-outline" onClick={load}>{t('common.retry')}</button>
-          </div>
-        </div>
-      </>
-    );
-  }
-
-  if (!incident) {
-    return (
-      <>
-        <div className="drawer-backdrop" onClick={onClose} />
-        <div className="incident-drawer">
-          <div className="loading-page"><Spinner size={24} /></div>
-        </div>
-      </>
-    );
-  }
-
-  const assignment = incident.assignments?.find((a: any) => a.isActive);
-  const ownerName = assignment?.responsable?.user?.name;
-  const ownerInitials = ownerName
-    ? ownerName.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase()
-    : '\u2013';
-  const issueCode = incident.incNumber || ('INC-' + String(id).slice(0, 4).toUpperCase());
-  const exactLocation = incident.exactLocation || incident.site?.address || (incident.latitude != null ? `${Number(incident.latitude).toFixed(4)}, ${Number(incident.longitude).toFixed(4)}` : '\u2014');
-
-  const canAssign = u.roles.includes('ADMINISTRATOR');
+  const handleAccept = () => executeAction(() => api(`/assignments/${activeAssignment.id}/accept`, { method: 'POST' }));
+  const handleReassign = () => executeAction(() => {
+    setShowReassign(false);
+    return api(`/assignments/${activeAssignment.id}/reassignment-request`, { method: 'POST', body: JSON.stringify({ reason: reassignReason }) });
+  });
+  const handleResolve = () => executeAction(() => {
+    setShowResolve(false);
+    return api(`/incidents/${incident.id}/resolution`, { method: 'POST', body: JSON.stringify({ resolutionText: resolveText }) });
+  });
+  const handleClose = () => executeAction(() => api(`/incidents/${incident.id}/closure`, { method: 'POST' }));
+  const handleReject = () => executeAction(() => {
+    setShowReject(false);
+    return api(`/incidents/${incident.id}/reject-resolution`, { method: 'POST', body: JSON.stringify({ reason: rejectReason }) });
+  });
 
   return (
-    <>
-      <div className="drawer-backdrop" onClick={onClose} />
-      <div className="incident-drawer" role="dialog" aria-modal="true" aria-labelledby="incident-drawer-title">
-
-        <div className="drawer-header">
-          <div className="drawer-heading">
-            <span>{issueCode}</span>
-            <h2 id="incident-drawer-title">{incident.title}</h2>
+    <div className="fixed inset-0 z-50 flex justify-end">
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-slate-900/20 backdrop-blur-sm transition-opacity" onClick={onClose} />
+      
+      {/* Slide-over panel */}
+      <div className="relative w-full max-w-xl bg-white shadow-2xl h-full flex flex-col animate-in slide-in-from-right duration-300">
+        
+        {/* Header */}
+        <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-start bg-slate-50">
+          <div>
+            <div className="text-xs text-slate-500 font-medium mb-1">INC-{incident.id.substring(0,6)}</div>
+            <h2 className="text-xl font-bold text-slate-900">{incident.title}</h2>
           </div>
-          <button className="drawer-close" onClick={onClose} aria-label={t('common.close')}>
-            <X size={18} />
+          <button 
+            onClick={onClose}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-full transition-colors"
+          >
+            <X size={20} />
           </button>
         </div>
 
-        <div className="drawer-content">
-          <div className="drawer-badges">
-            <span className={`drawer-badge ${getDrawerPriorityClass(incident.priority)}`}>
-              {t(`priorities.${incident.priority}`)}
-            </span>
-            <span className={`drawer-badge ${getDrawerBadgeClass(incident.status)}`}>
-              <i /> {t(`incidentStatuses.${incident.status}`)}
-            </span>
-          </div>
+        {/* Status Badges Row */}
+        <div className="px-6 py-3 border-b border-slate-200 flex gap-2 flex-wrap">
+          <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[incident.status] || 'bg-slate-100 text-slate-800'}`}>
+            {incident.status}
+          </span>
+          <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${priorityColors[incident.priority] || 'bg-slate-100 text-slate-800 border-slate-200'}`}>
+            {incident.priority}
+          </span>
+          <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
+            {incident.category}
+          </span>
+        </div>
 
-          <div className="drawer-section">
-            <div className="drawer-section-label">{t('drawer.incidentDetails')}</div>
-            {incident.description && (
-              <div className="drawer-description">
-                <p>{incident.description}</p>
-              </div>
-            )}
-            <div className="drawer-info-grid">
-              <div className="drawer-info">
-                <div className="drawer-info-label">{t('drawer.site')}</div>
-                <div className="drawer-info-value">{incident.site?.name || '\u2014'}</div>
-              </div>
-              <div className="drawer-info">
-                <div className="drawer-info-label">{t('drawer.exactLocation')}</div>
-                <div className="drawer-info-value">{exactLocation}</div>
-              </div>
-              <div className="drawer-info">
-                <div className="drawer-info-label">{t('drawer.category')}</div>
-                <div className="drawer-info-value">{CATEGORY_LABELS[incident.category] || incident.category}</div>
-              </div>
-              <div className="drawer-info">
-                <div className="drawer-info-label">{t('drawer.reported')}</div>
-                <div className="drawer-info-value">{timeAgo(incident.createdAt)}</div>
-              </div>
-            </div>
-          </div>
+        {/* Tabs */}
+        <div className="flex px-6 border-b border-slate-200">
+          {[
+            { id: 'overview', label: 'Aperçu', icon: <MessageSquare size={16} /> },
+            { id: 'timeline', label: 'Historique', icon: <Clock size={16} /> },
+            { id: 'evidence', label: 'Preuves', icon: <Paperclip size={16} /> }
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={`flex items-center gap-2 py-3 px-4 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === tab.id 
+                  ? 'border-blue-600 text-blue-600' 
+                  : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+              }`}
+            >
+              {tab.icon}
+              {tab.label}
+            </button>
+          ))}
+        </div>
 
-          <div className="drawer-section">
-            <div className="drawer-section-label">{t('drawer.assignedOwner')}</div>
-            <div className="drawer-owner">
-              <div className={`drawer-owner-avatar ${assignment ? 'drawer-owner-avatar-assigned' : 'drawer-owner-avatar-unassigned'}`}>
-                {ownerInitials}
-              </div>
-              <div className="drawer-owner-info">
-                <div className="drawer-owner-name">{ownerName || t('drawer.notAssigned')}</div>
-                <div className="drawer-owner-hint">{assignment ? t('drawer.assignedTeamMember') : t('drawer.assignTeamMember')}</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="drawer-section" style={{ borderBottom: 'none', marginBottom: 0 }}>
-            <div className="drawer-section-label">{t('drawer.activity')}</div>
-            <div className="timeline">
-              {(incident.auditEvents || []).map((a: any) => (
-                <div key={a.id} className="timeline-event">
-                  <div className={`timeline-dot ${timelineDotClass[a.eventType] || 'dot-status'}`} />
-                  <div className="timeline-label">{formatEventType(a.eventType, t)}</div>
-                  <div className="timeline-meta">
-                    <span>{a.actor?.name}</span>
-                    <span>{timeAgo(a.createdAt)}</span>
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-6 bg-white">
+          
+          {activeTab === 'overview' && (
+            <div className="flex flex-col gap-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <div className="text-xs text-slate-500 flex items-center gap-1.5 mb-1">
+                    <MapPin size={14} /> Localisation
                   </div>
+                  <div className="font-medium text-slate-900">{incident.site?.name || 'Inconnue'}</div>
                 </div>
-              ))}
-              {(!incident.auditEvents || incident.auditEvents.length === 0) && (
-                <div style={{ fontSize: 12, color: '#94A3B8', padding: '8px 0' }}>{t('drawer.noActivity')}</div>
-              )}
+                <div>
+                  <div className="text-xs text-slate-500 flex items-center gap-1.5 mb-1">
+                    <Calendar size={14} /> Date de signalement
+                  </div>
+                  <div className="font-medium text-slate-900">{new Date(incident.createdAt).toLocaleString('fr-FR')}</div>
+                </div>
+              </div>
+
+              <div className="bg-slate-50 rounded-lg p-4 border border-slate-100">
+                <h3 className="text-sm font-semibold text-slate-900 mb-2">Description</h3>
+                <p className="text-sm text-slate-600 whitespace-pre-wrap leading-relaxed">
+                  {incident.description}
+                </p>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-semibold text-slate-900 mb-3">Assignation</h3>
+                {activeAssignment ? (
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-semibold text-sm">
+                      {activeAssignment.responsable?.user?.name?.charAt(0) || '?'}
+                    </div>
+                    <div>
+                      <div className="font-medium text-slate-900 text-sm">{activeAssignment.responsable?.user?.name}</div>
+                      <div className="text-xs text-slate-500">{activeAssignment.status}</div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-sm text-slate-500 italic">Aucun intervenant assigné</div>
+                )}
+              </div>
             </div>
-          </div>
-
-          <div style={{ borderTop: '1px solid var(--border)', paddingTop: 14, marginTop: 4 }}>
-            <form onSubmit={handleComment} style={{ display: 'flex', gap: 8 }}>
-              <input
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                placeholder={t('drawer.addComment') || 'Add a comment...'}
-                style={{ flex: 1, border: '1px solid var(--border)', borderRadius: 8, padding: '8px 12px', fontSize: 13, outline: 'none' }}
-              />
-              <button type="submit" className="button button-primary button-small" disabled={!comment.trim() || actionLoading}>
-                <Send size={14} />
-              </button>
-            </form>
-          </div>
-        </div>
-
-        <div className="drawer-footer">
-          <button className="button button-outline" onClick={onClose}>{t('common.close')}</button>
-
-          {canAssign && incident.status === 'NEW' && !showAssign && (
-            <button className="button button-primary" onClick={() => setShowAssign(true)}>
-              {t('drawer.assignIncident')}
-            </button>
           )}
 
-          {canAssign && showAssign && (
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <select
-                value={selectedResp}
-                onChange={(e) => setSelectedResp(e.target.value)}
-                style={{ height: 38, border: '1px solid var(--border)', borderRadius: 8, fontSize: 12, padding: '0 10px', background: '#fff', minWidth: 160 }}
+          {activeTab === 'timeline' && (
+            <div className="text-sm text-slate-500 text-center py-8 italic">
+              L'historique des événements sera affiché ici.
+            </div>
+          )}
+
+          {activeTab === 'evidence' && (
+            <div className="text-sm text-slate-500 text-center py-8 italic">
+              Les photos et documents joints seront affichés ici.
+            </div>
+          )}
+
+        </div>
+
+        {/* Footer / Actions */}
+        <div className="p-6 border-t border-slate-200 bg-slate-50 flex flex-col gap-4">
+          {incident.status === 'ASSIGNED' && isAssignedToMe && !showReassign && (
+            <div className="flex justify-end gap-3">
+              <button 
+                onClick={() => setShowReassign(true)} 
+                disabled={actionLoading}
+                className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
               >
-                <option value="">{t('drawer.chooseResponsable')}</option>
-                {responsables.filter((r: any) => r.isActive).map((r: any) => (
-                  <option key={r.id} value={r.id}>{r.user.name}</option>
-                ))}
-              </select>
-              <button className="button button-primary button-small" onClick={handleAssign} disabled={!selectedResp || actionLoading}>
-                {actionLoading ? <Spinner size={14} /> : <Send size={14} />}
+                Demander réassignation
+              </button>
+              <button 
+                onClick={handleAccept} 
+                disabled={actionLoading}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+              >
+                Accepter l'intervention
               </button>
             </div>
           )}
 
-          {incident.status === 'ASSIGNED' && assignment && (
-            <button className="button button-primary" onClick={handleAccept} disabled={actionLoading}>
-              {t('drawer.acceptAssignment')}
-            </button>
+          {showReassign && (
+            <div className="bg-white p-4 rounded-lg border border-slate-200 flex flex-col gap-3">
+              <label className="text-sm font-medium text-slate-900 flex flex-col gap-1">
+                Raison de la réassignation
+                <textarea 
+                  value={reassignReason} 
+                  onChange={(e) => setReassignReason(e.target.value)} 
+                  maxLength={500}
+                  className="w-full p-2 border border-slate-300 rounded-md text-sm mt-1 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  rows={3}
+                />
+              </label>
+              <div className="flex justify-end gap-2">
+                <button 
+                  onClick={() => setShowReassign(false)}
+                  className="px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-slate-900"
+                >
+                  Annuler
+                </button>
+                <button 
+                  onClick={handleReassign} 
+                  disabled={actionLoading || reassignReason.length < 5}
+                  className="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50"
+                >
+                  Envoyer
+                </button>
+              </div>
+            </div>
           )}
 
-          {incident.status === 'IN_PROGRESS' && (
-            <button className="button button-primary" onClick={handleResolve} disabled={actionLoading}>
-              {t('drawer.submitResolution')}
-            </button>
+          {incident.status === 'IN_PROGRESS' && isAssignedToMe && !showResolve && (
+            <div className="flex justify-end gap-3">
+              <button 
+                onClick={() => setShowResolve(true)} 
+                disabled={actionLoading}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+              >
+                Soumettre résolution
+              </button>
+            </div>
           )}
 
-          {incident.status === 'RESOLVED' && (
-            <button className="button button-primary" onClick={handleCloseIncident} disabled={actionLoading}>
-              {t('drawer.closeIncident')}
-            </button>
+          {showResolve && (
+            <div className="bg-white p-4 rounded-lg border border-slate-200 flex flex-col gap-3">
+              <label className="text-sm font-medium text-slate-900 flex flex-col gap-1">
+                Rapport de résolution
+                <textarea 
+                  value={resolveText} 
+                  onChange={(e) => setResolveText(e.target.value)} 
+                  maxLength={3000}
+                  className="w-full p-2 border border-slate-300 rounded-md text-sm mt-1 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  rows={4}
+                />
+              </label>
+              <div className="flex justify-end gap-2">
+                <button 
+                  onClick={() => setShowResolve(false)}
+                  className="px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-slate-900"
+                >
+                  Annuler
+                </button>
+                <button 
+                  onClick={handleResolve} 
+                  disabled={actionLoading || resolveText.length < 10}
+                  className="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50"
+                >
+                  Soumettre
+                </button>
+              </div>
+            </div>
+          )}
+
+          {incident.status === 'RESOLVED' && isAdmin && !showReject && (
+            <div className="flex justify-end gap-3">
+              <button 
+                onClick={() => setShowReject(true)} 
+                disabled={actionLoading}
+                className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
+              >
+                Rejeter
+              </button>
+              <button 
+                onClick={handleClose} 
+                disabled={actionLoading}
+                className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition-colors"
+              >
+                Clôturer l'incident
+              </button>
+            </div>
+          )}
+
+          {showReject && (
+            <div className="bg-red-50 p-4 rounded-lg border border-red-200 flex flex-col gap-3">
+              <label className="text-sm font-medium text-red-900 flex flex-col gap-1">
+                Raison du rejet
+                <textarea 
+                  value={rejectReason} 
+                  onChange={(e) => setRejectReason(e.target.value)} 
+                  maxLength={500}
+                  className="w-full p-2 border border-red-300 rounded-md text-sm mt-1 focus:ring-2 focus:ring-red-500 focus:outline-none"
+                  rows={3}
+                />
+              </label>
+              <div className="flex justify-end gap-2">
+                <button 
+                  onClick={() => setShowReject(false)}
+                  className="px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-slate-900"
+                >
+                  Annuler
+                </button>
+                <button 
+                  onClick={handleReject} 
+                  disabled={actionLoading || rejectReason.length < 5}
+                  className="px-3 py-1.5 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 disabled:opacity-50"
+                >
+                  Rejeter la résolution
+                </button>
+              </div>
+            </div>
           )}
         </div>
+
       </div>
-    </>
+    </div>
   );
 }

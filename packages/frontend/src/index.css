@@ -1,49 +1,41 @@
 @import "tailwindcss";
 
 :root {
-  /* Foundation & Neutrals — Blue Enterprise Palette */
-  --midnight: #0F172A;
-  --midnight-light: #1E293B;
-  --midnight-hover: #334155;
-  --blue: #3B82F6;
-  --blue-dark: #2563EB;
-  --blue-active: #1D4ED8;
-  --blue-light: #EFF6FF;
-  --bg: #F4F7FB;
+  /* surfaces */
+  --canvas: #F3F5F7;
   --surface: #FFFFFF;
-  --surface-muted: #F1F5F9;
-  --text: #475569;
-  --text-dark: #0F172A;
-  --text-muted: #94A3B8;
-  --border: #E2E8F0;
-  --border-light: #F1F5F9;
-  --focus: #3B82F6;
+  --surface-sunken: #EBEEF2;
+  --border: #D5DBE2;
+  --border-strong: #B7C0CB;
 
-  /* Priority Semantic */
-  --priority-low: #65A30D;
-  --priority-low-bg: #ECFCCB;
-  --priority-medium: #D97706;
-  --priority-medium-bg: #FEF3C7;
-  --priority-high: #EA580C;
-  --priority-high-bg: #FFEDD5;
-  --priority-critical: #DC2626;
-  --priority-critical-bg: #FEE2E2;
+  /* text */
+  --ink: #121C26;
+  --ink-2: #3D4A58;
+  --ink-3: #5E6B79;
+  --ink-disabled: #8C97A3;
 
-  /* Status Lifecycle */
-  --status-new: #DC2626;
-  --status-new-bg: #FEE2E2;
-  --status-assigned: #2563EB;
-  --status-assigned-bg: #DBEAFE;
-  --status-progress: #059669;
-  --status-progress-bg: #D1FAE5;
-  --status-resolved: #D97706;
-  --status-resolved-bg: #FEF3C7;
-  --status-closed: #16A34A;
-  --status-closed-bg: #DCFCE7;
+  /* brand and action */
+  --brand: #0B4F8A;
+  --brand-hover: #093F70;
+  --brand-pressed: #073256;
+  --brand-tint: #E6EFF8;
+  --focus: #1A73C9;
 
-  font-family: 'Inter', 'DM Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
-  color: var(--text);
-  background: var(--bg);
+  /* semantic */
+  --critical: #B3261E;
+  --critical-tint: #FCEBEA;
+  --high: #B85400;
+  --high-tint: #FDF0E3;
+  --medium: #8A6A00;
+  --medium-tint: #FBF4DA;
+  --low: #4B5F72;
+  --low-tint: #EAEFF4;
+  --success: #12724A;
+  --success-tint: #E4F4EC;
+
+  font-family: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  color: var(--ink);
+  background: var(--canvas);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
@@ -237,11 +229,9 @@ textarea::placeholder {
 
 /* ===== SIDEBAR ===== */
 .sidebar {
-  width: 222px;
-  flex: 0 0 222px;
+  width: 240px;
+  flex: 0 0 240px;
   min-height: 100vh;
-  background: var(--midnight);
-  color: #CBD5E1;
   display: flex;
   flex-direction: column;
   padding: 16px 12px;
@@ -250,6 +240,7 @@ textarea::placeholder {
   top: 0;
   bottom: 0;
   z-index: 20;
+  border-right: 1px solid var(--border);
   overflow: hidden;
 }
 
@@ -258,15 +249,14 @@ textarea::placeholder {
   align-items: center;
   gap: 10px;
   padding: 0 8px 18px;
-  color: #F8FAFC;
 }
 
 .brand-mark {
   width: 28px;
   height: 28px;
   border-radius: 7px;
-  border: 1px solid rgba(255,255,255,.15);
-  background: rgba(255,255,255,.06);
+  border: 1px solid var(--border);
+  background: var(--surface);
   display: flex;
   align-items: flex-end;
   gap: 3px;
@@ -278,21 +268,19 @@ textarea::placeholder {
   display: block;
   width: 5px;
   border-radius: 2px;
-  background: #60A5FA;
+  background: var(--blue);
 }
 
 .brand strong {
-  font-family: 'Manrope', sans-serif;
+  font-family: inherit;
   font-weight: 800;
   font-size: 15px;
   letter-spacing: 0.25em;
-  color: #F8FAFC;
   display: block;
   line-height: 1.1;
 }
 
 .brand small {
-  color: #94A3B8;
   font-size: 8px;
   letter-spacing: 0.3em;
   margin-top: 5px;
@@ -306,17 +294,17 @@ textarea::placeholder {
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
-  background: #172b45;
-  border: 1px solid rgba(255,255,255,.08);
-  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
   margin: 0 1px 20px;
 }
 
 .org-avatar {
   width: 32px;
   height: 32px;
-  border-radius: 8px;
-  background: #2563EB;
+  border-radius: 4px;
+  background: var(--blue);
   color: #fff;
   font-weight: 800;
   font-size: 12px;
@@ -331,7 +319,6 @@ textarea::placeholder {
 }
 
 .org-copy strong {
-  color: #E2E8F0;
   font-size: 12px;
   font-weight: 600;
   text-overflow: ellipsis;
@@ -341,14 +328,12 @@ textarea::placeholder {
 }
 
 .org-copy small {
-  color: #94A3B8;
   font-size: 10px;
   display: block;
   margin-top: 1px;
 }
 
 .org-chevron {
-  color: #94A3B8;
   transform: rotate(90deg);
 }
 
@@ -360,7 +345,6 @@ textarea::placeholder {
 }
 
 .nav-label {
-  color: #64748B;
   font-size: 9px;
   letter-spacing: 0.13em;
   font-weight: 700;
@@ -378,24 +362,25 @@ textarea::placeholder {
   width: 100%;
   padding: 10px 12px;
   background: transparent;
-  color: #94A3B8;
-  border-radius: 8px;
+  color: var(--text-muted);
+  border-radius: 4px;
   text-align: left;
   font-size: 13px;
   font-weight: 500;
   transition: background 0.18s, color 0.18s;
+  border: 1px solid transparent;
 }
 
 .nav-item:hover {
-  color: #E2E8F0;
-  background: rgba(255,255,255,.06);
+  color: var(--text-dark);
+  background: rgba(0,0,0,0.04);
 }
 
 .nav-active {
-  color: #93c5fd;
-  background: rgba(59, 130, 246, 0.2);
+  color: var(--blue-dark);
+  background: var(--blue-light);
   font-weight: 600;
-  box-shadow: 0 4px 12px rgba(37,99,235,.3);
+  border-color: rgba(15, 108, 189, 0.2);
 }
 
 .nav-badge {
@@ -403,9 +388,9 @@ textarea::placeholder {
   min-width: 22px;
   height: 20px;
   padding: 0 6px;
-  border-radius: 10px;
-  background: rgba(255,255,255,.12);
-  color: #94A3B8;
+  border-radius: 4px;
+  background: var(--border);
+  color: var(--text-dark);
   font-size: 10px;
   font-weight: 700;
   display: flex;
@@ -414,7 +399,7 @@ textarea::placeholder {
 }
 
 .nav-active .nav-badge {
-  background: rgba(255,255,255,.2);
+  background: var(--blue);
   color: #fff;
 }
 
@@ -426,7 +411,7 @@ textarea::placeholder {
 .user-mini {
   margin: 18px 3px 0;
   padding: 12px 8px 0;
-  border-top: 1px solid rgba(255,255,255,.08);
+  border-top: 1px solid var(--border);
   display: flex;
   align-items: center;
   gap: 9px;
@@ -436,7 +421,7 @@ textarea::placeholder {
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background: #2563EB;
+  background: var(--blue);
   color: #fff;
   display: grid;
   place-items: center;
@@ -451,20 +436,20 @@ textarea::placeholder {
 }
 
 .user-mini-name {
-  color: #E2E8F0;
+  color: var(--text-dark);
   font-size: 11px;
   font-weight: 500;
   display: block;
 }
 
 .user-mini-role {
-  color: #94A3B8;
+  color: var(--text-muted);
   font-size: 10px;
   display: block;
 }
 
 .user-mini > svg:last-child {
-  color: #64748B;
+  color: var(--text-muted);
 }
 
 .sidebar-logout {
@@ -472,9 +457,9 @@ textarea::placeholder {
   margin: 6px 3px 0;
   padding: 9px 12px;
   border: none;
-  border-radius: 8px;
+  border-radius: 4px;
   background: transparent;
-  color: #94A3B8;
+  color: var(--text-muted);
   font-size: 11px;
   font-weight: 600;
   display: flex;
@@ -486,8 +471,8 @@ textarea::placeholder {
 }
 
 .sidebar-logout:hover {
-  background: rgba(255,255,255,.06);
-  color: #E2E8F0;
+  background: rgba(0,0,0,0.04);
+  color: var(--text-dark);
 }
 
 /* Mobile sidebar */
@@ -521,7 +506,7 @@ textarea::placeholder {
   flex: 1;
   display: flex;
   flex-direction: column;
-  margin-left: 222px;
+  margin-left: 240px;
 }
 
 .main-content {
@@ -592,7 +577,7 @@ textarea::placeholder {
   padding: 0 26px 0 10px;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 4px;
   font-size: 12px;
   font-weight: 600;
   color: var(--text);
@@ -705,7 +690,7 @@ textarea::placeholder {
   background: #fff;
   border: 1px solid var(--border);
   box-shadow: 0 14px 35px rgba(0,0,0,.12);
-  border-radius: 10px;
+  border-radius: 4px;
   overflow: hidden;
   animation: dropdown 0.18s ease both;
 }
@@ -720,7 +705,7 @@ textarea::placeholder {
 
 .notifications-header-title {
   color: var(--text-dark);
-  font-family: 'Manrope', sans-serif;
+  font-family: inherit;
   font-size: 13px;
 }
 
@@ -858,7 +843,7 @@ textarea::placeholder {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  border-radius: 8px;
+  border-radius: 4px;
   font-size: 13px;
   font-weight: 600;
   transition: background 0.18s, box-shadow 0.18s, transform 0.18s;
@@ -974,14 +959,14 @@ textarea::placeholder {
 .card {
   background: #fff;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 8px;
   box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04);
 }
 
 .card-hover {
   background: #fff;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 8px;
   box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04);
   transition: box-shadow 0.15s, border-color 0.15s;
 }
@@ -995,7 +980,7 @@ textarea::placeholder {
 .panel {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,.03);
 }
 
@@ -1004,7 +989,7 @@ textarea::placeholder {
 }
 
 .panel-header h2 {
-  font-family: 'Manrope', sans-serif;
+  font-family: inherit;
   font-size: 15px;
   font-weight: 700;
   color: var(--text-dark);
@@ -1048,7 +1033,7 @@ textarea::placeholder {
 .empty-icon {
   width: 35px;
   height: 35px;
-  border-radius: 10px;
+  border-radius: 4px;
   background: #F1F5F9;
   color: #64748B;
   display: grid;
@@ -1081,7 +1066,7 @@ textarea::placeholder {
   color: #F8FAFC;
   background: #0F172A;
   border: 1px solid #334155;
-  border-radius: 8px;
+  border-radius: 4px;
   box-shadow: 0 9px 25px rgba(0,0,0,.2);
   font-size: 12px;
   animation: toast-in 0.24s ease both;
@@ -1105,7 +1090,7 @@ textarea::placeholder {
 }
 
 .page-heading h1 {
-  font-family: 'Manrope', sans-serif;
+  font-family: inherit;
   font-size: 30px;
   line-height: 1.15;
   letter-spacing: -0.03em;
@@ -1159,7 +1144,7 @@ textarea::placeholder {
   min-height: 112px;
   padding: 18px 20px;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 4px;
   background: #fff;
   position: relative;
   overflow: hidden;
@@ -1188,7 +1173,7 @@ textarea::placeholder {
 }
 
 .kpi-value {
-  font-family: 'Manrope', sans-serif;
+  font-family: inherit;
   font-size: 28px;
   font-weight: 700;
   color: var(--text-dark);
@@ -1236,7 +1221,7 @@ textarea::placeholder {
   width: 38px;
   height: 38px;
   min-width: 38px;
-  border-radius: 10px;
+  border-radius: 4px;
   background: linear-gradient(90deg, #f1f4f4 25%, #e8ecec 50%, #f1f4f4 75%);
   background-size: 200% 100%;
   animation: skeleton-shimmer 1.5s infinite;
@@ -1268,7 +1253,7 @@ textarea::placeholder {
 }
 
 .needs-attention-header h2 {
-  font-family: 'Manrope', sans-serif;
+  font-family: inherit;
   font-size: 19px;
   font-weight: 700;
   color: var(--text-dark);
@@ -1318,7 +1303,7 @@ textarea::placeholder {
   padding: 16px 18px;
   background: #fff;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 4px;
   cursor: pointer;
   transition: border-color 0.15s, box-shadow 0.15s;
   scroll-snap-align: start;
@@ -1340,7 +1325,7 @@ textarea::placeholder {
 .attention-icon {
   width: 42px;
   height: 42px;
-  border-radius: 10px;
+  border-radius: 4px;
   display: grid;
   place-items: center;
   flex-shrink: 0;
@@ -1430,7 +1415,7 @@ textarea::placeholder {
 }
 
 .recent-incidents-header h2 {
-  font-family: 'Manrope', sans-serif;
+  font-family: inherit;
   font-size: 18px;
   font-weight: 700;
   color: var(--text-dark);
@@ -1478,7 +1463,7 @@ textarea::placeholder {
   gap: 8px;
   border: 1px solid var(--border);
   padding: 8px 12px;
-  border-radius: 8px;
+  border-radius: 4px;
   flex: 1;
   max-width: 340px;
   background: #fff;
@@ -1507,7 +1492,7 @@ textarea::placeholder {
   color: var(--text);
   border: 1px solid var(--border);
   background: #fff;
-  border-radius: 8px;
+  border-radius: 4px;
   font-size: 12px;
   padding: 0 10px;
   cursor: pointer;
@@ -1680,7 +1665,7 @@ textarea::placeholder {
 }
 
 .empty-title {
-  font-family: 'Manrope', sans-serif;
+  font-family: inherit;
   font-weight: 700;
   font-size: 15px;
   color: #0f172a;
@@ -1762,7 +1747,7 @@ textarea::placeholder {
 }
 
 .success-title {
-  font-family: 'Manrope', sans-serif;
+  font-family: inherit;
   font-weight: 700;
   font-size: 16px;
   color: #29444d;
@@ -1817,7 +1802,7 @@ textarea::placeholder {
 .category-icon-box {
   width: 31px;
   height: 31px;
-  border-radius: 8px;
+  border-radius: 4px;
   display: grid;
   place-items: center;
   flex-shrink: 0;
@@ -1877,7 +1862,7 @@ textarea::placeholder {
 .status-bar-fill.fill-closed { background: #334155; }
 
 .status-bar-count {
-  font-family: 'Manrope', sans-serif;
+  font-family: inherit;
   font-size: 13px;
   color: var(--text-dark);
   min-width: 20px;
@@ -1947,7 +1932,7 @@ textarea::placeholder {
   flex: 1;
   border: 1px solid var(--border);
   padding: 8px 12px;
-  border-radius: 8px;
+  border-radius: 4px;
 }
 
 .table-search input {
@@ -1964,7 +1949,7 @@ textarea::placeholder {
   color: var(--text);
   border: 1px solid var(--border);
   background: white;
-  border-radius: 8px;
+  border-radius: 4px;
   font-size: 11px;
   padding: 0 10px;
 }
@@ -2064,7 +2049,7 @@ textarea::placeholder {
   position: relative;
   overflow: hidden;
   background: #e2e8f0;
-  border-radius: 10px;
+  border-radius: 4px;
 }
 
 .map-legend {
@@ -2099,11 +2084,11 @@ textarea::placeholder {
 
 .site-popup,
 .incident-popup {
-  font-family: 'DM Sans', sans-serif;
+  font-family: inherit;
 }
 
 .site-popup strong {
-  font-family: 'Manrope', sans-serif;
+  font-family: inherit;
   font-size: 13px;
   display: block;
 }
@@ -2133,7 +2118,7 @@ textarea::placeholder {
 .map-location-picker {
   position: relative;
   border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  border-radius: 4px;
   background: #fff;
 }
 
@@ -2259,7 +2244,7 @@ textarea::placeholder {
   margin-left: auto;
   font-size: 10px;
   color: #94a3b8;
-  font-family: 'DM Sans', monospace;
+  font-family: ui-monospace, Consolas, monospace;
 }
 
 .mlp-map {
@@ -2349,7 +2334,7 @@ textarea::placeholder {
 
 .mlp-detail-row span:last-child {
   color: #0f172a;
-  font-family: 'DM Sans', monospace;
+  font-family: ui-monospace, Consolas, monospace;
 }
 
 .mlp-placeholder {
@@ -2383,7 +2368,7 @@ textarea::placeholder {
   gap: 4px;
   padding: 14px 16px;
   background: #fff;
-  border-radius: 12px;
+  border-radius: 4px;
   border: 1px solid #e2e8f0;
 }
 
@@ -2421,7 +2406,7 @@ textarea::placeholder {
   height: 34px;
   background: #fff;
   border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  border-radius: 4px;
   color: #94a3b8;
   flex: 0 0 220px;
 }
@@ -2458,7 +2443,7 @@ textarea::placeholder {
 
 .opmap-map-area {
   position: relative;
-  border-radius: 12px;
+  border-radius: 4px;
   overflow: hidden;
   border: 1px solid #e2e8f0;
 }
@@ -2515,7 +2500,7 @@ textarea::placeholder {
   left: 12px;
   z-index: 1000;
   background: rgba(255, 255, 255, 0.95);
-  border-radius: 8px;
+  border-radius: 4px;
   padding: 10px 14px;
   border: 1px solid #e2e8f0;
   font-size: 11px;
@@ -2552,7 +2537,7 @@ textarea::placeholder {
   display: flex;
   flex-direction: column;
   background: #fff;
-  border-radius: 12px;
+  border-radius: 4px;
   border: 1px solid #e2e8f0;
   overflow: hidden;
 }
@@ -2665,7 +2650,7 @@ textarea::placeholder {
   width: 30px;
   height: 30px;
   background: #1d4ed8;
-  border-radius: 8px;
+  border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2789,7 +2774,7 @@ textarea::placeholder {
   margin-bottom: 18px;
   background: #eff6ff;
   border: 1px solid #dbeafe;
-  border-radius: 10px;
+  border-radius: 4px;
 }
 
 .team-avatars {
@@ -2831,7 +2816,7 @@ textarea::placeholder {
 }
 
 .person-card-name {
-  font-family: 'Manrope', sans-serif;
+  font-family: inherit;
   font-size: 14px;
   color: #0f172a;
   margin: 16px 0 4px;
@@ -2925,7 +2910,7 @@ textarea::placeholder {
 }
 
 .site-card-name {
-  font-family: 'Manrope', sans-serif;
+  font-family: inherit;
   font-size: 14px;
   color: #0f172a;
   margin: 14px 0 4px;
@@ -2945,7 +2930,7 @@ textarea::placeholder {
 }
 
 .site-stat-value {
-  font-family: 'Manrope', sans-serif;
+  font-family: inherit;
   font-size: 16px;
   color: #0f172a;
 }
@@ -3022,7 +3007,7 @@ textarea::placeholder {
 .drawer-heading h2 {
   margin: 0;
   color: var(--text-dark);
-  font-family: 'Manrope', sans-serif;
+  font-family: inherit;
   font-size: 20px;
   line-height: 1.2;
   letter-spacing: -0.025em;
@@ -3031,7 +3016,7 @@ textarea::placeholder {
 .drawer-close {
   width: 32px;
   height: 32px;
-  border-radius: 8px;
+  border-radius: 4px;
   display: grid;
   place-items: center;
   color: #94A3B8;
@@ -3187,7 +3172,7 @@ textarea::placeholder {
 }
 
 .drawer-section-header h3 {
-  font-family: 'Manrope', sans-serif;
+  font-family: inherit;
   font-size: 14px;
   font-weight: 700;
   color: var(--text-dark);
@@ -3333,7 +3318,7 @@ textarea::placeholder {
   padding: 16px;
   background: #FFFBEB;
   border: 1px solid #FDE68A;
-  border-radius: 8px;
+  border-radius: 4px;
 }
 
 .reassign-title {
@@ -3480,7 +3465,7 @@ textarea::placeholder {
   color: #94A3B8;
   background: #F1F5F9;
   padding: 2px 7px;
-  border-radius: 10px;
+  border-radius: 4px;
 }
 
 /* Status stepper */
@@ -3491,7 +3476,7 @@ textarea::placeholder {
   margin: 20px 0;
   padding: 16px;
   background: #f1f5f9;
-  border-radius: 8px;
+  border-radius: 4px;
 }
 
 .stepper-step {
@@ -3628,7 +3613,7 @@ textarea::placeholder {
   gap: 12px;
   padding: 12px;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 4px;
   background: var(--surface-muted);
 }
 
@@ -3699,7 +3684,7 @@ textarea::placeholder {
 }
 
 .success-title {
-  font-family: 'Manrope', sans-serif;
+  font-family: inherit;
   font-size: 20px;
   font-weight: 700;
   color: var(--text-dark);
@@ -3728,7 +3713,7 @@ textarea::placeholder {
 }
 
 .create-header-text h2 {
-  font-family: 'Manrope', sans-serif;
+  font-family: inherit;
   font-size: 20px;
   font-weight: 700;
   color: var(--text-dark);
@@ -3744,7 +3729,7 @@ textarea::placeholder {
 .create-close {
   width: 32px;
   height: 32px;
-  border-radius: 8px;
+  border-radius: 4px;
   border: 1px solid var(--border);
   background: #f1f5f9;
   display: grid;
@@ -3842,7 +3827,7 @@ textarea::placeholder {
 .create-textarea-wrap textarea {
   width: 100%;
   border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  border-radius: 4px;
   padding: 14px 16px;
   font-size: 14px;
   color: #0f172a;
@@ -3879,7 +3864,7 @@ textarea::placeholder {
   gap: 6px;
   padding: 28px 20px;
   border: 1.5px dashed #e2e8f0;
-  border-radius: 10px;
+  border-radius: 4px;
   background: #f8fafc;
   color: #64748b;
   cursor: pointer;
@@ -3913,7 +3898,7 @@ textarea::placeholder {
 
 .create-photo-preview {
   position: relative;
-  border-radius: 10px;
+  border-radius: 4px;
   overflow: hidden;
   border: 1px solid #e2e8f0;
 }
@@ -3950,7 +3935,7 @@ textarea::placeholder {
 .create-field select {
   width: 100%;
   border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  border-radius: 4px;
   padding: 10px 12px;
   font-size: 13px;
   color: #0f172a;
@@ -3970,7 +3955,7 @@ textarea::placeholder {
   align-items: center;
   gap: 6px;
   padding: 8px 14px;
-  border-radius: 8px;
+  border-radius: 4px;
   border: 1px solid #e2e8f0;
   background: #f1f5f9;
   color: #475569;
@@ -3990,7 +3975,7 @@ textarea::placeholder {
   color: #64748b;
   padding: 8px 12px;
   background: #f1f5f9;
-  border-radius: 8px;
+  border-radius: 4px;
 }
 
 .create-ai-result {
@@ -4001,7 +3986,7 @@ textarea::placeholder {
   color: #2563eb;
   padding: 8px 12px;
   background: #eff6ff;
-  border-radius: 8px;
+  border-radius: 4px;
 }
 
 .create-ai-dot {
@@ -4022,7 +4007,7 @@ textarea::placeholder {
   padding: 10px 14px;
   background: #fef2f2;
   border: 1px solid #fecaca;
-  border-radius: 8px;
+  border-radius: 4px;
   color: #b91c1c;
   font-size: 12px;
 }
@@ -4036,7 +4021,7 @@ textarea::placeholder {
 
 .create-cancel-btn {
   padding: 10px 18px;
-  border-radius: 8px;
+  border-radius: 4px;
   border: 1px solid #e2e8f0;
   background: #fff;
   color: #475569;
@@ -4056,7 +4041,7 @@ textarea::placeholder {
   align-items: center;
   gap: 6px;
   padding: 11px 22px;
-  border-radius: 8px;
+  border-radius: 4px;
   border: none;
   font-size: 13px;
   font-weight: 600;
@@ -4112,7 +4097,7 @@ textarea::placeholder {
 }
 
 .auth-brand strong {
-  font-family: 'Manrope', sans-serif;
+  font-family: inherit;
   font-weight: 800;
   font-size: 22px;
   letter-spacing: 0.15em;
@@ -4127,7 +4112,7 @@ textarea::placeholder {
 }
 
 .auth-heading {
-  font-family: 'Manrope', sans-serif;
+  font-family: inherit;
   font-size: 28px;
   font-weight: 800;
   color: #1a1a1a;
@@ -4167,7 +4152,7 @@ textarea::placeholder {
 .auth-field select {
   width: 100%;
   border: 1.5px solid #e0e0e0;
-  border-radius: 10px;
+  border-radius: 4px;
   padding: 14px 16px;
   font-size: 15px;
   color: #1a1a1a;
@@ -4192,7 +4177,7 @@ textarea::placeholder {
   border: 1px solid #fecaca;
   color: #b91c1c;
   padding: 12px 16px;
-  border-radius: 10px;
+  border-radius: 4px;
   font-size: 14px;
   line-height: 1.4;
 }
@@ -4497,7 +4482,7 @@ textarea::placeholder {
 
 .settings-card {
   border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  border-radius: 4px;
   background: #fff;
   overflow: hidden;
 }
@@ -4571,7 +4556,7 @@ textarea::placeholder {
   gap: 10px;
   padding: 12px 16px;
   border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  border-radius: 4px;
   background: #fff;
   cursor: pointer;
   transition: all 0.15s;
@@ -4653,7 +4638,7 @@ textarea::placeholder {
   padding: 12px 20px;
   background: #2d8a5e;
   color: #fff;
-  border-radius: 8px;
+  border-radius: 4px;
   font-size: 13px;
   font-weight: 600;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
@@ -4670,7 +4655,7 @@ textarea::placeholder {
 }
 
 .modal-header h2 {
-  font-family: 'Manrope', sans-serif;
+  font-family: inherit;
   font-size: 20px;
   font-weight: 700;
   color: #0f172a;
@@ -4711,7 +4696,7 @@ textarea::placeholder {
   width: 100%;
   padding: 10px 14px;
   border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  border-radius: 4px;
   font-size: 13px;
   color: #0f172a;
   background: #fff;
@@ -4754,7 +4739,7 @@ textarea::placeholder {
   gap: 8px;
   padding: 10px 12px;
   border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  border-radius: 4px;
   background: #fff;
   color: #0f172a;
   font-size: 0.875rem;
@@ -4774,7 +4759,7 @@ textarea::placeholder {
   z-index: 30;
   background: #fff;
   border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  border-radius: 4px;
   box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
   overflow: hidden;
 }
@@ -4878,7 +4863,7 @@ textarea::placeholder {
   flex: 1;
   padding: 8px 12px;
   border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  border-radius: 4px;
   font-size: 0.85rem;
   outline: 0;
 }
@@ -4899,7 +4884,7 @@ textarea::placeholder {
   gap: 6px;
   padding: 6px 12px;
   border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  border-radius: 4px;
   font-size: 0.85rem;
   color: #334155;
   cursor: pointer;
@@ -4926,3 +4911,5 @@ textarea::placeholder {
 .status-toggle-row input {
   accent-color: #2563eb;
 }
+
+

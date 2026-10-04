@@ -5,14 +5,16 @@ import { prisma } from '../../lib/prisma.js';
 import { AppError } from '../../lib/errors.js';
 import { saveFile, readFile, contentType } from '../../lib/storage.js';
 import { audit } from '../shared/audit.js';
-import { incidentScope } from '../incidents/incidents.routes.js';
+import { incidentScope } from '../incidents/incidents.service.js';
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024, files: 1 } });
 
+import { getAuth } from '@clerk/express';
 function ctx(req: any) {
-  if (!req.auth) throw new AppError('AUTH_REQUIRED', 401, 'Authentication required');
-  return req.auth;
+  const auth = getAuth(req);
+  if (!auth.userId || !auth.orgId) throw new AppError('AUTH_REQUIRED', 401, 'Authentication required');
+  return { organizationId: auth.orgId, userId: auth.userId };
 }
 
 // Magic byte signatures for file type verification. Users can spoof the MIME
@@ -33,7 +35,7 @@ function verifyFileType(buffer: Buffer, declaredMime: string): boolean {
 
 router.post('/:id', upload.single('file'), async (req: any, res, next) => {
   try {
-    const a = ctx(req);
+    const a = req.ctx;
     const i = await prisma.incident.findFirst({ where: { id: req.params.id, ...incidentScope(a) } });
     if (!i) throw new AppError('NOT_FOUND', 404, 'Incident not found');
     if (i.status === 'CLOSED') throw new AppError('CONFLICT_STATE', 409, 'Closed incident');
@@ -47,18 +49,20 @@ router.post('/:id', upload.single('file'), async (req: any, res, next) => {
     // stays clean; if the DB fails the orphaned file is acceptable (no PII).
     const ref = await saveFile(req.file.buffer, req.file.mimetype);
     const cleanName = path.basename(req.file.originalname).slice(0, 255);
-    const attachment = await prisma.$transaction(async (tx) => {
+    const attachment = await prisma.$transaction(async (tx: any) => {
       const x = await tx.attachment.create({
         data: {
           incidentId: i.id,
-          uploadedById: a.userId,
+          organizationId: a.orgId,
+          uploadedByMembershipId: a.membershipId,
+          kind: 'REPORT_PHOTO',
           originalName: cleanName,
           mimeType: req.file!.mimetype,
           sizeBytes: req.file!.size,
-          storageRef: ref
+          storageKey: ref
         }
       });
-      await audit(tx, i.id, a.userId, 'ATTACHMENT', { attachmentId: x.id });
+      await audit(tx, a.orgId, i.id, a.membershipId, 'ATTACHMENT', { attachmentId: x.id });
       return x;
     });
     res.status(201).json(attachment);
@@ -69,12 +73,12 @@ router.post('/:id', upload.single('file'), async (req: any, res, next) => {
 
 router.get('/:id/:attId', async (req: any, res, next) => {
   try {
-    const a = ctx(req);
+    const a = req.ctx;
     const i = await prisma.incident.findFirst({ where: { id: req.params.id, ...incidentScope(a) } });
     if (!i) throw new AppError('NOT_FOUND', 404, 'Incident not found');
     const at = await prisma.attachment.findFirst({ where: { id: req.params.attId, incidentId: i.id } });
     if (!at) throw new AppError('NOT_FOUND', 404, 'Attachment not found');
-    res.type(contentType(at.storageRef)).send(await readFile(at.storageRef));
+    res.type(contentType(at.storageKey)).send(await readFile(at.storageKey));
   } catch (e) {
     next(e);
   }

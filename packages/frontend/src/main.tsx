@@ -1,20 +1,24 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
+import { ClerkProvider } from '@clerk/clerk-react';
 import App from './App';
 import 'leaflet/dist/leaflet.css';
 import './index.css';
-import { useAuth } from './store/authStore';
+
+const clerkPubKey = (import.meta as any).env.VITE_CLERK_PUBLISHABLE_KEY;
+
+if (!clerkPubKey) {
+  throw new Error("Missing Publishable Key")
+}
 
 function Root() {
-  const load = useAuth((s) => s.restoreSession);
-  React.useEffect(() => {
-    load();
-  }, [load]);
   return (
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
+    <ClerkProvider publishableKey={clerkPubKey}>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+    </ClerkProvider>
   );
 }
 

@@ -1,17 +1,14 @@
 export class ApiClient {
   private baseUrl: string;
-  private token: string | null = null;
+  private tokenResolver?: () => Promise<string | null> | string | null;
 
-  constructor(baseUrl: string) {
+  constructor(baseUrl: string, tokenResolver?: () => Promise<string | null> | string | null) {
     this.baseUrl = baseUrl;
+    this.tokenResolver = tokenResolver;
   }
 
-  setToken(token: string) {
-    this.token = token;
-  }
-
-  clearToken() {
-    this.token = null;
+  setTokenResolver(resolver: () => Promise<string | null> | string | null) {
+    this.tokenResolver = resolver;
   }
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
@@ -20,8 +17,11 @@ export class ApiClient {
       ...((options.headers as Record<string, string>) || {}),
     };
 
-    if (this.token) {
-      headers['Authorization'] = `Bearer ${this.token}`;
+    if (this.tokenResolver) {
+      const token = await this.tokenResolver();
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
     }
 
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
