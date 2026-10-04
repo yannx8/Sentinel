@@ -148,7 +148,7 @@ Security is a functional requirement. Every protected endpoint and domain mutati
 ## 7. Testing Requirements
 
 Tests must verify business requirements and security boundaries, not internal syntax.
-- Write tests in Vitest and Supertest located in `packages/backend/src/__tests__/`.
+- Write tests in Vitest and Supertest located in `apps/api/src/__tests__/`.
 - Cover both happy paths and mandatory negative paths:
   - Unauthorized requests (missing or invalid credentials).
   - Cross-tenant access attempts (requesting resource of Organization A with token for Organization B).

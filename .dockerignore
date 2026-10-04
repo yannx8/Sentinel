@@ -1,0 +1,12 @@
+**/node_modules
+**/dist
+**/.env
+**/.env.*
+!**/.env.example
+**/.expo
+**/uploads
+.git
+.github
+.vscode
+coverage
+apps/mobile

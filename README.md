@@ -1,91 +1,62 @@
 # Sentinel
 
-Production-oriented incident reporting and tracking platform for multi-tenant organizations.
+Multi-tenant incident management for organizations with several sites. Employees report, supervisors triage and assign, intervenants resolve, supervisors verify and close, with a full audit trail.
 
-## Architecture
+> Status: under active rebuild. Authentication is being replaced (Phase 2), so protected API routes currently answer 401. See the delivery phases in `docs/PRD.md`.
 
-- Frontend: React + TypeScript + Vite
-- API: Express + TypeScript
-- Database: PostgreSQL + Prisma
-- Map: Leaflet + OpenStreetMap
-- Monorepo: pnpm
-- Authentication: short-lived access JWT + rotated, revocable HTTP-only refresh sessions
-- Authorization: organization-scoped RBAC
-- Storage: private server-side attachment storage
+## Repository layout
 
-## No mock data
+| Path | What it is |
+|---|---|
+| `apps/api` | REST API: Express 5, Prisma 6, PostgreSQL 16 |
+| `apps/web` | Web console for supervisors and platform admins: React, Vite, Tailwind v4 |
+| `apps/mobile` | Expo app for employees and intervenants |
+| `packages/shared` | Types, API client and design tokens shared by the apps |
 
-This repository contains **no demo accounts, seed incidents, sample organizations, or fabricated production records**. A deployment starts empty and must be provisioned through real administrative workflows or controlled database provisioning.
+## Requirements
+
+- Node 22 or newer
+- pnpm 10.15 (`corepack enable`)
+- Docker Desktop, for Postgres and Mailpit
 
 ## Local development
 
-1. Install Node 20+ and pnpm 10+.
-2. Copy `.env.example` to `packages/backend/.env` and replace every secret/value.
-3. Install dependencies:
-
 ```bash
 pnpm install
+cp apps/api/.env.example apps/api/.env
+docker compose up -d db mailpit
+pnpm db:generate
+pnpm db:migrate:deploy
+pnpm dev            # api on :4000, web on :5173
+pnpm dev:mobile     # Expo dev server
 ```
 
-4. Generate Prisma client and apply migrations:
+Local services:
+
+| Service | URL |
+|---|---|
+| API | http://localhost:4000 (health: `/health`, `/ready`) |
+| Web console | http://localhost:5173 |
+| Mailpit inbox | http://localhost:8025 |
+
+## Checks
 
 ```bash
-pnpm --filter backend prisma:generate
-pnpm --filter backend prisma:migrate
+pnpm typecheck
+pnpm test           # API tests, run against the sentinel_test database
+pnpm build
 ```
 
-5. Start the application:
+API tests always run with `--no-file-parallelism` to avoid exhausting the local connection pool.
+
+## Full stack in Docker
 
 ```bash
-pnpm dev
+docker compose up --build
 ```
 
-The Vite development server proxies `/api/*` to the API.
+The web console is served on http://localhost:8080 and proxies `/api` to the API container. The API applies pending migrations on start.
 
-## Production deployment
+## Database
 
-Set real environment variables. Never deploy the example values.
-
-Required:
-
-- `DATABASE_URL`
-- `JWT_SECRET` with at least 32 random characters
-- `JWT_REFRESH_SECRET` with a different at least 32-character random value
-- `WEB_ORIGIN`
-- `EMAIL_WEBHOOK_URL`
-- `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` when using Docker Compose
-
-Apply migrations with:
-
-```bash
-pnpm --filter backend prisma:migrate:deploy
-```
-
-Then build and run the API and web containers. The API exposes `/health` for liveness and `/ready` for database readiness.
-
-## Email delivery
-
-The API uses an email webhook contract instead of embedding a vendor SDK. Configure `EMAIL_WEBHOOK_URL` to a trusted internal mail service or email provider adapter. The webhook receives the event type, recipient, verification/reset token, and generated application URLs. In production, registration/reset fails safely if email delivery is not configured.
-
-## Security controls
-
-- Organization context is embedded in access tokens and selected explicitly at login for multi-organization users.
-- Refresh sessions are stored server-side, hashed, rotated, and revocable.
-- Refresh credentials use an HTTP-only cookie and are not stored in browser localStorage.
-- Access tokens are held in memory by the web client.
-- CORS is restricted to `WEB_ORIGIN`.
-- Security response headers and a restrictive CSP are enabled by the API.
-- Authentication endpoints are rate limited.
-- Passwords use bcrypt with cost 12.
-- Verification/reset tokens are stored hashed and expire.
-- Attachments are stored outside the public web root and require incident authorization for download.
-- Tenant identifiers are never accepted from client-controlled mutation payloads.
-- Incident transitions enforce role and assignment boundaries.
-- Audit events are written for core lifecycle actions, comments, progress updates, and attachments.
-- `/ready` checks database availability.
-
-## Production checklist
-
-Before public launch, configure TLS at the reverse proxy/load balancer, centralized logs and alerting, encrypted PostgreSQL backups, persistent/private attachment storage, email delivery monitoring, secret management, vulnerability scanning, dependency update automation, and a disaster recovery procedure.
-
-The application code is designed for production deployment, but infrastructure security and operational controls remain deployment responsibilities.
+The schema lives in `apps/api/prisma/schema.prisma`, with one baseline migration. Some invariants (partial unique indexes) exist only as raw SQL in the migration, so review every generated migration for unintended `DROP INDEX` statements before applying it.

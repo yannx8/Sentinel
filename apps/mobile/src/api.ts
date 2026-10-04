@@ -1,6 +1,6 @@
 import { ApiClient } from '@sentinel/shared';
 
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:4000';
 
 export const apiClient = new ApiClient(BASE_URL);
 

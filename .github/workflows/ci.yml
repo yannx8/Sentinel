@@ -1,31 +1,34 @@
 name: CI
-on: [push, pull_request]
+on:
+  push:
+    branches: [main]
+  pull_request:
+
 jobs:
-  test:
+  verify:
     runs-on: ubuntu-latest
     services:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_DB: nexus_incidents
-          POSTGRES_USER: nexus
-          POSTGRES_PASSWORD: nexus_dev
+          POSTGRES_DB: sentinel_test
+          POSTGRES_USER: sentinel
+          POSTGRES_PASSWORD: sentinel
         ports: [5432:5432]
         options: >-
-          --health-cmd "pg_isready -U nexus -d nexus_incidents"
-          --health-interval 10s --health-timeout 5s --health-retries 5
+          --health-cmd "pg_isready -U sentinel -d sentinel_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://sentinel:sentinel@localhost:5432/sentinel_test?schema=public
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        with: {version: 10}
+        with: { version: 10.15.0 }
       - uses: actions/setup-node@v4
-        with: {node-version: 20, cache: pnpm}
-      - run: pnpm install --frozen-lockfile=false
-      - run: pnpm --filter backend prisma:generate
-      - run: pnpm --filter backend prisma:migrate
-        env:
-          DATABASE_URL: postgresql://nexus:nexus_dev@localhost:5432/nexus_incidents
-          JWT_SECRET: test
-          JWT_REFRESH_SECRET: test-refresh
-      - run: pnpm build
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm db:generate
+      - run: pnpm typecheck
+      - run: pnpm db:migrate:deploy
       - run: pnpm test
+      - run: pnpm build
