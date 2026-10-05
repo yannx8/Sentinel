@@ -1,0 +1,11 @@
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  test: {
+    env: {
+      DATABASE_URL: 'postgresql://sentinel:sentinel@localhost:5432/sentinel_test?schema=public',
+      NODE_ENV: 'test',
+      PORT: '4001'
+    }
+  }
+});

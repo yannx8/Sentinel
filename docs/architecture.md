@@ -43,7 +43,7 @@ The backend is organised into the following modules. Each module owns its router
 ### Structural rule
 
 ```
-packages/backend/src/
+apps/api/src/
   modules/
     auth/
       auth.router.ts

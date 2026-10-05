@@ -125,7 +125,6 @@ Do not introduce the following unless mandated by approved, documented requireme
 - Caching layers (Redis, Memcached) before measured bottlenecks exist.
 - Container orchestrators (Kubernetes) or complex cloud infrastructure.
 - CQRS, event sourcing, or complex generic repository/factory abstractions.
-- Custom policy engines or external authentication proxies.
 - Refactoring unrelated modules merely for cosmetic preferences.
 
 Keep solutions minimal, readable, and consistent with existing patterns.
@@ -134,8 +133,8 @@ Keep solutions minimal, readable, and consistent with existing patterns.
 
 Security is a functional requirement. Every protected endpoint and domain mutation must enforce:
 - Organization Isolation: Every resource belongs to exactly one Organization. Cross-organization access is strictly forbidden.
-- Server-Side Authority: Never trust `organizationId`, roles, permissions, or user IDs passed in client request bodies, query strings, or headers. Derive trusted context exclusively from the verified server-side session via `constructServerSideAuthContext`.
-- Role-Based Access Control (RBAC): Enforce rules for `USER`, `RESPONSABLE`, and `ADMINISTRATOR` roles on the server.
+- Server-Side Authority: Never trust `organizationId`, roles, permissions, or user IDs passed in client request bodies, query strings, or headers. Derive trusted context exclusively from the verified server-side session via Clerk's `getAuth(req)`.
+- Role-Based Access Control (RBAC): Enforce rules for `USER`, `RESPONSABLE`, and `ADMINISTRATOR` roles on the server using `getAuth(req)`.
 - Site and Responsable Constraints:
   - Incidents can only be created on active sites within the tenant.
   - Responsables can only access incidents assigned to them on sites where they have active access (`ResponsableSite.isActive`).
@@ -149,7 +148,7 @@ Security is a functional requirement. Every protected endpoint and domain mutati
 ## 7. Testing Requirements
 
 Tests must verify business requirements and security boundaries, not internal syntax.
-- Write tests in Vitest and Supertest located in `packages/backend/src/__tests__/`.
+- Write tests in Vitest and Supertest located in `apps/api/src/__tests__/`.
 - Cover both happy paths and mandatory negative paths:
   - Unauthorized requests (missing or invalid credentials).
   - Cross-tenant access attempts (requesting resource of Organization A with token for Organization B).

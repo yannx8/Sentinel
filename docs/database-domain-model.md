@@ -480,7 +480,7 @@ Unique constraints (which implicitly create indexes) also serve query patterns:
 
 ### Current state
 
-Prisma is initialized in `packages/backend/prisma/schema.prisma` with the full domain model. The schema is validated and formatted. No migration has been created because no PostgreSQL instance is available in the current development environment.
+Prisma is initialized in `apps/api/prisma/schema.prisma` with the full domain model. The schema is validated and formatted. No migration has been created because no PostgreSQL instance is available in the current development environment.
 
 ### Creating the initial migration
 
@@ -497,8 +497,8 @@ docker run -d --name incident-db -p 5432:5432 \
 # 2. Copy .env.example to .env and verify DATABASE_URL
 cp .env.example .env
 
-# 3. Create the initial migration from packages/backend/
-cd packages/backend
+# 3. Create the initial migration from apps/api/
+cd apps/api
 pnpm prisma:migrate:dev -- --name init
 
 # This creates:

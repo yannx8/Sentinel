@@ -44,3 +44,10 @@ Thumbs.db
 *.patch
 diff_output.txt
 
+
+# Expo and local uploads
+.expo/
+uploads/
+
+# Local TLS inspection certificates (see .certs/README.md)
+.certs/*.pem
