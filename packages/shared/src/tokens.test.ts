@@ -19,6 +19,9 @@ describe('tokens', () => {
 
   it('keeps src/tokens.css in sync with tokens.ts (run `pnpm --filter @sentinel/shared tokens:build`)', () => {
     const onDisk = readFileSync(new URL('./tokens.css', import.meta.url), 'utf8');
-    expect(onDisk).toBe(toCss());
+    // Git may check files out with CRLF on Windows, so compare line-ending-insensitively.
+    expect(onDisk.replace(/
+/g, '
+')).toBe(toCss());
   });
 });
