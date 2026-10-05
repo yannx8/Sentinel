@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sentinel design system specimen</title>
+<!-- Preview only. Production self-hosts the fonts (see docs/DESIGN_SYSTEM.md section 9). -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;500;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;700&display=swap" rel="stylesheet">
+<style>
+:root, [data-theme="light"] {
+  --canvas:#F3F5F9; --surface:#FFFFFF; --surface-2:#F8F9FC; --sunken:#E9EDF4;
+  --border:#DCE1EA; --border-strong:#7F8AA3;
+  --ink:#0E1A33; --ink-2:#3A4660; --ink-3:#5B6784; --ink-disabled:#9AA3B8;
+  --brand:#2B44C6; --brand-solid:#2B44C6; --brand-hover:#1F34A0; --brand-pressed:#182A82; --brand-tint:#E8ECFB;
+  --critical:#C0262D; --critical-tint:#FDECEC; --critical-ink:#A3141B;
+  --high:#C2540A; --high-tint:#FDEFE2; --high-ink:#9A4300;
+  --medium:#946B00; --medium-tint:#FAF1D6; --medium-ink:#7A5800;
+  --low:#52627A; --low-tint:#E9EEF5; --low-ink:#3F4E66;
+  --success:#11704A; --success-tint:#E2F4EA; --success-ink:#0B5A3A;
+  --scrim:rgba(14,26,51,.40);
+  --e1:0 1px 2px rgba(14,26,51,.06), 0 8px 24px rgba(14,26,51,.10);
+  --e2:0 2px 4px rgba(14,26,51,.06), 0 24px 56px rgba(14,26,51,.20);
+}
+[data-theme="dark"] {
+  --canvas:#0D1424; --surface:#141C2F; --surface-2:#1A2339; --sunken:#0A101D;
+  --border:#26314A; --border-strong:#5A6A8C;
+  --ink:#E8ECF6; --ink-2:#B4BDD2; --ink-3:#8D98B3; --ink-disabled:#5A6685;
+  --brand:#9BADFF; --brand-solid:#4A62E0; --brand-hover:#B5C2FF; --brand-pressed:#CBD5FF; --brand-tint:#1B2550;
+  --critical:#FF8F94; --critical-tint:#3A1A21; --critical-ink:#FF8F94;
+  --high:#FFA562; --high-tint:#3A2616; --high-ink:#FFA562;
+  --medium:#E6BE55; --medium-tint:#35290E; --medium-ink:#E6BE55;
+  --low:#A9B7CE; --low-tint:#222C3E; --low-ink:#A9B7CE;
+  --success:#5CD39B; --success-tint:#12301F; --success-ink:#5CD39B;
+  --scrim:rgba(0,0,0,.60);
+  --e1:0 1px 2px rgba(0,0,0,.30), 0 8px 24px rgba(0,0,0,.40);
+  --e2:0 2px 4px rgba(0,0,0,.30), 0 24px 56px rgba(0,0,0,.55);
+}
+:root {
+  --ui:"Atkinson Hyperlegible Next","Segoe UI",system-ui,sans-serif;
+  --display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --r-control:8px; --r-panel:12px; --r-sheet:16px;
+  --ease-out:cubic-bezier(.2,.7,.2,1); --ease-in-out:cubic-bezier(.4,0,.2,1);
+}
+*{box-sizing:border-box}
+html{background:var(--canvas)}
+body{margin:0;font:400 14px/20px var(--ui);color:var(--ink);background:var(--canvas);font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:32px 24px 96px}
+h1,h2,h3{font-family:var(--display);margin:0;letter-spacing:-.01em}
+h1{font-size:32px;line-height:38px;font-weight:700}
+h2{font-size:24px;line-height:30px;font-weight:600;margin:64px 0 8px}
+h3{font-size:20px;line-height:26px;font-weight:600}
+p{margin:0}
+.lead{color:var(--ink-2);max-width:68ch;margin-top:8px}
+.muted{color:var(--ink-3)}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-panel)}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+
+/* buttons */
+.btn{font:500 14px/20px var(--ui);height:32px;padding:0 14px;border-radius:var(--r-control);border:1px solid transparent;cursor:pointer;transition:background-color 90ms var(--ease-out),transform 90ms var(--ease-out),border-color 140ms var(--ease-out);color:var(--ink)}
+.btn:active{transform:scale(.98)}
+.btn.primary{background:var(--brand-solid);color:#fff}
+.btn.primary:hover{background:var(--brand-hover)}
+[data-theme="dark"] .btn.primary:hover{background:#3F57D6;color:#fff}
+.btn.secondary{background:var(--surface);border-color:var(--border-strong);color:var(--ink)}
+.btn.secondary:hover{background:var(--surface-2)}
+.btn.ghost{background:transparent;color:var(--brand)}
+.btn.ghost:hover{background:var(--brand-tint)}
+.btn.danger{background:var(--critical);color:#fff}
+[data-theme="dark"] .btn.danger{color:#2A0A0D}
+.btn[disabled]{background:var(--sunken);color:var(--ink-disabled);border-color:transparent;cursor:not-allowed}
+.btn.lg{height:48px;font-size:16px;padding:0 20px}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+
+/* swatches */
+.swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:12px;margin-top:16px}
+.sw{border:1px solid var(--border);border-radius:var(--r-panel);overflow:hidden;background:var(--surface)}
+.sw i{display:block;height:56px;border-bottom:1px solid var(--border)}
+.sw div{padding:8px 12px 10px}
+.sw b{display:block;font-weight:600}
+.sw span{color:var(--ink-3);font-size:12px;line-height:16px}
+
+/* chips */
+.chip{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px 0 8px;border-radius:999px;font:600 12px/16px var(--ui);border:1px solid transparent;white-space:nowrap}
+.chip svg{width:12px;height:12px;flex:none}
+.chip.critical{background:var(--critical-tint);color:var(--critical-ink)} .chip.critical svg{color:var(--critical)}
+.chip.high{background:var(--high-tint);color:var(--high-ink)} .chip.high svg{color:var(--high)}
+.chip.medium{background:var(--medium-tint);color:var(--medium-ink)} .chip.medium svg{color:var(--medium)}
+.chip.low{background:var(--low-tint);color:var(--low-ink)} .chip.low svg{color:var(--low)}
+.chip.s-new{background:var(--surface);border-color:var(--border-strong);color:var(--ink-2)}
+.chip.s-assigned{background:var(--surface);border-color:var(--brand);color:var(--brand)}
+.chip.s-progress{background:var(--brand-solid);color:#fff}
+.chip.s-resolved{background:var(--surface);border-color:var(--success);color:var(--success-ink)}
+.chip.s-closed{background:var(--sunken);color:var(--ink-2)}
+.glyph{width:12px;height:12px}
+
+/* type */
+.type-row{display:grid;grid-template-columns:120px 1fr;gap:16px;align-items:baseline;padding:12px 0;border-bottom:1px solid var(--border)}
+.type-row small{color:var(--ink-3);font-size:12px}
+.t-figure{font:700 36px/40px var(--display)}
+.t-xl{font:700 32px/38px var(--display);letter-spacing:-.01em}
+.t-lg{font:600 24px/30px var(--display);letter-spacing:-.01em}
+.t-md{font:600 20px/26px var(--display)}
+.t-18{font:600 18px/26px var(--ui)}
+.t-16{font:400 16px/24px var(--ui)}
+.t-14{font:400 14px/20px var(--ui)}
+.t-13{font:400 13px/20px var(--ui)}
+.t-12{font:400 12px/16px var(--ui)}
+
+/* inputs */
+.field{display:grid;gap:4px;max-width:320px}
+.field label{font-weight:500}
+.input{height:36px;border:1px solid var(--border-strong);border-radius:var(--r-control);background:var(--surface);color:var(--ink);padding:0 12px;font:400 14px var(--ui);transition:border-color 140ms var(--ease-out),box-shadow 140ms var(--ease-out)}
+.input:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-tint)}
+.input.err{border-color:var(--critical)}
+.help{font-size:13px;color:var(--ink-3)}
+.errtext{font-size:13px;color:var(--critical);display:flex;gap:6px;align-items:center}
+.switch{width:40px;height:24px;border-radius:999px;background:var(--brand-solid);position:relative;border:0;cursor:pointer}
+.switch::after{content:"";position:absolute;top:3px;left:19px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left 140ms var(--ease-out)}
+.switch.off{background:var(--border-strong)} .switch.off::after{left:3px}
+
+/* triage desk */
+.desk{display:grid;grid-template-columns:232px minmax(300px,1fr) minmax(360px,1.25fr);min-height:560px;overflow:hidden;margin-top:16px}
+.rail{background:var(--surface);border-right:1px solid var(--border);padding:16px 12px;display:flex;flex-direction:column;gap:2px}
+.brandmark{font:700 18px/24px var(--display);padding:4px 12px 16px}
+.nav{display:flex;align-items:center;gap:10px;height:36px;padding:0 12px;border-radius:var(--r-control);color:var(--ink-2);position:relative;font-weight:500}
+.nav.active{color:var(--brand);background:var(--brand-tint)}
+.nav.active::before{content:"";position:absolute;left:-12px;top:8px;bottom:8px;width:3px;border-radius:0 3px 3px 0;background:var(--brand)}
+.nav i{width:16px;height:16px;border:1.75px solid currentColor;border-radius:4px;display:block;opacity:.8}
+.list{background:var(--surface);border-right:1px solid var(--border)}
+.listhead{display:flex;gap:8px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.pill{height:28px;padding:0 12px;border-radius:999px;border:1px solid var(--border);background:var(--surface-2);font-weight:500;display:inline-flex;align-items:center;gap:6px;color:var(--ink-2)}
+.irow{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:0 16px;min-height:56px;border-bottom:1px solid var(--border);margin:0 8px;border-radius:var(--r-control);border-bottom-color:transparent;transition:background-color 140ms var(--ease-out)}
+.irow:hover{background:var(--surface-2)}
+.irow.sel{background:var(--brand-tint)}
+.irow b{display:block;font-weight:500;line-height:20px}
+.irow small{color:var(--ink-3);font-size:12px;line-height:16px}
+.irow time{color:var(--ink-3);font-size:12px}
+.case{background:var(--surface);padding:20px 24px}
+.ref{color:var(--ink-3);font-size:13px}
+.case h3{margin:2px 0 10px}
+.meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;color:var(--ink-2);font-size:13px}
+.tabs{display:flex;gap:20px;border-bottom:1px solid var(--border);margin:18px 0 0}
+.tab{padding:10px 0;font-weight:500;color:var(--ink-2);border-bottom:2px solid transparent}
+.tab.on{color:var(--brand);border-color:var(--brand)}
+
+/* thread */
+.thread{position:relative;margin:20px 0 0;padding-left:28px;display:grid;gap:18px}
+.thread::before{content:"";position:absolute;left:5px;top:6px;bottom:6px;width:2px;background:var(--border);border-radius:2px}
+.ev{position:relative}
+.node{position:absolute;left:-28px;top:3px;width:12px;height:12px;border-radius:50%;background:var(--surface);border:2px solid var(--ink-3)}
+.node.now{background:var(--brand-solid);border-color:var(--brand-solid)}
+.node.live{animation:pulse 2.4s var(--ease-out) 3}
+.node.small{width:8px;height:8px;left:-26px;top:6px;border-width:0;background:var(--ink-3)}
+.node.bad{border-color:var(--critical)}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--brand-solid) 55%,transparent)}80%,100%{box-shadow:0 0 0 12px transparent}}
+.ev .who{font-weight:500}
+.ev time{color:var(--ink-3);font-size:12px;margin-left:6px}
+.bubble{margin-top:6px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-panel);padding:10px 12px;max-width:52ch;color:var(--ink-2)}
+.bubble.internal{border-style:dashed}
+.thumb{margin-top:8px;width:96px;height:64px;border-radius:var(--r-control);border:1px solid var(--border);background:linear-gradient(135deg,var(--sunken),var(--surface-2))}
+.actions{display:flex;gap:8px;margin-top:20px}
+
+/* dialog + candidates */
+.stage{background:var(--sunken);border-radius:var(--r-panel);padding:40px 16px;display:grid;place-items:center;border:1px solid var(--border)}
+.dialog{width:min(560px,100%);background:var(--surface);border-radius:var(--r-sheet);box-shadow:var(--e2);overflow:hidden}
+.dhead{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.cand{display:grid;grid-template-columns:auto 1fr;gap:12px;padding:12px 20px;border-bottom:1px solid var(--border);align-items:start}
+.cand.top{background:var(--brand-tint)}
+.cand.dis{color:var(--ink-3)}
+.radio{width:18px;height:18px;border-radius:50%;border:2px solid var(--border-strong);margin-top:2px;background:var(--surface)}
+.cand.top .radio{border-color:var(--brand);box-shadow:inset 0 0 0 3px var(--surface),inset 0 0 0 9px var(--brand)}
+.cand.dis .radio{border-color:var(--border);background:var(--sunken)}
+.fit{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.fitchip{font-size:12px;line-height:16px;padding:2px 8px;border-radius:999px;background:var(--surface-2);border:1px solid var(--border);color:var(--ink-2)}
+.fitchip.ok{background:var(--success-tint);border-color:transparent;color:var(--success-ink)}
+.fitchip.no{background:var(--critical-tint);border-color:transparent;color:var(--critical-ink)}
+.dfoot{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;gap:12px;background:var(--surface)}
+
+/* dashboard figures */
+.figs{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:32px;padding:8px 0}
+.fig .t-figure{display:block}
+.fig span{color:var(--ink-2)}
+table.t{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-panel);overflow:hidden}
+.t th{background:var(--surface-2);text-align:left;font:600 12px/16px var(--ui);color:var(--ink-2);padding:8px 16px;border-bottom:1px solid var(--border)}
+.t td{padding:0 16px;height:40px;border-bottom:1px solid var(--border);font-size:13px}
+.t tr:last-child td{border-bottom:0}
+.num{text-align:right}
+
+/* toast banner */
+.toast{display:inline-flex;gap:16px;align-items:center;background:var(--ink);color:var(--canvas);padding:10px 16px;border-radius:var(--r-panel);box-shadow:var(--e1)}
+[data-theme="dark"] .toast{background:var(--surface-2);color:var(--ink);border:1px solid var(--border)}
+.toast a{color:inherit;font-weight:600;text-decoration:underline;cursor:pointer}
+.banner{display:flex;gap:12px;align-items:flex-start;padding:12px 16px;border-radius:var(--r-panel);background:var(--brand-tint);color:var(--ink);border:1px solid color-mix(in srgb,var(--brand) 30%,transparent);max-width:640px}
+.banner.warn{background:var(--medium-tint);border-color:color-mix(in srgb,var(--medium) 35%,transparent)}
+
+/* phone */
+.phones{display:flex;gap:32px;flex-wrap:wrap;margin-top:16px}
+.phone{width:300px;border:1px solid var(--border-strong);border-radius:28px;background:var(--canvas);overflow:hidden;display:flex;flex-direction:column;height:560px;box-shadow:var(--e1)}
+.phone header{padding:16px 16px 8px;display:flex;justify-content:space-between;align-items:center;background:var(--canvas)}
+.phone header b{font:600 16px/24px var(--display)}
+.badge{background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:2px 10px;font-size:12px;line-height:16px;color:var(--ink-2);font-weight:500}
+.phone .body{padding:8px 16px;flex:1;overflow:hidden}
+.grp{font:600 13px/20px var(--ui);color:var(--ink-2);margin:12px 0 8px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-panel);padding:12px 14px;margin-bottom:8px;min-height:56px}
+.card b{font-weight:500;display:block}
+.card small{color:var(--ink-3);font-size:12px;line-height:16px}
+.bottom{padding:12px 16px 20px;background:var(--surface);border-top:1px solid var(--border);display:grid;gap:8px}
+.bottom .btn.lg{width:100%}
+.bottom .sec{display:flex;justify-content:center;gap:24px;color:var(--brand);font-weight:500}
+.tabbar{display:grid;grid-template-columns:repeat(4,1fr);background:var(--surface);border-top:1px solid var(--border);padding:8px 0 14px;text-align:center;font-size:12px;color:var(--ink-3)}
+.tabbar .on{color:var(--brand);font-weight:600}
+.pulsechip.live svg{animation:pulsechip 2.4s var(--ease-out) 3;border-radius:50%}
+@keyframes pulsechip{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--brand) 55%,transparent)}80%,100%{box-shadow:0 0 0 8px transparent}}
+
+@media (max-width:1100px){.desk{grid-template-columns:1fr}.rail{display:none}.list{border-right:0}}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none !important}
+  .node.live,.pulsechip.live svg{animation:none}
+  .node.live{box-shadow:0 0 0 4px color-mix(in srgb,var(--brand-solid) 30%,transparent)}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="g-critical" viewBox="0 0 12 12"><path d="M6 1.4 11.2 10.6H.8z" fill="currentColor"/></symbol>
+  <symbol id="g-high" viewBox="0 0 12 12"><rect x="2" y="2" width="8" height="8" rx="1.2" fill="currentColor"/></symbol>
+  <symbol id="g-medium" viewBox="0 0 12 12"><circle cx="6" cy="6" r="4.6" fill="currentColor"/></symbol>
+  <symbol id="g-low" viewBox="0 0 12 12"><circle cx="6" cy="6" r="4" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>
+  <symbol id="g-new" viewBox="0 0 12 12"><circle cx="6" cy="6" r="4.2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2.2 1.8"/></symbol>
+  <symbol id="g-assigned" viewBox="0 0 12 12"><circle cx="6" cy="6" r="4.4" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="6" cy="6" r="1.6" fill="currentColor"/></symbol>
+  <symbol id="g-progress" viewBox="0 0 12 12"><circle cx="6" cy="6" r="4.4" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1.6a4.4 4.4 0 0 1 0 8.8z" fill="currentColor"/></symbol>
+  <symbol id="g-resolved" viewBox="0 0 12 12"><circle cx="6" cy="6" r="4.4" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M3.9 6.1 5.4 7.6 8.2 4.6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="g-closed" viewBox="0 0 12 12"><circle cx="6" cy="6" r="5" fill="currentColor"/><path d="M3.8 6.1 5.3 7.6 8.2 4.5" fill="none" stroke="var(--sunken)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</svg>
+
+<div class="wrap">
+  <div class="top">
+    <div>
+      <h1>Sentinel design system</h1>
+      <p class="lead">Calm, modern and smooth. One brand colour, role-based radii, glyph plus label for every status, and one memorable element: the Thread. This page renders the tokens from <code>docs/DESIGN_SYSTEM.md</code>.</p>
+    </div>
+    <div class="row">
+      <button class="btn secondary" id="theme">Switch to dark theme</button>
+    </div>
+  </div>
+
+  <h2>Colour</h2>
+  <p class="lead">Named by role. Every text pairing meets 4.5:1 and every control or glyph meets 3:1, checked by script.</p>
+  <div class="swatches" id="swatches"></div>
+
+  <h2>Typography</h2>
+  <p class="lead">Atkinson Hyperlegible Next carries the interface. Bricolage Grotesque gives titles and figures a voice. If the fonts do not load, a system fallback shows.</p>
+  <div class="panel" style="padding:8px 24px;margin-top:16px">
+    <div class="type-row"><small>figure 36/40</small><div class="t-figure">42 open, 6 h 20</div></div>
+    <div class="type-row"><small>title-xl 32/38</small><div class="t-xl">Sign in to Sentinel</div></div>
+    <div class="type-row"><small>title-lg 24/30</small><div class="t-lg">Triage desk</div></div>
+    <div class="type-row"><small>title-md 20/26</small><div class="t-md">Water leak in corridor B3</div></div>
+    <div class="type-row"><small>text-lg 18/26</small><div class="t-18">Awaiting review</div></div>
+    <div class="type-row"><small>text-md 16/24</small><div class="t-16">Water is coming through the ceiling near the fire door. The floor is slippery.</div></div>
+    <div class="type-row"><small>text-base 14/20</small><div class="t-14">Karim B. accepted the assignment and started work on site.</div></div>
+    <div class="type-row"><small>text-sm 13/20</small><div class="t-13">Paris 11, Site 2. Reported by Lea M. INC-2026-00042</div></div>
+    <div class="type-row" style="border:0"><small>text-xs 12/16</small><div class="t-12">12 min ago. Tabular figures keep columns aligned: 1,111 and 8,888.</div></div>
+  </div>
+
+  <h2>Status and priority</h2>
+  <p class="lead">Never colour alone. Each carries a glyph and a label.</p>
+  <div class="panel" style="padding:24px;margin-top:16px;display:grid;gap:16px">
+    <div class="row">
+      <span class="chip critical"><svg><use href="#g-critical"/></svg>Critical</span>
+      <span class="chip high"><svg><use href="#g-high"/></svg>High</span>
+      <span class="chip medium"><svg><use href="#g-medium"/></svg>Medium</span>
+      <span class="chip low"><svg><use href="#g-low"/></svg>Low</span>
+    </div>
+    <div class="row">
+      <span class="chip s-new"><svg><use href="#g-new"/></svg>New</span>
+      <span class="chip s-assigned pulsechip live"><svg><use href="#g-assigned"/></svg>Assigned</span>
+      <span class="chip s-progress"><svg><use href="#g-progress"/></svg>In progress</span>
+      <span class="chip s-resolved"><svg><use href="#g-resolved"/></svg>Resolved</span>
+      <span class="chip s-closed"><svg><use href="#g-closed"/></svg>Closed</span>
+    </div>
+  </div>
+
+  <h2>Controls</h2>
+  <div class="panel" style="padding:24px;margin-top:16px;display:grid;gap:24px">
+    <div class="row">
+      <button class="btn primary">Assign</button>
+      <button class="btn secondary">Save changes</button>
+      <button class="btn ghost">Cancel</button>
+      <button class="btn danger">Revoke</button>
+      <button class="btn primary" disabled>Assign</button>
+      <button class="btn primary lg">Accept</button>
+    </div>
+    <div class="row" style="align-items:flex-start;gap:32px">
+      <div class="field"><label for="a">Employee code</label><input id="a" class="input" value="EMP-0042"><span class="help">Unique in your organization.</span></div>
+      <div class="field"><label for="b">Employee code</label><input id="b" class="input err" value="EMP-0007"><span class="errtext">That code is used by another member. Change it or edit the existing member.</span></div>
+      <div class="field"><label>Show reporter phone to technicians</label><div class="row"><button class="switch" aria-label="on"></button><button class="switch off" aria-label="off"></button></div></div>
+    </div>
+    <div class="row">
+      <div class="toast"><span>Assigned to Karim B.</span><a>Undo</a></div>
+      <div class="banner"><span>Anna R. updated this incident just now. Review the changes before you continue.</span></div>
+    </div>
+  </div>
+
+  <h2>Triage desk and the Thread</h2>
+  <p class="lead">The list and the case file sit side by side. Selecting a row swaps the case file in place. The Thread is the product's signature: one line, typed nodes, one live node that pulses three times and then rests.</p>
+  <div class="panel desk">
+    <aside class="rail">
+      <div class="brandmark">Sentinel</div>
+      <div class="nav active"><i></i>Triage desk</div>
+      <div class="nav"><i></i>Dashboard</div>
+      <div class="nav"><i></i>Map</div>
+      <div class="nav"><i></i>Reassignments</div>
+      <div class="nav"><i></i>Team</div>
+      <div class="nav"><i></i>Sites</div>
+      <div class="nav"><i></i>Audit</div>
+      <div style="flex:1"></div>
+      <div class="nav"><i></i>Settings</div>
+    </aside>
+    <section class="list">
+      <div class="listhead"><span class="pill">Needs attention</span><span class="pill">Priority</span><span class="pill">Site</span><span class="muted" style="margin-left:auto">7 results</span></div>
+      <div style="padding:8px 0">
+        <div class="irow sel"><svg class="glyph" style="color:var(--critical)"><use href="#g-critical"/></svg><div><b>Water leak in corridor B3</b><small>INC-2026-00042 &nbsp;Paris 11</small></div><time>12 min</time></div>
+        <div class="irow"><svg class="glyph" style="color:var(--high)"><use href="#g-high"/></svg><div><b>Door sensor offline, loading dock</b><small>INC-2026-00041 &nbsp;Lyon 3 &nbsp;Declined by Joel T.</small></div><time>1 h</time></div>
+        <div class="irow"><svg class="glyph" style="color:var(--medium)"><use href="#g-medium"/></svg><div><b>Flickering light, meeting room 4</b><small>INC-2026-00039 &nbsp;Paris 11</small></div><time>3 h</time></div>
+        <div class="irow"><svg class="glyph" style="color:var(--low)"><use href="#g-low"/></svg><div><b>Squeaking turnstile</b><small>INC-2026-00036 &nbsp;Lille 1 &nbsp;Awaiting review</small></div><time>1 d</time></div>
+        <div class="irow"><svg class="glyph" style="color:var(--high)"><use href="#g-high"/></svg><div><b>No hot water, 2nd floor</b><small>INC-2026-00034 &nbsp;Paris 11 &nbsp;Reassignment requested</small></div><time>2 d</time></div>
+      </div>
+    </section>
+    <section class="case">
+      <div class="ref">INC-2026-00042</div>
+      <h3>Water leak in corridor B3</h3>
+      <div class="meta">
+        <span class="chip critical"><svg><use href="#g-critical"/></svg>Critical</span>
+        <span class="chip s-new"><svg><use href="#g-new"/></svg>New</span>
+        <span>Paris 11, Site 2</span><span class="muted">Lea M., 12 min ago</span>
+      </div>
+      <div class="actions"><button class="btn primary">Triage and assign</button><button class="btn secondary">Dismiss</button></div>
+      <div class="tabs"><span class="tab">Overview</span><span class="tab on">Thread</span><span class="tab">Evidence</span></div>
+      <div class="thread">
+        <div class="ev"><span class="node now live"></span><span class="who">Needs triage</span><time>now</time></div>
+        <div class="ev"><span class="node small"></span><span class="who">Lea M.</span> commented<time>9 min ago</time>
+          <div class="bubble">The leak is getting bigger. I put a bucket under it.</div></div>
+        <div class="ev"><span class="node small"></span><span class="who">Sara K.</span> <span class="muted">(internal)</span><time>6 min ago</time>
+          <div class="bubble internal">Check whether the sprinkler line was serviced last week.</div></div>
+        <div class="ev"><span class="node"></span><span class="who">Reported by Lea M.</span><time>12 min ago</time>
+          <div class="bubble">Water is coming through the ceiling near the fire door. The floor is slippery.</div><div class="thumb" role="img" aria-label="Photo of the leak"></div></div>
+      </div>
+    </section>
+  </div>
+
+  <h2>Assign dialog</h2>
+  <p class="lead">Ranked candidates with plain-language fit chips. Ineligible people stay visible with the reason.</p>
+  <div class="stage">
+    <div class="dialog" role="dialog" aria-label="Assign INC-2026-00042">
+      <div class="dhead"><h3 style="font-size:18px">Assign INC-2026-00042</h3><button class="btn ghost" aria-label="Close">Close</button></div>
+      <div class="cand top"><span class="radio"></span><div><b>Karim B.</b><div class="fit"><span class="fitchip ok">Plumbing match</span><span class="fitchip ok">Available</span><span class="fitchip">1 open</span><span class="fitchip ok">Site access</span></div></div></div>
+      <div class="cand"><span class="radio"></span><div><b>Anna R.</b><div class="fit"><span class="fitchip ok">Plumbing match</span><span class="fitchip">Busy</span><span class="fitchip">3 open</span><span class="fitchip ok">Site access</span></div></div></div>
+      <div class="cand"><span class="radio"></span><div><b>Joel T.</b><div class="fit"><span class="fitchip">Electrical</span><span class="fitchip ok">Available</span><span class="fitchip">0 open</span><span class="fitchip ok">Site access</span></div></div></div>
+      <div class="cand dis"><span class="radio"></span><div><b>Mia D.</b><div class="fit"><span class="fitchip no">No access to Site 2</span></div></div></div>
+      <div class="dfoot"><span class="muted">Karim B. is preselected as the best fit.</span><div class="row"><button class="btn ghost">Cancel</button><button class="btn primary">Assign</button></div></div>
+    </div>
+  </div>
+
+  <h2>Dashboard figures</h2>
+  <p class="lead">Figures sit on the canvas with space around them, no card chrome. Each links to the filtered inbox. Tables come before charts.</p>
+  <div class="figs">
+    <div class="fig"><span class="t-figure">42</span><span>Open</span></div>
+    <div class="fig"><span class="t-figure">7</span><span>Unassigned</span></div>
+    <div class="fig"><span class="t-figure">5</span><span>Awaiting review</span></div>
+    <div class="fig"><span class="t-figure">6 h 20</span><span>Median time to resolution</span></div>
+  </div>
+  <table class="t" style="margin-top:16px">
+    <thead><tr><th>Ageing</th><th class="num">Incidents</th><th>Oldest</th></tr></thead>
+    <tbody>
+      <tr><td>Under 4 hours</td><td class="num">18</td><td>3 h 40</td></tr>
+      <tr><td>4 to 24 hours</td><td class="num">14</td><td>21 h</td></tr>
+      <tr><td>1 to 3 days</td><td class="num">8</td><td>2 d 6 h</td></tr>
+      <tr><td>Over 3 days</td><td class="num">2</td><td>9 d</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Mobile</h2>
+  <p class="lead">Fixed bottom action, 56 pt rows, 48 pt targets, offline state always visible.</p>
+  <div class="phones">
+    <div class="phone">
+      <header><b>Acme Facilities</b><span class="badge">2 waiting to send</span></header>
+      <div class="body">
+        <div class="grp">Needs response</div>
+        <div class="card"><div class="row" style="gap:8px;justify-content:space-between"><b>Water leak in corridor B3</b><svg class="glyph" style="color:var(--critical)"><use href="#g-critical"/></svg></div><small>Paris 11, Acme Facilities, 12 min</small></div>
+        <div class="grp">In progress</div>
+        <div class="card"><div class="row" style="gap:8px;justify-content:space-between"><b>Door sensor offline</b><svg class="glyph" style="color:var(--high)"><use href="#g-high"/></svg></div><small>Lyon 3, Northwind, 1 h</small></div>
+        <div class="grp">Awaiting review</div>
+        <div class="card"><div class="row" style="gap:8px;justify-content:space-between"><b>Squeaking turnstile</b><svg class="glyph" style="color:var(--low)"><use href="#g-low"/></svg></div><small>Lille 1, Acme Facilities, 1 d</small></div>
+      </div>
+      <div class="tabbar"><span class="on">My work</span><span>History</span><span>Alerts</span><span>Profile</span></div>
+    </div>
+    <div class="phone">
+      <header><b>INC-2026-00042</b><span class="chip s-assigned pulsechip live"><svg><use href="#g-assigned"/></svg>Assigned</span></header>
+      <div class="body">
+        <h3 style="font-size:20px;margin:4px 0 8px">Water leak in corridor B3</h3>
+        <div class="meta"><span class="chip critical"><svg><use href="#g-critical"/></svg>Critical</span><span>Paris 11, Site 2</span></div>
+        <p class="t-16" style="margin-top:16px;color:var(--ink-2)">Water is coming through the ceiling near the fire door. The floor is slippery.</p>
+        <div class="banner warn" style="margin-top:16px"><span>Reply within 30 minutes so the supervisor can plan.</span></div>
+      </div>
+      <div class="bottom"><button class="btn primary lg">Accept</button><div class="sec"><span>Decline</span><span>Request change</span></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const tokens = {
+  light: [
+    ['canvas','#F3F5F9','App background'],['surface','#FFFFFF','Panels, inputs'],['surface-2','#F8F9FC','Headers, hover'],['sunken','#E9EDF4','Wells'],
+    ['border','#DCE1EA','Hairlines'],['border-strong','#7F8AA3','Input outlines (3:1)'],['ink','#0E1A33','Primary text 17.3:1'],['ink-2','#3A4660','Secondary 9.4:1'],
+    ['ink-3','#5B6784','Metadata 5.7:1'],['brand','#2B44C6','Actions, links 7.7:1'],['brand-hover','#1F34A0','Hover'],['brand-tint','#E8ECFB','Selection'],
+    ['critical','#C0262D','Critical glyph and text'],['high','#C2540A','High'],['medium','#946B00','Medium'],['low','#52627A','Low'],['success','#11704A','Success']
+  ],
+  dark: [
+    ['canvas','#0D1424','App background'],['surface','#141C2F','Panels, inputs'],['surface-2','#1A2339','Headers, hover'],['sunken','#0A101D','Wells'],
+    ['border','#26314A','Hairlines'],['border-strong','#5A6A8C','Input outlines (3:1)'],['ink','#E8ECF6','Primary text'],['ink-2','#B4BDD2','Secondary'],
+    ['ink-3','#8D98B3','Metadata'],['brand','#9BADFF','Links, focus'],['brand-solid','#4A62E0','Filled buttons'],['brand-tint','#1B2550','Selection'],
+    ['critical','#FF8F94','Critical'],['high','#FFA562','High'],['medium','#E6BE55','Medium'],['low','#A9B7CE','Low'],['success','#5CD39B','Success']
+  ]
+};
+const root = document.documentElement;
+function renderSwatches(){
+  const set = tokens[root.dataset.theme];
+  document.getElementById('swatches').innerHTML = set.map(([n,v,u]) =>
+    `<div class="sw"><i style="background:${v}"></i><div><b>${n}</b><span>${v}<br>${u}</span></div></div>`).join('');
+}
+document.getElementById('theme').addEventListener('click', e => {
+  const dark = root.dataset.theme === 'light';
+  root.dataset.theme = dark ? 'dark' : 'light';
+  e.target.textContent = dark ? 'Switch to light theme' : 'Switch to dark theme';
+  renderSwatches();
+});
+renderSwatches();
+</script>
+</body>
+</html>
