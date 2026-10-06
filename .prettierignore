@@ -1,0 +1,6 @@
+pnpm-lock.yaml
+**/dist
+**/node_modules
+**/migrations/**/*.sql
+docs/CAHIER_DES_CHARGES.md
+.agents
