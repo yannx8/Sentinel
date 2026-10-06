@@ -2,7 +2,33 @@
 
 Multi-tenant incident management for organizations with several sites. Employees report, supervisors triage and assign, intervenants resolve, supervisors verify and close, with a full audit trail.
 
-> Status: under active rebuild. Authentication is being replaced (Phase 2), so protected API routes currently answer 401. See the delivery phases in `docs/PRD.md`.
+> Status: greenfield rebuild in progress. Start with `docs/PRD.md` (product spec and milestones R0 to R7) and `docs/DESIGN_SYSTEM.md`.
+
+## Where things stand
+
+| Area | State |
+|---|---|
+| Web console (`apps/web`) | The Triage desk works end to end on in-memory demo data: list, docked case file with the Thread, assign dialog, close, send back, dismiss, comments, undo, dark theme, phone layout. No API behind it yet. Review page: `/design` |
+| Shared (`packages/shared`) | Design tokens (generated CSS, contrast tests), incident state machine, candidate ranking. 66 tests |
+| API (`apps/api`) | Legacy code, protected routes answer 401 until auth lands in R1 and R2 |
+| Mobile (`apps/mobile`) | Legacy shell. Not usable until it is rebuilt in R2, so there is nothing to test on a phone yet except the web console in a mobile browser |
+
+Next steps, in order: R1 data model and auth, R2 incident loop slice with the API and mobile report and My work screens. Design prototypes are being made in Claude Design with `docs/design-system/claude-design-prompts.md`.
+
+## Run the web console
+
+```bash
+pnpm install
+pnpm --filter @sentinel/web dev      # http://localhost:5173/app/triage
+pnpm --filter @sentinel/shared test  # tokens contrast and domain rules
+pnpm --filter @sentinel/web build
+```
+
+On a machine behind TLS inspection (antivirus HTTPS scanning), set `NODE_EXTRA_CA_CERTS` to the inspecting root CA before running Node tools. See `.certs/README.md`.
+
+## Deploy the web console on Vercel
+
+Import the repository in the Vercel dashboard with Root Directory `apps/web` and Node 22. `apps/web/vercel.json` already sets the build command, output directory and single-page rewrites. The deployed site shows demo data only.
 
 ## Repository layout
 
