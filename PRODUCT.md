@@ -6,15 +6,15 @@
 
 web
 
-Scope note: this file is shared by `apps/web` (supervisor and platform admin console) and `apps/mobile` (Expo app for employees and intervenants). The mobile app is a separate native surface and will record its own platform when it is built.
+One web app (`apps/web`) serves every role: the supervisor console (`/app`), a phone-first field app for employees and intervenants (`/field`) and platform administration (`/platform`). The Expo app was removed in the October 2026 rebuild and will return later as a client of the same API (PRD assumption A4 fallback in reverse: web first, native when the field validates it).
 
 ## Stack
 
-React 19, Vite, TanStack Router, Query and Table, React Hook Form with shared zod schemas, Radix primitives, Tailwind v4 with `@theme` tokens. Decided in `docs/PRD.md` section 7.2, confirmed by the user.
+Web: React 19, Vite, TanStack Router (typed search params) and Query, React Hook Form with the shared zod schemas, Radix primitives, cmdk, Tailwind v4 with `@theme` tokens, Inter. API: Express 5, Prisma 6, PostgreSQL 16, zod, pino, in-house sessions (scrypt, opaque tokens, TOTP for platform admins). Shared: `packages/shared` contracts, state machines and ranking.
 
 ## Users
 
-Primary: supervisors at a desk (often the organization owner or a delegate) triaging tens of incidents a day, who must keep nothing unowned or stale. Secondary: platform admins (Sentinel staff) managing tenant organizations. Employees and intervenants use the mobile app, not this console.
+Primary: supervisors at a desk (often the organization owner or a delegate) triaging tens of incidents a day, who must keep nothing unowned or stale. Field: employees who report and intervenants who resolve, on phones, through the `/field` surface. Internal: platform admins (Sentinel staff) managing tenant organizations.
 
 ## Product Purpose
 
@@ -38,11 +38,11 @@ Supervisors work on desktop browsers, in a docked list plus case file workflow. 
 
 ## Brand Commitments
 
-Name: Sentinel. Voice rules from `docs/PRD.md` and `docs/DESIGN_SYSTEM.md` section 7: plain verbs, sentence case, no exclamation marks, errors that say what to do. Visual direction is NOT recorded here. `docs/DESIGN_SYSTEM.md` is a draft proposal pending the user's review and is evidence for new-work, not a binding constraint.
+Name: Sentinel. Voice rules in `docs/DESIGN_SYSTEM.md` section 6: plain verbs, sentence case, no exclamation marks, no em dashes, errors that say what to do. Visual direction: `docs/DESIGN_SYSTEM.md` v2 (near-monochrome, ink primary actions, Inter, the Thread as signature), chosen by the user in October 2026 and implemented in `apps/web`.
 
 ## Evidence on Hand
 
-`docs/PRD.md` (v2.0), `docs/DESIGN_SYSTEM.md`, `docs/design-system/specimen.html`. No real customers, testimonials, metrics or screenshots exist. Do not fabricate any.
+`docs/PRD.md` (v2.0), `docs/DESIGN_SYSTEM.md` (v2). Demo data in `apps/api/prisma/seed.ts` is fictional. No real customers, testimonials or metrics exist. Do not fabricate any.
 
 ## Product Principles
 

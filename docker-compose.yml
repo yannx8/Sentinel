@@ -1,6 +1,6 @@
-# Local stack: Postgres, Mailpit (SMTP), API and web console. Object storage joins in Phase 2.
-# Dev workflow: `docker compose up -d db mailpit` and run api/web with `pnpm dev`.
-# Full stack:   `docker compose up --build`, then open http://localhost:8080
+# Local stack: Postgres, Mailpit (SMTP with a web inbox), API and web app.
+# Development: `docker compose up -d db mailpit`, then `pnpm dev`.
+# Full stack:  `docker compose up --build`, then open http://localhost:8080
 services:
   db:
     image: postgres:16-alpine
@@ -36,14 +36,12 @@ services:
       PORT: 4000
       WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:8080}
       TRUST_PROXY: "true"
-      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-dev-only-secret-change-me-0123456789abcdef}
-      BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:8080/api}
       SMTP_HOST: mailpit
       SMTP_PORT: 1025
       SMTP_FROM: "Sentinel <no-reply@sentinel.local>"
       STORAGE_PATH: /app/uploads
-    ports:
-      - "4000:4000"
+    volumes:
+      - uploads:/app/uploads
     depends_on:
       db:
         condition: service_healthy
@@ -62,3 +60,4 @@ services:
 
 volumes:
   pgdata:
+  uploads:

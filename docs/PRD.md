@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Version | 2.0, 5 October 2026 |
-| Status | Draft for approval. Replaces PRD v1.1 (audit of the legacy code) |
+| Status | v2.1, October 2026. Implemented in the rebuild except where section 12 says otherwise |
 | Scope | Greenfield rebuild of web console, mobile app, API and database |
 | Companion docs | `docs/DESIGN_SYSTEM.md` (visual language, tokens, components, screens), `docs/design-system/specimen.html` (live preview of the tokens) |
 | Superseded | `docs/architecture.md` and `docs/api-conventions.md` (written for the legacy Responsable model, page-based pagination and JWT). Section 7 replaces them. `docs/database-domain-model.md` and `docs/CAHIER_DES_CHARGES.md` stay as background only |
@@ -90,9 +90,9 @@ Non-goals for v1: billing and payments, SSO/SAML, an SLA engine, automatic assig
 
 ### 2.2 Which surface for which membership
 
-- The web console serves **supervisor** memberships and platform admins. A person with only employee or intervenant memberships who signs in on the web sees a "Use the Sentinel app" page with store links.
-- The app serves **employee** and **intervenant** memberships. It never shows supervisor screens.
-- Someone who supervises organization A and works as an intervenant for organization B uses the web console for A and the app for B, with one login.
+- The web console (`/app`) serves **supervisor** memberships. Platform admins use `/platform`.
+- The field app (`/field`, phone-first web) serves **employee** and **intervenant** memberships. It never shows supervisor screens. A native Expo app may replace it later on the same API (decision of October 2026, see section 12).
+- Someone who supervises organization A and works as an intervenant for organization B switches organization in the header and lands in the right surface, with one login.
 
 ### 2.3 Vocabulary (used in the UI, API docs and code)
 
@@ -810,3 +810,19 @@ Each milestone has its own branch `feature/R<n>-<slug>`, ends with green checks,
 | 7 | Trial length and what happens at the end | 30 days, informational only, no lockout | with billing |
 | 8 | Reopen closed incidents | Out of v1 | after pilot |
 | 9 | Supervisors scoped to a subset of sites | Out of v1 | after pilot |
+
+---
+
+## 12. Rebuild status (October 2026)
+
+The rebuild delivered the web console, the field app, platform administration, the API and the database in one pass. Differences from the plan above:
+
+| Area | Decision |
+|---|---|
+| Surfaces | One web app for every role. The Expo app was removed and is deferred; mobile-only features (push, offline queue, biometric unlock, app-config gate, device tokens) are not built |
+| Identity | In-house module instead of Better Auth (the documented fallback): scrypt password hashes, opaque session tokens stored hashed, httpOnly cookie, lockout, TOTP for platform admins |
+| Storage | Local disk adapter behind a small interface, magic-byte checks, scope-checked downloads. S3 and presigned URLs are not built |
+| Async | Notifications are written in the same transaction as the event. Emails are sent after commit, best effort. No outbox worker and no server-sent events: the console polls (20 to 60 seconds) and refetches on focus |
+| Sites | Code, name, address and contact. Map, pin and perimeter editing are deferred until a tile provider is chosen (section 11, decision 3) |
+| Saved views | Built-in views (Needs attention, Unassigned, In progress, Awaiting review, All open, Closed, All) with filters in the URL. Custom saved views and bulk actions are deferred |
+| Not built yet | Map page, saved views, bulk actions, certifications, active-session revoke on membership revoke beyond the per-request check, Postgres row-level security |

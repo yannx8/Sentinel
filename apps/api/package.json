@@ -1,34 +1,44 @@
 {
   "name": "@sentinel/api",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
-    "build": "tsc",
-    "start": "node dist/src/server.js",
+    "dev": "tsx watch --env-file-if-exists=.env src/server.ts",
+    "build": "tsup",
+    "start": "node dist/server.js",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --no-file-parallelism",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev --name local",
-    "prisma:migrate:deploy": "prisma migrate deploy",
-    "prisma:seed": "tsx prisma/seed.ts"
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate deploy",
+    "db:reset": "prisma migrate reset --force --skip-seed && tsx --env-file-if-exists=.env prisma/seed.ts",
+    "db:seed": "tsx --env-file-if-exists=.env prisma/seed.ts",
+    "admin:create": "tsx --env-file-if-exists=.env src/cli/create-platform-admin.ts"
   },
   "dependencies": {
-    "@prisma/client": "^6.16.0",
+    "@prisma/client": "~6.19.3",
+    "@sentinel/shared": "workspace:*",
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "express-rate-limit": "^8.1.0",
     "multer": "^2.0.2",
-    "zod": "^4.1.5",
-    "prisma": "^6.16.0"
+    "nodemailer": "^7.0.6",
+    "pino": "^9.9.0",
+    "prisma": "~6.19.3",
+    "zod": "^4.1.5"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/multer": "^2.0.0",
+    "@types/node": "^22.18.0",
+    "@types/nodemailer": "^7.0.1",
+    "@types/supertest": "^6.0.3",
+    "pino-pretty": "^13.1.1",
     "supertest": "^7.1.4",
+    "tsup": "^8.5.0",
     "tsx": "^4.20.5",
-    "typescript": "^5.6.3",
+    "typescript": "^5.9.3",
     "vitest": "^3.2.4"
   }
 }

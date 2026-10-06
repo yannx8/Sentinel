@@ -222,7 +222,7 @@
     background: var(--bg);
     color: var(--ink);
     font-family: var(--font-sans);
-    font-feature-settings: 'cv05', 'cv08', 'cv11';
+    font-feature-settings: 'cv05', 'cv08';
     -webkit-text-size-adjust: 100%;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
