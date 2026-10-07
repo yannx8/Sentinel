@@ -1,4 +1,5 @@
 import type { NotificationType } from '@sentinel/shared';
+import { emitEvent } from './events';
 import type { Tx } from './prisma';
 
 type Notice = {
@@ -29,6 +30,7 @@ export async function notify(tx: Tx, notice: Notice) {
     })),
     skipDuplicates: true,
   });
+  await emitEvent(tx, { orgId: notice.orgId, recipients, incidentId: notice.incidentId, type: notice.type });
 }
 
 export async function activeSupervisorIds(tx: Tx, orgId: string): Promise<string[]> {
