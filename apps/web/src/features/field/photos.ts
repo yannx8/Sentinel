@@ -49,7 +49,12 @@ async function decode(file: File): Promise<Decoded> {
     URL.revokeObjectURL(url);
     throw new PhotoError('unreadable');
   }
-  return { source: image, width: image.naturalWidth, height: image.naturalHeight, release: () => URL.revokeObjectURL(url) };
+  return {
+    source: image,
+    width: image.naturalWidth,
+    height: image.naturalHeight,
+    release: () => URL.revokeObjectURL(url),
+  };
 }
 
 function draw(decoded: Decoded, maxEdge: number): HTMLCanvasElement {

@@ -85,7 +85,11 @@ export function AuditFilters({
             onChange={(event) => onChange({ from: event.target.value || undefined })}
           />
         </Field>
-        <Field label={t('audit.filters.to')} className="sm:w-40" error={rangeInvalid ? t('audit.filters.rangeError') : undefined}>
+        <Field
+          label={t('audit.filters.to')}
+          className="sm:w-40"
+          error={rangeInvalid ? t('audit.filters.rangeError') : undefined}
+        >
           <Input
             type="date"
             value={search.to ?? ''}

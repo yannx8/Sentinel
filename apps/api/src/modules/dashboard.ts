@@ -21,7 +21,16 @@ dashboardRoutes.get('/', async (req, res) => {
   const [openRows, sites, categories, workloadRows, liveCounts, medianRows, trendRows] = await Promise.all([
     prisma.incident.findMany({
       where: open,
-      select: { id: true, reference: true, title: true, status: true, priority: true, createdAt: true, siteId: true, categoryId: true },
+      select: {
+        id: true,
+        reference: true,
+        title: true,
+        status: true,
+        priority: true,
+        createdAt: true,
+        siteId: true,
+        categoryId: true,
+      },
       orderBy: { createdAt: 'asc' },
     }),
     prisma.site.findMany({ where: { organizationId: orgId, isActive: true }, select: { id: true, name: true } }),
@@ -100,7 +109,8 @@ dashboardRoutes.get('/', async (req, res) => {
     .sort((a, b) => b.live - a.live || a.name.localeCompare(b.name));
 
   const medians = medianRows[0];
-  const round = (value: number | null | undefined) => (value === null || value === undefined ? null : Math.round(Number(value)));
+  const round = (value: number | null | undefined) =>
+    value === null || value === undefined ? null : Math.round(Number(value));
 
   const data: DashboardDTO = {
     counts: {
@@ -112,7 +122,11 @@ dashboardRoutes.get('/', async (req, res) => {
       reassignmentRequests,
       criticalOpen: count((row) => row.priority === 'CRITICAL'),
     },
-    medians: { toAssign: round(medians?.assign), toAcknowledge: round(medians?.ack), toResolve: round(medians?.resolve) },
+    medians: {
+      toAssign: round(medians?.assign),
+      toAcknowledge: round(medians?.ack),
+      toResolve: round(medians?.resolve),
+    },
     ageing,
     oldestOpen: openRows.slice(0, 5).map((row) => ({
       id: row.id,
@@ -121,7 +135,9 @@ dashboardRoutes.get('/', async (req, res) => {
       status: row.status,
       createdAt: row.createdAt.toISOString(),
     })),
-    byPriority: [...priorities].reverse().map((priority) => ({ priority, count: count((row) => row.priority === priority) })),
+    byPriority: [...priorities]
+      .reverse()
+      .map((priority) => ({ priority, count: count((row) => row.priority === priority) })),
     bySite,
     byCategory,
     workload,

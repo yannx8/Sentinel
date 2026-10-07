@@ -38,7 +38,9 @@ describe('sign-in', () => {
   it('gives the same answer for an unknown email and a wrong password', async () => {
     await createUser('claire@acme.test');
     const unknown = await request(app).post('/v1/auth/login').send({ email: 'nobody@acme.test', password: PASSWORD });
-    const wrong = await request(app).post('/v1/auth/login').send({ email: 'claire@acme.test', password: 'not the password' });
+    const wrong = await request(app)
+      .post('/v1/auth/login')
+      .send({ email: 'claire@acme.test', password: 'not the password' });
     expect(unknown.status).toBe(401);
     expect(wrong.status).toBe(401);
     expect(unknown.body.error.message).toBe(wrong.body.error.message);
@@ -60,10 +62,14 @@ describe('sign-in', () => {
     const forgot = await request(app).post('/v1/auth/password/forgot').send({ email: 'claire@acme.test' });
     expect(forgot.status).toBe(202);
     const token = lastMailToken();
-    const reset = await request(app).post('/v1/auth/password/reset').send({ token, password: 'a brand new passphrase' });
+    const reset = await request(app)
+      .post('/v1/auth/password/reset')
+      .send({ token, password: 'a brand new passphrase' });
     expect(reset.status).toBe(200);
     expect((await before.get('/me')).status).toBe(401);
-    const reused = await request(app).post('/v1/auth/password/reset').send({ token, password: 'another new passphrase' });
+    const reused = await request(app)
+      .post('/v1/auth/password/reset')
+      .send({ token, password: 'another new passphrase' });
     expect(reused.body.error.code).toBe('TOKEN_INVALID');
     expect((await signIn('claire@acme.test', null, 'a brand new passphrase')).agent).toBeTruthy();
   });
@@ -86,7 +92,12 @@ describe('organization registration (J1)', () => {
       timezone: 'Europe/Paris',
       defaultLocale: 'fr',
     },
-    contact: { firstName: 'Claire', lastName: 'Dubois', email: 'claire@northwind.test', password: 'long enough passphrase' },
+    contact: {
+      firstName: 'Claire',
+      lastName: 'Dubois',
+      email: 'claire@northwind.test',
+      password: 'long enough passphrase',
+    },
     acceptTerms: true,
   };
 
@@ -121,7 +132,9 @@ describe('organization registration (J1)', () => {
   });
 
   it('requires accepting the terms', async () => {
-    const response = await request(app).post('/v1/public/organizations').send({ ...registration, acceptTerms: false });
+    const response = await request(app)
+      .post('/v1/public/organizations')
+      .send({ ...registration, acceptTerms: false });
     expect(response.status).toBe(422);
   });
 });
@@ -130,12 +143,21 @@ describe('invitations (J2)', () => {
   it('invites an employee who sets a password and joins', async () => {
     const { org, owner } = await createOrg();
     const supervisor = await signIn(owner.user.email, org.id);
-    const invited = await supervisor.post('/invitations', { role: 'REPORTER', email: 'lea@acme.test', firstName: 'Lea', lastName: 'Moreau' });
+    const invited = await supervisor.post('/invitations', {
+      role: 'REPORTER',
+      email: 'lea@acme.test',
+      firstName: 'Lea',
+      lastName: 'Moreau',
+    });
     expect(invited.status).toBe(201);
     const token = String(invited.body.data.acceptUrl).split('/invite/')[1] ?? '';
 
     const preview = await request(app).get(`/v1/public/invitations/${token}`);
-    expect(preview.body.data).toMatchObject({ organization: 'Acme Facilities', role: 'REPORTER', existingAccount: false });
+    expect(preview.body.data).toMatchObject({
+      organization: 'Acme Facilities',
+      role: 'REPORTER',
+      existingAccount: false,
+    });
 
     const agent = request.agent(app);
     const accepted = await agent.post(`/v1/public/invitations/${token}/accept`).send({ password: 'my own passphrase' });
@@ -143,7 +165,9 @@ describe('invitations (J2)', () => {
     expect(accepted.body.data.memberships[0].role).toBe('REPORTER');
     expect((await request(app).get(`/v1/public/invitations/${token}`)).body.error.code).toBe('TOKEN_INVALID');
 
-    const notice = await prisma.notification.findFirst({ where: { recipientMembershipId: owner.membership.id, type: 'INVITATION_ACCEPTED' } });
+    const notice = await prisma.notification.findFirst({
+      where: { recipientMembershipId: owner.membership.id, type: 'INVITATION_ACCEPTED' },
+    });
     expect(notice).not.toBeNull();
   });
 
@@ -161,7 +185,9 @@ describe('invitations (J2)', () => {
     });
     const token = String(invited.body.data.acceptUrl).split('/invite/')[1] ?? '';
 
-    const anonymous = await request(app).post(`/v1/public/invitations/${token}/accept`).send({ password: 'whatever it is' });
+    const anonymous = await request(app)
+      .post(`/v1/public/invitations/${token}/accept`)
+      .send({ password: 'whatever it is' });
     expect(anonymous.status).toBe(401);
 
     const karim = await signIn(tech.user.email, null);
@@ -177,14 +203,24 @@ describe('invitations (J2)', () => {
     const bravo = await createOrg('Bravo');
     await addMember(acme.org.id, 'REPORTER', { email: 'lea@acme.test' });
     const supervisor = await signIn(bravo.owner.user.email, bravo.org.id);
-    const response = await supervisor.post('/invitations', { role: 'REPORTER', email: 'lea@acme.test', firstName: 'Lea', lastName: 'Moreau' });
+    const response = await supervisor.post('/invitations', {
+      role: 'REPORTER',
+      email: 'lea@acme.test',
+      firstName: 'Lea',
+      lastName: 'Moreau',
+    });
     expect(response.status).toBe(409);
   });
 
   it('invalidates the old link when an invitation is resent', async () => {
     const { org, owner } = await createOrg();
     const supervisor = await signIn(owner.user.email, org.id);
-    const invited = await supervisor.post('/invitations', { role: 'REPORTER', email: 'lea@acme.test', firstName: 'Lea', lastName: 'Moreau' });
+    const invited = await supervisor.post('/invitations', {
+      role: 'REPORTER',
+      email: 'lea@acme.test',
+      firstName: 'Lea',
+      lastName: 'Moreau',
+    });
     const oldToken = String(invited.body.data.acceptUrl).split('/invite/')[1] ?? '';
     const resent = await supervisor.post(`/invitations/${invited.body.data.invitation.id}/resend`);
     expect(resent.status).toBe(200);
@@ -200,7 +236,9 @@ describe('member management', () => {
       expectedVersion: incident.version,
       intervenantMembershipId: s.intervenant.membership.id,
     });
-    const suspended = await s.supervisor.post(`/members/${s.intervenant.membership.id}/suspend`, { reason: 'Contract paused' });
+    const suspended = await s.supervisor.post(`/members/${s.intervenant.membership.id}/suspend`, {
+      reason: 'Contract paused',
+    });
     expect(suspended.status).toBe(200);
     expect(suspended.body.data.status).toBe('SUSPENDED');
     const after = await s.supervisor.get(`/incidents/${incident.reference}`);

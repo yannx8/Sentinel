@@ -98,7 +98,9 @@ registrationRoutes.post('/verify', publicLimiter, async (req, res) => {
   const registration = await prisma.organizationRegistration.findUnique({ where: { tokenHash: hashToken(token) } });
   if (!registration) throw new AppError('TOKEN_INVALID', 'This link is not valid. Use the latest email we sent.');
   if (registration.verifiedAt) {
-    throw new AppError('TOKEN_INVALID', 'This organization is already active. Sign in to continue.', { alreadyVerified: true });
+    throw new AppError('TOKEN_INVALID', 'This organization is already active. Sign in to continue.', {
+      alreadyVerified: true,
+    });
   }
   if (registration.expiresAt < new Date()) {
     throw new AppError('TOKEN_EXPIRED', 'This link has expired. Ask for a new one.', { email: registration.email });
@@ -206,7 +208,12 @@ const industryCategories: Partial<Record<Industry, CatalogEntry>> = {
   MANUFACTURING: { en: 'Machine breakdown', fr: 'Panne machine', priority: 'CRITICAL', specialty: 'general' },
   HOSPITALITY: { en: 'Guest room issue', fr: 'Problème en chambre', priority: 'HIGH', specialty: 'general' },
   EDUCATION: { en: 'Classroom equipment', fr: 'Équipement de salle', priority: 'MEDIUM', specialty: 'it' },
-  LOGISTICS: { en: 'Dock or handling equipment', fr: 'Quai ou matériel de manutention', priority: 'HIGH', specialty: 'general' },
+  LOGISTICS: {
+    en: 'Dock or handling equipment',
+    fr: 'Quai ou matériel de manutention',
+    priority: 'HIGH',
+    specialty: 'general',
+  },
   PROPERTY: { en: 'Lift or elevator', fr: 'Ascenseur', priority: 'HIGH', specialty: 'general' },
 };
 

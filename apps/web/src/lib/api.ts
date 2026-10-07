@@ -86,7 +86,10 @@ async function request<T>(path: string, options: Options = {}): Promise<T> {
     });
   } catch (cause) {
     if (cause instanceof DOMException && cause.name === 'AbortError') throw cause;
-    throw new ApiError({ code: 'INTERNAL', message: 'You appear to be offline. Check your connection and try again.' }, 0);
+    throw new ApiError(
+      { code: 'INTERNAL', message: 'You appear to be offline. Check your connection and try again.' },
+      0,
+    );
   }
 
   if (response.status === 204) return undefined as T;

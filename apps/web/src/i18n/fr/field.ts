@@ -177,7 +177,8 @@ export const field: Translation<typeof en> = {
     updatePosted: 'Point publié',
     more: "Plus d'actions",
     requestReassignment: 'Demander une réaffectation',
-    reassignDescription: "Continuez l'intervention jusqu'à la décision d'un superviseur. Il pourra assigner quelqu'un d'autre.",
+    reassignDescription:
+      "Continuez l'intervention jusqu'à la décision d'un superviseur. Il pourra assigner quelqu'un d'autre.",
     reassignReason: 'Motif',
     reassignNote: 'Note',
     reassignNotePlaceholder: 'Ce que le superviseur doit savoir',

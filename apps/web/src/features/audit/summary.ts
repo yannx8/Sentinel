@@ -70,11 +70,16 @@ export function useAuditSummary() {
             parts.push(t('audit.details.priorityChange', { from: priority(from.priority), to: priority(to.priority) }));
           }
           if (text(from, 'category') !== text(to, 'category')) {
-            parts.push(t('audit.details.categoryChange', { from: text(from, 'category') ?? '', to: text(to, 'category') ?? '' }));
+            parts.push(
+              t('audit.details.categoryChange', { from: text(from, 'category') ?? '', to: text(to, 'category') ?? '' }),
+            );
           }
           return parts.length > 0
             ? join(...parts)
-            : t('audit.details.triageConfirmed', { priority: priority(to.priority), category: text(to, 'category') ?? '' });
+            : t('audit.details.triageConfirmed', {
+                priority: priority(to.priority),
+                category: text(to, 'category') ?? '',
+              });
         }
         case 'ASSIGNED': {
           const assignee = person(p, 'assignee') ?? '';
@@ -106,7 +111,9 @@ export function useAuditSummary() {
           return withNote(reason, text(p, 'note'));
         }
         case 'COMMENT_ADDED': {
-          const visibility = t(p.visibility === 'INTERNAL' ? 'audit.details.commentInternal' : 'audit.details.commentPublic');
+          const visibility = t(
+            p.visibility === 'INTERNAL' ? 'audit.details.commentInternal' : 'audit.details.commentPublic',
+          );
           return withNote(visibility, text(p, 'body'));
         }
         case 'ATTACHMENT_ADDED': {
@@ -129,7 +136,8 @@ export function useAuditSummary() {
         case 'MEMBER_SUSPENDED':
         case 'MEMBER_REACTIVATED':
         case 'MEMBER_REVOKED': {
-          const released = typeof p.releasedAssignments === 'number' && p.releasedAssignments > 0 ? p.releasedAssignments : 0;
+          const released =
+            typeof p.releasedAssignments === 'number' && p.releasedAssignments > 0 ? p.releasedAssignments : 0;
           return withNote(join(name, released > 0 && tn('audit.details.released', released)), text(p, 'reason'));
         }
         case 'SITE_CREATED': {

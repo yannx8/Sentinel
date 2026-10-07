@@ -17,7 +17,11 @@ async function detail(client: Scenario['supervisor'], reference: string) {
 }
 
 async function assign(reference: string, version: number, intervenantMembershipId = s.intervenant.membership.id) {
-  return s.supervisor.post(`/incidents/${reference}/assign`, { expectedVersion: version, intervenantMembershipId, priority: 'CRITICAL' });
+  return s.supervisor.post(`/incidents/${reference}/assign`, {
+    expectedVersion: version,
+    intervenantMembershipId,
+    priority: 'CRITICAL',
+  });
 }
 
 describe('incident loop', () => {
@@ -35,13 +39,24 @@ describe('incident loop', () => {
     expect(accepted.body.data.status).toBe('IN_PROGRESS');
     expect(accepted.body.data.startedAt).not.toBeNull();
 
-    expect((await s.tech.post(`/assignments/${assignmentId}/progress`, { progressType: 'ON_SITE', note: 'Arrived, shutting the valve' })).status).toBe(200);
-    const resolved = await s.tech.post(`/assignments/${assignmentId}/resolve`, { note: 'Replaced the cracked pipe joint and dried the floor.' });
+    expect(
+      (
+        await s.tech.post(`/assignments/${assignmentId}/progress`, {
+          progressType: 'ON_SITE',
+          note: 'Arrived, shutting the valve',
+        })
+      ).status,
+    ).toBe(200);
+    const resolved = await s.tech.post(`/assignments/${assignmentId}/resolve`, {
+      note: 'Replaced the cracked pipe joint and dried the floor.',
+    });
     expect(resolved.status).toBe(200);
     expect(resolved.body.data.status).toBe('RESOLVED');
 
     const current = await detail(s.supervisor, created.reference);
-    const closed = await s.supervisor.post(`/incidents/${created.reference}/close`, { expectedVersion: current.version });
+    const closed = await s.supervisor.post(`/incidents/${created.reference}/close`, {
+      expectedVersion: current.version,
+    });
     expect(closed.status).toBe(200);
     expect(closed.body.data.status).toBe('CLOSED');
     expect(closed.body.data.actions).toEqual([]);
@@ -49,8 +64,18 @@ describe('incident loop', () => {
     const assignment = await prisma.assignment.findUniqueOrThrow({ where: { id: assignmentId } });
     expect(assignment.status).toBe('COMPLETED');
 
-    const types = ((await s.supervisor.get(`/incidents/${created.reference}/thread`)).body.data as ThreadEvent[]).map((e) => e.type);
-    expect(types).toEqual(['INCIDENT_CREATED', 'TRIAGED', 'ASSIGNED', 'ASSIGNMENT_ACCEPTED', 'PROGRESS_POSTED', 'RESOLVED', 'CLOSED']);
+    const types = ((await s.supervisor.get(`/incidents/${created.reference}/thread`)).body.data as ThreadEvent[]).map(
+      (e) => e.type,
+    );
+    expect(types).toEqual([
+      'INCIDENT_CREATED',
+      'TRIAGED',
+      'ASSIGNED',
+      'ASSIGNMENT_ACCEPTED',
+      'PROGRESS_POSTED',
+      'RESOLVED',
+      'CLOSED',
+    ]);
   });
 
   it('numbers references per organization in sequence', async () => {
@@ -60,7 +85,9 @@ describe('incident loop', () => {
   });
 
   it('lets a supervisor report on behalf of an employee', async () => {
-    const created = await reportIncident(s.supervisor, s.site.id, s.category.id, { onBehalfOfMembershipId: s.employee.membership.id });
+    const created = await reportIncident(s.supervisor, s.site.id, s.category.id, {
+      onBehalfOfMembershipId: s.employee.membership.id,
+    });
     const mine = await s.reporter.get(`/incidents/${created.reference}`);
     expect(mine.status).toBe(200);
     expect(mine.body.data.reporter.membershipId).toBe(s.employee.membership.id);
@@ -93,7 +120,9 @@ describe('decline, reassignment and send back', () => {
   it('returns a declined incident to NEW with a declined flag', async () => {
     const created = await reportIncident(s.reporter, s.site.id, s.category.id);
     const assigned = await assign(created.reference, created.version);
-    const response = await s.tech.post(`/assignments/${assigned.body.data.liveAssignment.id}/decline`, { reason: 'Not my trade' });
+    const response = await s.tech.post(`/assignments/${assigned.body.data.liveAssignment.id}/decline`, {
+      reason: 'Not my trade',
+    });
     expect(response.status).toBe(200);
     const after = await detail(s.supervisor, created.reference);
     expect(after.status).toBe('NEW');
@@ -106,14 +135,19 @@ describe('decline, reassignment and send back', () => {
     const assigned = await assign(created.reference, created.version);
     const assignmentId = assigned.body.data.liveAssignment.id as string;
     await s.tech.post(`/assignments/${assignmentId}/accept`);
-    const requested = await s.tech.post(`/assignments/${assignmentId}/request-reassignment`, { reasonCode: 'CANNOT_ACCESS', note: 'Gate locked' });
+    const requested = await s.tech.post(`/assignments/${assignmentId}/request-reassignment`, {
+      reasonCode: 'CANNOT_ACCESS',
+      note: 'Gate locked',
+    });
     expect(requested.status).toBe(200);
     expect(requested.body.data.flags.reassignmentRequested).toBe(true);
 
     const queue = await s.supervisor.get('/reassignments');
     expect(queue.body.data).toHaveLength(1);
 
-    const rejected = await s.supervisor.post(`/reassignments/${assignmentId}/reject`, { note: 'The key is at the front desk' });
+    const rejected = await s.supervisor.post(`/reassignments/${assignmentId}/reject`, {
+      note: 'The key is at the front desk',
+    });
     expect(rejected.status).toBe(200);
     expect(rejected.body.data.liveAssignment.status).toBe('ACCEPTED');
     expect((await s.supervisor.get('/reassignments')).body.data).toHaveLength(0);
@@ -152,7 +186,10 @@ describe('decline, reassignment and send back', () => {
 
   it('dismisses from NEW only, with a reason', async () => {
     const created = await reportIncident(s.reporter, s.site.id, s.category.id);
-    const dismissed = await s.supervisor.post(`/incidents/${created.reference}/dismiss`, { expectedVersion: created.version, reason: 'DUPLICATE' });
+    const dismissed = await s.supervisor.post(`/incidents/${created.reference}/dismiss`, {
+      expectedVersion: created.version,
+      reason: 'DUPLICATE',
+    });
     expect(dismissed.status).toBe(200);
     expect(dismissed.body.data.status).toBe('CLOSED');
     expect(dismissed.body.data.dismissReason).toBe('DUPLICATE');
@@ -162,7 +199,9 @@ describe('decline, reassignment and send back', () => {
 describe('state machine and invariants', () => {
   it('refuses transitions that are not allowed from the current state', async () => {
     const created = await reportIncident(s.reporter, s.site.id, s.category.id);
-    const close = await s.supervisor.post(`/incidents/${created.reference}/close`, { expectedVersion: created.version });
+    const close = await s.supervisor.post(`/incidents/${created.reference}/close`, {
+      expectedVersion: created.version,
+    });
     expect(close.status).toBe(409);
     expect(close.body.error.code).toBe('INVALID_STATE_TRANSITION');
   });
@@ -190,8 +229,14 @@ describe('state machine and invariants', () => {
 
   it('keeps closed incidents read-only, including comments (I8)', async () => {
     const created = await reportIncident(s.reporter, s.site.id, s.category.id);
-    await s.supervisor.post(`/incidents/${created.reference}/dismiss`, { expectedVersion: created.version, reason: 'NO_ACTION_NEEDED' });
-    const comment = await s.supervisor.post(`/incidents/${created.reference}/comments`, { body: 'Late note', visibility: 'INTERNAL' });
+    await s.supervisor.post(`/incidents/${created.reference}/dismiss`, {
+      expectedVersion: created.version,
+      reason: 'NO_ACTION_NEEDED',
+    });
+    const comment = await s.supervisor.post(`/incidents/${created.reference}/comments`, {
+      body: 'Late note',
+      visibility: 'INTERNAL',
+    });
     expect(comment.status).toBe(409);
     await expect(prisma.incident.update({ where: { id: created.id }, data: { priority: 'LOW' } })).rejects.toThrow();
   });
@@ -251,7 +296,10 @@ describe('what each role sees', () => {
     const assignmentId = assigned.body.data.liveAssignment.id as string;
     await s.tech.post(`/assignments/${assignmentId}/accept`);
     await s.tech.post(`/assignments/${assignmentId}/progress`, { progressType: 'BLOCKED', note: 'Need a part' });
-    await s.supervisor.post(`/incidents/${created.reference}/comments`, { body: 'Supplier is slow, escalate', visibility: 'INTERNAL' });
+    await s.supervisor.post(`/incidents/${created.reference}/comments`, {
+      body: 'Supplier is slow, escalate',
+      visibility: 'INTERNAL',
+    });
     await s.supervisor.post(`/incidents/${created.reference}/comments`, { body: 'We are on it', visibility: 'PUBLIC' });
 
     const employeeThread = (await s.reporter.get(`/incidents/${created.reference}/thread`)).body.data as ThreadEvent[];
@@ -280,12 +328,16 @@ describe('what each role sees', () => {
 
   it('notifies the right people and never the actor', async () => {
     const created = await reportIncident(s.reporter, s.site.id, s.category.id);
-    const supervisorNotes = await prisma.notification.findMany({ where: { recipientMembershipId: s.owner.membership.id } });
+    const supervisorNotes = await prisma.notification.findMany({
+      where: { recipientMembershipId: s.owner.membership.id },
+    });
     expect(supervisorNotes.map((n) => n.type)).toContain('INCIDENT_CREATED');
     expect(await prisma.notification.count({ where: { recipientMembershipId: s.employee.membership.id } })).toBe(0);
 
     await assign(created.reference, created.version);
-    const techNotes = await prisma.notification.findMany({ where: { recipientMembershipId: s.intervenant.membership.id } });
+    const techNotes = await prisma.notification.findMany({
+      where: { recipientMembershipId: s.intervenant.membership.id },
+    });
     expect(techNotes.map((n) => n.type)).toEqual(['ASSIGNED']);
     const unread = await s.tech.get('/notifications/unread-count');
     expect(unread.body.data.count).toBe(1);

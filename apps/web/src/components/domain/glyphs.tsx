@@ -40,7 +40,15 @@ export function PriorityIcon({ priority, className }: { priority: Priority; clas
   );
 }
 
-export function PriorityLabel({ priority, className, short }: { priority: Priority; className?: string; short?: boolean }) {
+export function PriorityLabel({
+  priority,
+  className,
+  short,
+}: {
+  priority: Priority;
+  className?: string;
+  short?: boolean;
+}) {
   const { t } = useT();
   return (
     <span className={cn('inline-flex items-center gap-1.5 text-sm text-ink-2', className)}>
@@ -77,20 +85,42 @@ export function StatusIcon({ status, className }: { status: IncidentStatus; clas
       return (
         <svg viewBox="0 0 16 16" className={cn(base, 'text-success')} aria-hidden>
           <circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" strokeWidth="1.5" />
-          <path d="m5.4 8.2 1.8 1.8 3.4-3.6" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+          <path
+            d="m5.4 8.2 1.8 1.8 3.4-3.6"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         </svg>
       );
     case 'CLOSED':
       return (
         <svg viewBox="0 0 16 16" className={cn(base, 'text-ink-3')} aria-hidden>
           <circle cx="8" cy="8" r="6.75" fill="currentColor" />
-          <path d="m5.4 8.2 1.8 1.8 3.4-3.6" fill="none" stroke="var(--surface)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+          <path
+            d="m5.4 8.2 1.8 1.8 3.4-3.6"
+            fill="none"
+            stroke="var(--surface)"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         </svg>
       );
   }
 }
 
-export function StatusLabel({ status, className, short }: { status: IncidentStatus; className?: string; short?: boolean }) {
+export function StatusLabel({
+  status,
+  className,
+  short,
+}: {
+  status: IncidentStatus;
+  className?: string;
+  short?: boolean;
+}) {
   const { t } = useT();
   return (
     <span className={cn('inline-flex items-center gap-1.5 text-sm text-ink-2', className)}>

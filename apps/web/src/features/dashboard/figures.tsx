@@ -63,7 +63,9 @@ export function FiguresRow({ data }: { data: DashboardDTO }) {
         value={number(counts.awaitingReview)}
         label={t('dashboard.figures.review')}
         context={
-          counts.reassignmentRequests > 0 ? tn('dashboard.figures.reassignment', counts.reassignmentRequests) : undefined
+          counts.reassignmentRequests > 0
+            ? tn('dashboard.figures.reassignment', counts.reassignmentRequests)
+            : undefined
         }
         search={{ view: 'review' }}
       />

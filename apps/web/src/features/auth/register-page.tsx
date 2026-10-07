@@ -95,7 +95,13 @@ export function RegisterPage() {
     } catch (cause) {
       if (applyServerErrors(form, cause)) {
         const failing = Object.keys(form.formState.errors);
-        setStep(failing.some((key) => key.startsWith('company')) ? 0 : failing.some((key) => key.startsWith('contact')) ? 1 : 2);
+        setStep(
+          failing.some((key) => key.startsWith('company'))
+            ? 0
+            : failing.some((key) => key.startsWith('contact'))
+              ? 1
+              : 2,
+        );
       }
       setError(errorMessage(cause, t));
     }
@@ -109,7 +115,9 @@ export function RegisterPage() {
           <Button
             onClick={async () => {
               try {
-                const result = await api.post<{ previewUrl?: string }>('/public/organizations/resend', { email: sent.email });
+                const result = await api.post<{ previewUrl?: string }>('/public/organizations/resend', {
+                  email: sent.email,
+                });
                 setSent({ ...sent, previewUrl: result.previewUrl ?? sent.previewUrl });
                 toast.success(t('auth.register.resent'));
               } catch (cause) {
@@ -124,7 +132,10 @@ export function RegisterPage() {
           </button>
         </div>
         {sent.previewUrl && (
-          <a href={sent.previewUrl} className="rounded-md border border-dashed border-line-strong px-3 py-2 text-xs text-ink-2 hover:text-ink">
+          <a
+            href={sent.previewUrl}
+            className="rounded-md border border-dashed border-line-strong px-3 py-2 text-xs text-ink-2 hover:text-ink"
+          >
             {t('auth.register.previewLink')}
           </a>
         )}
@@ -159,7 +170,11 @@ export function RegisterPage() {
             <Field label={t('auth.register.legalName')} error={errors.company?.legalName?.message}>
               <Input autoComplete="organization" autoFocus {...form.register('company.legalName')} />
             </Field>
-            <Field label={t('auth.register.displayName')} hint={t('auth.register.displayNameHint')} error={errors.company?.displayName?.message}>
+            <Field
+              label={t('auth.register.displayName')}
+              hint={t('auth.register.displayNameHint')}
+              error={errors.company?.displayName?.message}
+            >
               <Input {...form.register('company.displayName')} />
             </Field>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -176,7 +191,11 @@ export function RegisterPage() {
                 <Input autoComplete="address-level2" {...form.register('company.city')} />
               </Field>
             </div>
-            <Field label={t('auth.register.timezone')} hint={t('auth.register.timezoneHint')} error={errors.company?.timezone?.message}>
+            <Field
+              label={t('auth.register.timezone')}
+              hint={t('auth.register.timezoneHint')}
+              error={errors.company?.timezone?.message}
+            >
               <NativeSelect options={timeZoneOptions()} {...form.register('company.timezone')} />
             </Field>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -268,9 +287,13 @@ export function RegisterPage() {
                   <CheckboxField
                     checked={field.value === true}
                     onCheckedChange={(checked) => field.onChange(checked)}
-                    label={t('auth.register.terms', { company: values.company.legalName || values.company.displayName })}
+                    label={t('auth.register.terms', {
+                      company: values.company.legalName || values.company.displayName,
+                    })}
                   />
-                  {errors.acceptTerms && <p className="text-xs text-critical-ink">{t('auth.register.termsRequired')}</p>}
+                  {errors.acceptTerms && (
+                    <p className="text-xs text-critical-ink">{t('auth.register.termsRequired')}</p>
+                  )}
                 </div>
               )}
             />
@@ -284,7 +307,9 @@ export function RegisterPage() {
               {t('common.back')}
             </Button>
           ) : (
-            <span className="text-xs text-ink-3">{t('auth.register.stepOf', { current: step + 1, total: steps.length })}</span>
+            <span className="text-xs text-ink-3">
+              {t('auth.register.stepOf', { current: step + 1, total: steps.length })}
+            </span>
           )}
           {step < 2 ? (
             <Button variant="primary" onClick={next}>

@@ -10,7 +10,7 @@ type Leaves<T, P extends string = ''> = {
 
 export type TKey = Leaves<Dictionary>;
 /** Base of a plural pair: `fooOne` and `fooOther` give `foo`. */
-export type PluralKey = TKey extends `${infer Base}One` ? Base : never;
+export type PluralKey = TKey extends infer K ? (K extends `${infer Base}One` ? Base : never) : never;
 type Vars = Record<string, string | number>;
 
 const dictionaries: Record<Locale, Translation<Dictionary>> = { en, fr };
@@ -52,7 +52,15 @@ export type Formatter = {
 
 const I18nContext = createContext<Formatter | null>(null);
 
-export function I18nProvider({ locale, timeZone, children }: { locale: Locale; timeZone: string; children: ReactNode }) {
+export function I18nProvider({
+  locale,
+  timeZone,
+  children,
+}: {
+  locale: Locale;
+  timeZone: string;
+  children: ReactNode;
+}) {
   const dictionary = dictionaries[locale];
   const t = useCallback((key: TKey, vars?: Vars) => interpolate(lookup(dictionary, key), vars), [dictionary]);
 

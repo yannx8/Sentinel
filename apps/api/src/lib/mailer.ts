@@ -56,7 +56,11 @@ export const mail = {
     });
   },
 
-  invitation(to: string, locale: string, input: { name: string; organization: string; role: string; inviter: string; link: string }) {
+  invitation(
+    to: string,
+    locale: string,
+    input: { name: string; organization: string; role: string; inviter: string; link: string },
+  ) {
     const l = pick(locale);
     return send({
       to,

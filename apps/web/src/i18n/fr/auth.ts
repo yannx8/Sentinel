@@ -43,7 +43,8 @@ export const auth: Translation<typeof en> = {
     doneTitle: 'Mot de passe modifié',
     doneBody: 'Connectez-vous avec votre nouveau mot de passe.',
     invalidTitle: 'Ce lien ne fonctionne plus',
-    invalidBody: "Les liens de réinitialisation sont à usage unique et expirent au bout d'1 heure. Demandez-en un nouveau.",
+    invalidBody:
+      "Les liens de réinitialisation sont à usage unique et expirent au bout d'1 heure. Demandez-en un nouveau.",
     requestNew: 'Demander un nouveau lien',
   },
   register: {
@@ -57,7 +58,8 @@ export const auth: Translation<typeof en> = {
     stepOf: 'Étape {current} sur {total}',
     legalName: 'Raison sociale',
     displayName: "Nom d'usage",
-    displayNameHint: 'Affiché à votre équipe dans l’application, par exemple « Northwind » pour « Northwind Facilities Management SAS ».',
+    displayNameHint:
+      'Affiché à votre équipe dans l’application, par exemple « Northwind » pour « Northwind Facilities Management SAS ».',
     registrationNumber: "Numéro d'immatriculation",
     registrationHint: 'SIREN, numéro de TVA ou numéro d’entreprise.',
     industry: "Secteur d'activité",
@@ -106,7 +108,8 @@ export const auth: Translation<typeof en> = {
     roleIntro: {
       REPORTER: "Vous pouvez signaler des problèmes sur vos sites et les suivre jusqu'à leur résolution.",
       INTERVENANT: 'Vous recevez des interventions, suivez leur avancement et les résolvez avec des preuves.',
-      SUPERVISOR: 'Vous qualifiez les incidents, assignez les intervenants et bouclez le suivi pour votre organisation.',
+      SUPERVISOR:
+        'Vous qualifiez les incidents, assignez les intervenants et bouclez le suivi pour votre organisation.',
     },
     choosePassword: 'Choisissez un mot de passe pour créer votre compte.',
     phone: 'Téléphone mobile',
@@ -114,7 +117,8 @@ export const auth: Translation<typeof en> = {
     accept: 'Rejoindre {organization}',
     existingAccount: 'Vous avez déjà un compte Sentinel avec {email}.',
     signInToAccept: 'Se connecter pour accepter',
-    wrongAccount: 'Vous êtes connecté en tant que {current}. Déconnectez-vous et connectez-vous avec {email} pour accepter.',
+    wrongAccount:
+      'Vous êtes connecté en tant que {current}. Déconnectez-vous et connectez-vous avec {email} pour accepter.',
     signOut: 'Se déconnecter',
     invalidTitle: "Cette invitation n'est plus valide",
     invalidBody:

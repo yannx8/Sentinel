@@ -29,7 +29,12 @@ export function Th({ className, children, ...props }: ThHTMLAttributes<HTMLTable
   );
 }
 
-export function Tr({ className, children, interactive, ...props }: HTMLAttributes<HTMLTableRowElement> & { interactive?: boolean }) {
+export function Tr({
+  className,
+  children,
+  interactive,
+  ...props
+}: HTMLAttributes<HTMLTableRowElement> & { interactive?: boolean }) {
   return (
     <tr
       className={cn(

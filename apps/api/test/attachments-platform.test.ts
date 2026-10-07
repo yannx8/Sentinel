@@ -78,7 +78,9 @@ describe('platform administration (J8)', () => {
     const tooShort = await admin.post(`/platform/organizations/${a.org.id}/suspend`, { reason: 'no' });
     expect(tooShort.status).toBe(422);
 
-    const suspended = await admin.post(`/platform/organizations/${a.org.id}/suspend`, { reason: 'Unpaid invoices since August' });
+    const suspended = await admin.post(`/platform/organizations/${a.org.id}/suspend`, {
+      reason: 'Unpaid invoices since August',
+    });
     expect(suspended.status).toBe(200);
     expect(suspended.body.data.status).toBe('SUSPENDED');
     expect((await a.supervisor.get('/incidents')).body.error.code).toBe('ORG_SUSPENDED');
@@ -97,7 +99,15 @@ describe('platform administration (J8)', () => {
     await request(app)
       .post('/v1/public/organizations')
       .send({
-        company: { legalName: 'Delta SA', displayName: 'Delta', industry: 'RETAIL', sizeBand: 'S', country: 'BE', timezone: 'Europe/Brussels', defaultLocale: 'fr' },
+        company: {
+          legalName: 'Delta SA',
+          displayName: 'Delta',
+          industry: 'RETAIL',
+          sizeBand: 'S',
+          country: 'BE',
+          timezone: 'Europe/Brussels',
+          defaultLocale: 'fr',
+        },
         contact: { firstName: 'Dan', lastName: 'Delta', email: 'dan@delta.test', password: 'long enough passphrase' },
         acceptTerms: true,
       });

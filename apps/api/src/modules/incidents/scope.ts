@@ -30,7 +30,8 @@ export function incidentScope(tenant: Tenant): Prisma.IncidentWhereInput {
 /** Accepts a uuid or a reference such as INC-2026-00042. */
 export function incidentKey(idOrReference: string): Prisma.IncidentWhereInput {
   if (referencePattern.test(idOrReference)) return { reference: idOrReference };
-  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrReference)) return { id: idOrReference };
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrReference))
+    return { id: idOrReference };
   return { id: '00000000-0000-0000-0000-000000000000' };
 }
 

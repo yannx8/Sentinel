@@ -51,7 +51,13 @@ function StepLink({ step, label }: { step: StepKey; label: string }) {
 }
 
 export function isSetupComplete(checklist: SetupChecklist) {
-  return checklist.hasSite && checklist.hasCategory && checklist.hasIntervenant && checklist.hasEmployee && checklist.hasIncident;
+  return (
+    checklist.hasSite &&
+    checklist.hasCategory &&
+    checklist.hasIntervenant &&
+    checklist.hasEmployee &&
+    checklist.hasIncident
+  );
 }
 
 /** First-run checklist. Rendered only while at least one step is left. */

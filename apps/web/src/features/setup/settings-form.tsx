@@ -35,7 +35,9 @@ function valuesOf(settings: OrganizationSettings): SettingsInput {
 /** The browser list can miss the stored zone (some engines leave out UTC). Keep it selectable. */
 function zonesWith(current: string) {
   const zones = timeZoneOptions();
-  return zones.some((zone) => zone.value === current) ? zones : [{ value: current, label: current.replace(/_/g, ' ') }, ...zones];
+  return zones.some((zone) => zone.value === current)
+    ? zones
+    : [{ value: current, label: current.replace(/_/g, ' ') }, ...zones];
 }
 
 /**

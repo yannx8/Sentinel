@@ -10,7 +10,10 @@ export type Choice = { value: string; label: string; description?: string; tag?:
 const SEARCH_THRESHOLD = 8;
 
 function normalize(text: string) {
-  return text.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
+  return text
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLowerCase();
 }
 
 /**

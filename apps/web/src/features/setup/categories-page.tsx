@@ -14,7 +14,10 @@ import { SpecialtiesSection } from './specialties-section';
 export function CategoriesPage() {
   const { t } = useT();
   const categories = useCategories();
-  const [dialog, setDialog] = useState<{ open: boolean; category: CategoryDTO | null }>({ open: false, category: null });
+  const [dialog, setDialog] = useState<{ open: boolean; category: CategoryDTO | null }>({
+    open: false,
+    category: null,
+  });
 
   const openCreate = () => setDialog({ open: true, category: null });
   const openEdit = (category: CategoryDTO) => setDialog({ open: true, category });
@@ -36,7 +39,9 @@ export function CategoriesPage() {
         />
       );
   } else if (categories.isError) {
-    body = <LoadError error={categories.error} onRetry={() => void categories.refetch()} retrying={categories.isFetching} />;
+    body = (
+      <LoadError error={categories.error} onRetry={() => void categories.refetch()} retrying={categories.isFetching} />
+    );
   } else {
     body = <CategoriesTable categories={[]} loading onOpen={openEdit} />;
   }

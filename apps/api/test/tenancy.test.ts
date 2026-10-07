@@ -142,7 +142,10 @@ describe('role boundaries', () => {
     for (const path of ['/members', '/invitations', '/dashboard', '/audit', '/reassignments', '/incidents/counts']) {
       expect((await client.get(path)).status).toBe(403);
     }
-    expect((await client.post(`/incidents/${incidentA.reference}/dismiss`, { expectedVersion: 1, reason: 'DUPLICATE' })).status).not.toBe(200);
+    expect(
+      (await client.post(`/incidents/${incidentA.reference}/dismiss`, { expectedVersion: 1, reason: 'DUPLICATE' }))
+        .status,
+    ).not.toBe(200);
   });
 
   it('an employee cannot read a colleague report', async () => {
@@ -154,7 +157,12 @@ describe('role boundaries', () => {
   it('a supervisor who is not the owner cannot invite supervisors or change settings', async () => {
     const second = await addMember(a.org.id, 'SUPERVISOR');
     const client = await signIn(second.user.email, a.org.id);
-    const invite = await client.post('/invitations', { role: 'SUPERVISOR', email: 'boss@acme.test', firstName: 'Big', lastName: 'Boss' });
+    const invite = await client.post('/invitations', {
+      role: 'SUPERVISOR',
+      email: 'boss@acme.test',
+      firstName: 'Big',
+      lastName: 'Boss',
+    });
     expect(invite.status).toBe(403);
     const settings = await client.get('/organization');
     expect(settings.status).toBe(200);

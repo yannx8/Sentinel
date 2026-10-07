@@ -48,7 +48,10 @@ function Strong({ children }: { children: ReactNode }) {
 }
 
 /** Builds the one-line summary, with names and values emphasized. */
-function summary(event: ThreadEvent, f: Formatter): { text: ReactNode; kind: NodeKind; body?: ReactNode; internal?: boolean } {
+function summary(
+  event: ThreadEvent,
+  f: Formatter,
+): { text: ReactNode; kind: NodeKind; body?: ReactNode; internal?: boolean } {
   const { t } = f;
   const actor = <Strong>{event.actor?.name ?? t('thread.system')}</Strong>;
   const fill = (template: string, values: Record<string, ReactNode>) => {
@@ -62,29 +65,54 @@ function summary(event: ThreadEvent, f: Formatter): { text: ReactNode; kind: Nod
   switch (event.type) {
     case 'INCIDENT_CREATED':
       return event.payload.onBehalfOf
-        ? { text: fill(t('thread.events.INCIDENT_CREATED_ON_BEHALF'), { actor, person: <Strong>{event.payload.onBehalfOf.name}</Strong> }), kind: 'milestone' }
+        ? {
+            text: fill(t('thread.events.INCIDENT_CREATED_ON_BEHALF'), {
+              actor,
+              person: <Strong>{event.payload.onBehalfOf.name}</Strong>,
+            }),
+            kind: 'milestone',
+          }
         : { text: fill(t('thread.events.INCIDENT_CREATED'), { actor }), kind: 'milestone' };
     case 'TRIAGED': {
       const { from, to } = event.payload;
       const priority = (value: string) => t(`common.priority.${value as 'LOW'}`);
       if (from.priority && from.priority !== to.priority && from.category === to.category) {
         return {
-          text: fill(t('thread.events.TRIAGED_PRIORITY'), { actor, from: priority(from.priority), to: <Strong>{priority(to.priority)}</Strong> }),
+          text: fill(t('thread.events.TRIAGED_PRIORITY'), {
+            actor,
+            from: priority(from.priority),
+            to: <Strong>{priority(to.priority)}</Strong>,
+          }),
           kind: 'dot',
         };
       }
       if (from.priority === to.priority && from.category !== to.category) {
-        return { text: fill(t('thread.events.TRIAGED_CATEGORY'), { actor, from: from.category, to: <Strong>{to.category}</Strong> }), kind: 'dot' };
+        return {
+          text: fill(t('thread.events.TRIAGED_CATEGORY'), {
+            actor,
+            from: from.category,
+            to: <Strong>{to.category}</Strong>,
+          }),
+          kind: 'dot',
+        };
       }
       return {
-        text: fill(t('thread.events.TRIAGED'), { actor, priority: <Strong>{priority(to.priority)}</Strong>, category: <Strong>{to.category}</Strong> }),
+        text: fill(t('thread.events.TRIAGED'), {
+          actor,
+          priority: <Strong>{priority(to.priority)}</Strong>,
+          category: <Strong>{to.category}</Strong>,
+        }),
         kind: 'dot',
       };
     }
     case 'ASSIGNED':
       return {
         text: event.payload.previous
-          ? fill(t('thread.events.REASSIGNED'), { actor, previous: event.payload.previous.name, assignee: <Strong>{event.payload.assignee.name}</Strong> })
+          ? fill(t('thread.events.REASSIGNED'), {
+              actor,
+              previous: event.payload.previous.name,
+              assignee: <Strong>{event.payload.assignee.name}</Strong>,
+            })
           : fill(t('thread.events.ASSIGNED'), { actor, assignee: <Strong>{event.payload.assignee.name}</Strong> }),
         kind: 'milestone',
         body: event.payload.note ? <Quote internal>{event.payload.note}</Quote> : undefined,
@@ -98,16 +126,26 @@ function summary(event: ThreadEvent, f: Formatter): { text: ReactNode; kind: Nod
     case 'ASSIGNMENT_ACCEPTED':
       return { text: fill(t('thread.events.ASSIGNMENT_ACCEPTED'), { actor }), kind: 'milestone' };
     case 'ASSIGNMENT_DECLINED':
-      return { text: fill(t('thread.events.ASSIGNMENT_DECLINED'), { actor }), kind: 'warning', body: <Quote>{event.payload.reason}</Quote> };
+      return {
+        text: fill(t('thread.events.ASSIGNMENT_DECLINED'), { actor }),
+        kind: 'warning',
+        body: <Quote>{event.payload.reason}</Quote>,
+      };
     case 'REASSIGNMENT_REQUESTED':
       return {
-        text: fill(t('thread.events.REASSIGNMENT_REQUESTED'), { actor, reason: t(`common.reassignmentReason.${event.payload.reasonCode}`).toLowerCase() }),
+        text: fill(t('thread.events.REASSIGNMENT_REQUESTED'), {
+          actor,
+          reason: t(`common.reassignmentReason.${event.payload.reasonCode}`).toLowerCase(),
+        }),
         kind: 'warning',
         body: event.payload.note ? <Quote>{event.payload.note}</Quote> : undefined,
       };
     case 'REASSIGNMENT_REJECTED':
       return {
-        text: fill(t('thread.events.REASSIGNMENT_REJECTED'), { actor, assignee: <Strong>{event.payload.assignee.name}</Strong> }),
+        text: fill(t('thread.events.REASSIGNMENT_REJECTED'), {
+          actor,
+          assignee: <Strong>{event.payload.assignee.name}</Strong>,
+        }),
         kind: 'dot',
         body: event.payload.note ? <Quote>{event.payload.note}</Quote> : undefined,
       };
@@ -118,7 +156,12 @@ function summary(event: ThreadEvent, f: Formatter): { text: ReactNode; kind: Nod
           : event.payload.progressType === 'BLOCKED'
             ? 'thread.events.PROGRESS_BLOCKED'
             : 'thread.events.PROGRESS_POSTED';
-      const icon = event.payload.progressType === 'ON_SITE' ? <MapPin /> : event.payload.progressType === 'BLOCKED' ? <OctagonPause /> : null;
+      const icon =
+        event.payload.progressType === 'ON_SITE' ? (
+          <MapPin />
+        ) : event.payload.progressType === 'BLOCKED' ? (
+          <OctagonPause />
+        ) : null;
       return {
         text: (
           <>
@@ -131,7 +174,11 @@ function summary(event: ThreadEvent, f: Formatter): { text: ReactNode; kind: Nod
       };
     }
     case 'RESOLVED':
-      return { text: fill(t('thread.events.RESOLVED'), { actor }), kind: 'milestone', body: <Quote tone="success">{event.payload.note}</Quote> };
+      return {
+        text: fill(t('thread.events.RESOLVED'), { actor }),
+        kind: 'milestone',
+        body: <Quote tone="success">{event.payload.note}</Quote>,
+      };
     case 'SENT_BACK':
       return {
         text: (
@@ -150,7 +197,10 @@ function summary(event: ThreadEvent, f: Formatter): { text: ReactNode; kind: Nod
         text: (
           <>
             <CircleSlash className="mr-1 inline size-3.5 align-[-2px] text-ink-3" aria-hidden />
-            {fill(t('thread.events.DISMISSED'), { actor, reason: t(`common.dismissReason.${event.payload.reason}`).toLowerCase() })}
+            {fill(t('thread.events.DISMISSED'), {
+              actor,
+              reason: t(`common.dismissReason.${event.payload.reason}`).toLowerCase(),
+            })}
           </>
         ),
         kind: 'muted',
@@ -228,7 +278,15 @@ function liveNode(incident: IncidentDetail, t: Formatter['t']): string | null {
   return null;
 }
 
-export function Thread({ events, incident, className }: { events: ThreadEvent[]; incident?: IncidentDetail; className?: string }) {
+export function Thread({
+  events,
+  incident,
+  className,
+}: {
+  events: ThreadEvent[];
+  incident?: IncidentDetail;
+  className?: string;
+}) {
   const f = useT();
   const live = incident ? liveNode(incident, f.t) : null;
   let lastDay = '';

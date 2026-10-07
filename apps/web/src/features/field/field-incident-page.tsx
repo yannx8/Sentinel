@@ -52,7 +52,9 @@ export function FieldIncidentPage() {
         />
       );
     }
-    return <LoadError title={t('field.incident.loadError')} error={incident.error} onRetry={() => void incident.refetch()} />;
+    return (
+      <LoadError title={t('field.incident.loadError')} error={incident.error} onRetry={() => void incident.refetch()} />
+    );
   }
 
   const data = incident.data;

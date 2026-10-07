@@ -96,8 +96,7 @@ export function useSetAvailability() {
   const { t } = useT();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (availability: Availability) =>
-      api.patch<MembershipSelf>('/membership/availability', { availability }),
+    mutationFn: (availability: Availability) => api.patch<MembershipSelf>('/membership/availability', { availability }),
     onMutate: async (availability) => {
       await queryClient.cancelQueries({ queryKey: fieldKeys.membership });
       const previous = queryClient.getQueryData<MembershipSelf>(fieldKeys.membership);

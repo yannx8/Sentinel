@@ -31,7 +31,11 @@ export const Checkbox = forwardRef<HTMLButtonElement, CheckboxProps>(function Ch
       {...props}
     >
       <RadixCheckbox.Indicator className="text-on-primary">
-        {checked === 'indeterminate' ? <Minus className="size-3" strokeWidth={3} /> : <Check className="size-3" strokeWidth={3} />}
+        {checked === 'indeterminate' ? (
+          <Minus className="size-3" strokeWidth={3} />
+        ) : (
+          <Check className="size-3" strokeWidth={3} />
+        )}
       </RadixCheckbox.Indicator>
     </RadixCheckbox.Root>
   );
@@ -70,7 +74,10 @@ type SwitchProps = {
   'aria-describedby'?: string;
 };
 
-export const Switch = forwardRef<HTMLButtonElement, SwitchProps>(function Switch({ checked, onCheckedChange, ...props }, ref) {
+export const Switch = forwardRef<HTMLButtonElement, SwitchProps>(function Switch(
+  { checked, onCheckedChange, ...props },
+  ref,
+) {
   return (
     <RadixSwitch.Root
       ref={ref}

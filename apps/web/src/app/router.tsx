@@ -5,6 +5,7 @@ import {
   createRouter,
   lazyRouteComponent,
   Navigate,
+  redirect,
 } from '@tanstack/react-router';
 import { z } from 'zod';
 import { ConsoleShell } from './shells/console-shell';
@@ -115,7 +116,9 @@ const consoleLayout = createRoute({ getParentRoute: () => rootRoute, path: '/app
 const consoleIndex = createRoute({
   getParentRoute: () => consoleLayout,
   path: '/',
-  component: () => <Navigate to="/app/incidents" replace />,
+  beforeLoad: () => {
+    throw redirect({ to: '/app/incidents', replace: true });
+  },
 });
 const incidentsRoute = createRoute({
   getParentRoute: () => consoleLayout,
@@ -216,7 +219,9 @@ const platformLayout = createRoute({ getParentRoute: () => rootRoute, path: '/pl
 const platformIndex = createRoute({
   getParentRoute: () => platformLayout,
   path: '/',
-  component: () => <Navigate to="/platform/organizations" replace />,
+  beforeLoad: () => {
+    throw redirect({ to: '/platform/organizations', replace: true });
+  },
 });
 const platformOrganizationsRoute = createRoute({
   getParentRoute: () => platformLayout,
@@ -247,7 +252,16 @@ const platformAccountRoute = createRoute({
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
-  publicLayout.addChildren([loginRoute, forgotRoute, resetRoute, registerRoute, verifyRoute, inviteRoute, mfaRoute, noAccessRoute]),
+  publicLayout.addChildren([
+    loginRoute,
+    forgotRoute,
+    resetRoute,
+    registerRoute,
+    verifyRoute,
+    inviteRoute,
+    mfaRoute,
+    noAccessRoute,
+  ]),
   consoleLayout.addChildren([
     consoleIndex,
     incidentsRoute,
@@ -294,4 +308,3 @@ declare module '@tanstack/react-router' {
     router: typeof router;
   }
 }
-

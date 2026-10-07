@@ -20,7 +20,15 @@ type ContentProps = {
   modalLock?: boolean;
 };
 
-export function DialogContent({ title, description, children, footer, size = 'md', className, modalLock }: ContentProps) {
+export function DialogContent({
+  title,
+  description,
+  children,
+  footer,
+  size = 'md',
+  className,
+  modalLock,
+}: ContentProps) {
   const { t } = useT();
   const width = { sm: 'max-w-[420px]', md: 'max-w-[520px]', lg: 'max-w-[680px]' }[size];
   return (
@@ -73,7 +81,16 @@ type ConfirmProps = {
 };
 
 /** Names the object and the consequence. The confirm button repeats the verb. */
-export function ConfirmDialog({ open, onOpenChange, title, description, confirmLabel, variant = 'primary', onConfirm, children }: ConfirmProps) {
+export function ConfirmDialog({
+  open,
+  onOpenChange,
+  title,
+  description,
+  confirmLabel,
+  variant = 'primary',
+  onConfirm,
+  children,
+}: ConfirmProps) {
   const { t } = useT();
   const [busy, setBusy] = useState(false);
   return (

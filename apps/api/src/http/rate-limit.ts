@@ -9,7 +9,8 @@ function limiter(windowMinutes: number, limit: number) {
     standardHeaders: 'draft-8',
     legacyHeaders: false,
     skip: () => isTest,
-    handler: (_req, _res, next) => next(new AppError('RATE_LIMITED', 'Too many attempts. Wait a few minutes and try again.')),
+    handler: (_req, _res, next) =>
+      next(new AppError('RATE_LIMITED', 'Too many attempts. Wait a few minutes and try again.')),
   });
 }
 

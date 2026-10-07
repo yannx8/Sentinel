@@ -7,15 +7,7 @@ import type { AssignmentStatus, IncidentStatus, LiveAssignmentStatus, Membership
 import { liveAssignmentStatuses } from './enums';
 
 export type IncidentTrigger =
-  | 'assign'
-  | 'reassign'
-  | 'unassign'
-  | 'accept'
-  | 'decline'
-  | 'resolve'
-  | 'close'
-  | 'send-back'
-  | 'dismiss';
+  'assign' | 'reassign' | 'unassign' | 'accept' | 'decline' | 'resolve' | 'close' | 'send-back' | 'dismiss';
 
 type Transition = { from: IncidentStatus; trigger: IncidentTrigger; to: IncidentStatus };
 

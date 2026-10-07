@@ -18,13 +18,24 @@ const sharedHash = () => (passwordHash ??= hashPassword(PASSWORD));
 export async function resetDb() {
   const tables = await prisma.$queryRaw<{ tablename: string }[]>`
     SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename <> '_prisma_migrations'`;
-  await prisma.$executeRawUnsafe(`TRUNCATE ${tables.map((t) => `"${t.tablename}"`).join(', ')} RESTART IDENTITY CASCADE`);
+  await prisma.$executeRawUnsafe(
+    `TRUNCATE ${tables.map((t) => `"${t.tablename}"`).join(', ')} RESTART IDENTITY CASCADE`,
+  );
   testOutbox.length = 0;
 }
 
-export async function createUser(email = `${randomUUID().slice(0, 8)}@example.test`, names: [string, string] = ['Test', 'Person']) {
+export async function createUser(
+  email = `${randomUUID().slice(0, 8)}@example.test`,
+  names: [string, string] = ['Test', 'Person'],
+) {
   return prisma.user.create({
-    data: { email, firstName: names[0], lastName: names[1], passwordHash: await sharedHash(), emailVerifiedAt: new Date() },
+    data: {
+      email,
+      firstName: names[0],
+      lastName: names[1],
+      passwordHash: await sharedHash(),
+      emailVerifiedAt: new Date(),
+    },
   });
 }
 
@@ -52,14 +63,22 @@ export async function createOrg(name = 'Acme Facilities', industry: Industry = '
   });
   await prisma.$transaction((tx) => seedCatalog(tx, org.id, industry, 'en'));
   const site = await prisma.site.create({ data: { organizationId: org.id, code: 'HQ', name: 'Headquarters' } });
-  const category = await prisma.incidentCategory.findFirstOrThrow({ where: { organizationId: org.id, name: 'Water leak' } });
+  const category = await prisma.incidentCategory.findFirstOrThrow({
+    where: { organizationId: org.id, name: 'Water leak' },
+  });
   return { org, owner: { user: owner, membership: ownerMembership }, site, category };
 }
 
 export async function addMember(
   orgId: string,
   role: MembershipRole,
-  options: { email?: string; names?: [string, string]; siteIds?: string[]; specialtyIds?: string[]; userId?: string } = {},
+  options: {
+    email?: string;
+    names?: [string, string];
+    siteIds?: string[];
+    specialtyIds?: string[];
+    userId?: string;
+  } = {},
 ) {
   const user = options.userId
     ? await prisma.user.findUniqueOrThrow({ where: { id: options.userId } })
@@ -69,12 +88,16 @@ export async function addMember(
     await prisma.employeeProfile.create({ data: { membershipId: membership.id, organizationId: orgId } });
   }
   if (role === 'INTERVENANT') {
-    await prisma.intervenantProfile.create({ data: { membershipId: membership.id, organizationId: orgId, companyName: 'Fixit' } });
+    await prisma.intervenantProfile.create({
+      data: { membershipId: membership.id, organizationId: orgId, companyName: 'Fixit' },
+    });
     for (const siteId of options.siteIds ?? []) {
       await prisma.siteAccess.create({ data: { membershipId: membership.id, siteId, organizationId: orgId } });
     }
     for (const specialtyId of options.specialtyIds ?? []) {
-      await prisma.intervenantSpecialty.create({ data: { membershipId: membership.id, specialtyId, organizationId: orgId } });
+      await prisma.intervenantSpecialty.create({
+        data: { membershipId: membership.id, specialtyId, organizationId: orgId },
+      });
     }
   }
   return { user, membership };
@@ -100,7 +123,8 @@ function clientFor(agent: ReturnType<typeof request.agent>, orgId: string | null
 export async function signIn(email: string, orgId: string | null, password = PASSWORD) {
   const agent = request.agent(app);
   const response = await agent.post('/v1/auth/login').send({ email, password });
-  if (response.status !== 200) throw new Error(`Sign-in failed for ${email}: ${response.status} ${JSON.stringify(response.body)}`);
+  if (response.status !== 200)
+    throw new Error(`Sign-in failed for ${email}: ${response.status} ${JSON.stringify(response.body)}`);
   return clientFor(agent, orgId);
 }
 
@@ -128,7 +152,12 @@ export async function scenario(name = 'Acme Facilities') {
   return { ...base, employee, intervenant, supervisor, reporter, tech };
 }
 
-export async function reportIncident(client: Client, siteId: string, categoryId: string, overrides: Record<string, unknown> = {}) {
+export async function reportIncident(
+  client: Client,
+  siteId: string,
+  categoryId: string,
+  overrides: Record<string, unknown> = {},
+) {
   const response = await client.post('/incidents', {
     title: 'Water on the floor',
     description: 'Water is leaking from the ceiling in corridor B.',

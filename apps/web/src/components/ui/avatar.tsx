@@ -23,12 +23,27 @@ function tintFor(seed: string) {
   return tints[Math.abs(hash) % tints.length];
 }
 
-export function Avatar({ name, size = 'md', className }: { name: string; size?: 'xs' | 'sm' | 'md' | 'lg'; className?: string }) {
-  const dimension = { xs: 'size-5 text-[9px]', sm: 'size-6 text-2xs', md: 'size-8 text-xs', lg: 'size-10 text-sm' }[size];
+export function Avatar({
+  name,
+  size = 'md',
+  className,
+}: {
+  name: string;
+  size?: 'xs' | 'sm' | 'md' | 'lg';
+  className?: string;
+}) {
+  const dimension = { xs: 'size-5 text-[9px]', sm: 'size-6 text-2xs', md: 'size-8 text-xs', lg: 'size-10 text-sm' }[
+    size
+  ];
   return (
     <span
       aria-hidden
-      className={cn('inline-flex shrink-0 items-center justify-center rounded-full font-semibold', dimension, tintFor(name), className)}
+      className={cn(
+        'inline-flex shrink-0 items-center justify-center rounded-full font-semibold',
+        dimension,
+        tintFor(name),
+        className,
+      )}
     >
       {initials(name)}
     </span>

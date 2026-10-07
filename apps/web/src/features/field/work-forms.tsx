@@ -55,7 +55,9 @@ export function ResolveSheet({ open, onOpenChange, incident, assignmentId }: She
   const assignedAt = incident.liveAssignment?.assignedAt ?? '';
   const onFile = incident.attachments.some(
     (attachment) =>
-      attachment.kind === 'EVIDENCE' && attachment.uploadedBy.membershipId === membership.id && attachment.createdAt >= assignedAt,
+      attachment.kind === 'EVIDENCE' &&
+      attachment.uploadedBy.membershipId === membership.id &&
+      attachment.createdAt >= assignedAt,
   );
   const photoRequired = incident.requireResolutionPhoto && !onFile;
   const missingPhoto = () => photoRequired && photos.length === 0;

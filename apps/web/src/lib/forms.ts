@@ -20,12 +20,16 @@ export function installValidationMessages(t: Formatter['t']) {
         case 'too_small':
           if (issue.origin === 'string') {
             if (field.includes('password')) return t('common.validation.password');
-            return Number(issue.minimum) <= 1 ? t('common.validation.required') : t('common.validation.tooShort', { min: Number(issue.minimum) });
+            return Number(issue.minimum) <= 1
+              ? t('common.validation.required')
+              : t('common.validation.tooShort', { min: Number(issue.minimum) });
           }
           if (issue.origin === 'array') return t('common.validation.choose');
           return t('common.validation.invalid');
         case 'too_big':
-          return issue.origin === 'string' ? t('common.validation.tooLong', { max: Number(issue.maximum) }) : t('common.validation.invalid');
+          return issue.origin === 'string'
+            ? t('common.validation.tooLong', { max: Number(issue.maximum) })
+            : t('common.validation.invalid');
         case 'invalid_format':
           if (field.includes('email')) return t('common.validation.email');
           if (field.includes('phone')) return t('common.validation.phone');
@@ -72,5 +76,8 @@ export function errorMessage(error: unknown, t: Formatter['t']): string {
 
 export function toastError(error: unknown, t: Formatter['t']) {
   const requestId = error instanceof ApiError && error.code === 'INTERNAL' ? error.requestId : undefined;
-  toast.error(errorMessage(error, t), requestId ? { description: t('common.requestId', { id: requestId }) } : undefined);
+  toast.error(
+    errorMessage(error, t),
+    requestId ? { description: t('common.requestId', { id: requestId }) } : undefined,
+  );
 }

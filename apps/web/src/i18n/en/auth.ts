@@ -54,7 +54,8 @@ export const auth = {
     stepOf: 'Step {current} of {total}',
     legalName: 'Legal name',
     displayName: 'Display name',
-    displayNameHint: 'Shown to your team in the app, for example "Northwind" for "Northwind Facilities Management SAS".',
+    displayNameHint:
+      'Shown to your team in the app, for example "Northwind" for "Northwind Facilities Management SAS".',
     registrationNumber: 'Company registration number',
     registrationHint: 'SIREN, VAT or company number.',
     industry: 'Industry',
@@ -114,7 +115,8 @@ export const auth = {
     wrongAccount: 'You are signed in as {current}. Sign out and sign in as {email} to accept.',
     signOut: 'Sign out',
     invalidTitle: 'This invitation is no longer valid',
-    invalidBody: 'It may have been used, replaced by a newer one, or withdrawn. Ask your organization to send a new invitation.',
+    invalidBody:
+      'It may have been used, replaced by a newer one, or withdrawn. Ask your organization to send a new invitation.',
     expiredTitle: 'This invitation has expired',
     expiredBody: 'Invitations are valid for 7 days. Ask your organization to resend it.',
     joined: 'Welcome to {organization}',

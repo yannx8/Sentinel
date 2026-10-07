@@ -21,7 +21,10 @@ export function PopoverContent({
         align={align}
         sideOffset={6}
         collisionPadding={8}
-        className={cn('z-[70] rounded-md border border-line bg-surface shadow-pop animate-pop-in focus:outline-none', className)}
+        className={cn(
+          'z-[70] rounded-md border border-line bg-surface shadow-pop animate-pop-in focus:outline-none',
+          className,
+        )}
       >
         {children}
       </RadixPopover.Content>

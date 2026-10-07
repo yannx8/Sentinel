@@ -32,7 +32,12 @@ function PlatformLayout() {
         </div>
         <nav aria-label={t('shell.mainNavigation')} className="flex gap-0.5 overflow-x-auto lg:grid">
           {links.map((link) => (
-            <Link key={link.to} to={link.to} className={navLinkClass} activeProps={{ className: navLinkActiveClass, 'aria-current': 'page' }}>
+            <Link
+              key={link.to}
+              to={link.to}
+              className={navLinkClass}
+              activeProps={{ className: navLinkActiveClass, 'aria-current': 'page' }}
+            >
               {link.icon}
               <span className="whitespace-nowrap">{t(link.label)}</span>
             </Link>
@@ -43,7 +48,10 @@ function PlatformLayout() {
           <UserMenu accountPath="/platform/account" />
         </div>
       </aside>
-      <main id="main" className="min-h-0 flex-1 overflow-y-auto bg-surface lg:my-2 lg:mr-2 lg:rounded-lg lg:border lg:border-line lg:shadow-control">
+      <main
+        id="main"
+        className="min-h-0 flex-1 overflow-y-auto bg-surface lg:my-2 lg:mr-2 lg:rounded-lg lg:border lg:border-line lg:shadow-control"
+      >
         <Outlet />
       </main>
     </div>

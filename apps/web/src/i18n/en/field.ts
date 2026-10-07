@@ -115,7 +115,8 @@ export const field = {
     notFoundBody: 'This incident no longer exists or you no longer have access to it.',
     loadError: 'This incident could not load',
     threadError: 'The activity could not load. Pull down or try again in a moment.',
-    reassignmentPending: 'You asked to be reassigned. A supervisor will decide soon. Until then, this incident stays with you.',
+    reassignmentPending:
+      'You asked to be reassigned. A supervisor will decide soon. Until then, this incident stays with you.',
     sentBack: 'A supervisor sent this back for more work. The reason is in the activity below.',
   },
   statusLine: {

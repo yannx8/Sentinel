@@ -39,7 +39,12 @@ export async function idempotent(req: Request, scope: string, run: () => Promise
       statusCode: result.status,
       responseBody: result.body as Prisma.InputJsonValue,
     },
-    update: { requestHash, statusCode: result.status, responseBody: result.body as Prisma.InputJsonValue, createdAt: new Date() },
+    update: {
+      requestHash,
+      statusCode: result.status,
+      responseBody: result.body as Prisma.InputJsonValue,
+      createdAt: new Date(),
+    },
   });
   return result;
 }

@@ -11,7 +11,9 @@ const css = readFileSync(new URL('./app.css', import.meta.url), 'utf8');
 function block(selector: string): Record<string, string> {
   const start = css.indexOf(`${selector} {`);
   const body = css.slice(start, css.indexOf('}', start));
-  return Object.fromEntries([...body.matchAll(/--([\w-]+):\s*(#[0-9a-f]{6})/gi)].map((m) => [m[1] as string, m[2] as string]));
+  return Object.fromEntries(
+    [...body.matchAll(/--([\w-]+):\s*(#[0-9a-f]{6})/gi)].map((m) => [m[1] as string, m[2] as string]),
+  );
 }
 
 function luminance(hex: string) {
@@ -38,13 +40,19 @@ describe.each([
   ['light', light],
   ['dark', dark],
 ])('%s theme', (_name, theme) => {
-  it.each(text.flatMap((fg) => backgrounds.map((bg) => [fg, bg] as const)))('%s text on %s is at least 4.5:1', (fg, bg) => {
-    expect(ratio(theme[fg] as string, theme[bg] as string)).toBeGreaterThanOrEqual(4.5);
-  });
+  it.each(text.flatMap((fg) => backgrounds.map((bg) => [fg, bg] as const)))(
+    '%s text on %s is at least 4.5:1',
+    (fg, bg) => {
+      expect(ratio(theme[fg] as string, theme[bg] as string)).toBeGreaterThanOrEqual(4.5);
+    },
+  );
 
-  it.each(glyphs.flatMap((fg) => backgrounds.map((bg) => [fg, bg] as const)))('%s glyph on %s is at least 3:1', (fg, bg) => {
-    expect(ratio(theme[fg] as string, theme[bg] as string)).toBeGreaterThanOrEqual(3);
-  });
+  it.each(glyphs.flatMap((fg) => backgrounds.map((bg) => [fg, bg] as const)))(
+    '%s glyph on %s is at least 3:1',
+    (fg, bg) => {
+      expect(ratio(theme[fg] as string, theme[bg] as string)).toBeGreaterThanOrEqual(3);
+    },
+  );
 
   it('primary buttons are readable', () => {
     expect(ratio(theme['primary'] as string, theme['on-primary'] as string)).toBeGreaterThanOrEqual(4.5);

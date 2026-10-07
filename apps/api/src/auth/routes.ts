@@ -88,9 +88,19 @@ authRoutes.post('/password/forgot', authLimiter, async (req, res) => {
   if (user?.passwordHash && user.status === 'ACTIVE') {
     const token = newToken();
     await prisma.userToken.create({
-      data: { userId: user.id, kind: 'PASSWORD_RESET', tokenHash: hashToken(token), expiresAt: new Date(Date.now() + RESET_TTL_MS) },
+      data: {
+        userId: user.id,
+        kind: 'PASSWORD_RESET',
+        tokenHash: hashToken(token),
+        expiresAt: new Date(Date.now() + RESET_TTL_MS),
+      },
     });
-    await mail.passwordReset(user.email, user.locale, user.firstName, `${env.WEB_ORIGIN}/reset-password?token=${token}`);
+    await mail.passwordReset(
+      user.email,
+      user.locale,
+      user.firstName,
+      `${env.WEB_ORIGIN}/reset-password?token=${token}`,
+    );
   }
   res.status(202).json({ data: { ok: true } });
 });

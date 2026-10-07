@@ -47,7 +47,10 @@ function FieldLayout() {
           <NotificationBell to="/field/notifications" />
         </div>
       </header>
-      <main id="main" className="mx-auto w-full max-w-[680px] flex-1 px-4 pt-5 pb-[calc(88px+env(safe-area-inset-bottom))]">
+      <main
+        id="main"
+        className="mx-auto w-full max-w-[680px] flex-1 px-4 pt-5 pb-[calc(88px+env(safe-area-inset-bottom))]"
+      >
         <Outlet />
       </main>
       <nav

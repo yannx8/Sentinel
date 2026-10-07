@@ -52,7 +52,10 @@ function ToastView({ item }: { item: ToastItem }) {
       {item.tone === 'error' ? (
         <CircleAlert className="mt-0.5 size-4 shrink-0 text-critical" aria-hidden />
       ) : (
-        <CircleCheck className={cn('mt-0.5 size-4 shrink-0', item.tone === 'success' ? 'text-success' : 'text-accent')} aria-hidden />
+        <CircleCheck
+          className={cn('mt-0.5 size-4 shrink-0', item.tone === 'success' ? 'text-success' : 'text-accent')}
+          aria-hidden
+        />
       )}
       <div className="min-w-0 flex-1">
         <p className="text-sm font-medium text-ink">{item.title}</p>

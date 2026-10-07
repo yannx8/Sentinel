@@ -143,7 +143,12 @@ function fold(items: BarItem[], other: (count: number) => string): BarItem[] {
   const rest = sorted.slice(TOP);
   return [
     ...sorted.slice(0, TOP),
-    { key: 'other', label: other(rest.length), value: rest.reduce((sum, item) => sum + item.value, 0), tone: 'bg-ink-3' },
+    {
+      key: 'other',
+      label: other(rest.length),
+      value: rest.reduce((sum, item) => sum + item.value, 0),
+      tone: 'bg-ink-3',
+    },
   ];
 }
 

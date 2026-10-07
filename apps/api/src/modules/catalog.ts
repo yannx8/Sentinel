@@ -193,7 +193,10 @@ export async function updateSite(tenant: Tenant, siteId: string, input: SiteUpda
   const site = await guardUnique(
     () =>
       prisma.$transaction(async (tx) => {
-        const current = await tx.site.findFirst({ where: { id: siteId, organizationId: tenant.orgId }, include: siteCounts });
+        const current = await tx.site.findFirst({
+          where: { id: siteId, organizationId: tenant.orgId },
+          include: siteCounts,
+        });
         if (!current) throw notFound('Site');
         const next = {
           code: input.code ?? current.code,

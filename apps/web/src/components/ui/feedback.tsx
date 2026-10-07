@@ -44,9 +44,15 @@ export function EmptyState({
 
 const bannerTones = {
   info: { className: 'border-accent-line bg-accent-subtle text-ink', icon: <Info className="text-accent" /> },
-  success: { className: 'border-success/30 bg-success-subtle text-ink', icon: <CircleCheck className="text-success" /> },
+  success: {
+    className: 'border-success/30 bg-success-subtle text-ink',
+    icon: <CircleCheck className="text-success" />,
+  },
   warning: { className: 'border-medium/30 bg-medium-subtle text-ink', icon: <TriangleAlert className="text-medium" /> },
-  critical: { className: 'border-critical/30 bg-critical-subtle text-ink', icon: <CircleAlert className="text-critical" /> },
+  critical: {
+    className: 'border-critical/30 bg-critical-subtle text-ink',
+    icon: <CircleAlert className="text-critical" />,
+  },
 };
 
 export function Banner({
@@ -66,7 +72,11 @@ export function Banner({
   return (
     <div
       role={tone === 'critical' || tone === 'warning' ? 'alert' : 'status'}
-      className={cn('flex items-start gap-3 rounded-md border px-3.5 py-3 text-sm [&>svg]:mt-0.5 [&>svg]:size-4 [&>svg]:shrink-0', config.className, className)}
+      className={cn(
+        'flex items-start gap-3 rounded-md border px-3.5 py-3 text-sm [&>svg]:mt-0.5 [&>svg]:size-4 [&>svg]:shrink-0',
+        config.className,
+        className,
+      )}
     >
       {config.icon}
       <div className="min-w-0 flex-1">

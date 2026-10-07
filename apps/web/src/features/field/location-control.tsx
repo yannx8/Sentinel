@@ -52,7 +52,13 @@ export function LocationControl({ fix, onChange }: { fix: GeoFix | null; onChang
           </Button>
         </div>
       ) : (
-        <Button size="xl" block icon={<LocateFixed className="size-5" />} loading={state === 'locating'} onClick={locate}>
+        <Button
+          size="xl"
+          block
+          icon={<LocateFixed className="size-5" />}
+          loading={state === 'locating'}
+          onClick={locate}
+        >
           {state === 'locating' ? t('field.location.locating') : t('field.location.use')}
         </Button>
       )}

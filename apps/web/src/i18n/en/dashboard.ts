@@ -116,7 +116,8 @@ export const dashboard = {
     resolved: 'Resolved',
     day: 'Day',
     total: '{count} in total',
-    summary: 'Line chart of incidents created and resolved per day over the last 30 days. {created} created, {resolved} resolved. Use the left and right arrow keys to read each day.',
+    summary:
+      'Line chart of incidents created and resolved per day over the last 30 days. {created} created, {resolved} resolved. Use the left and right arrow keys to read each day.',
     caption: 'Incidents created and resolved per day',
   },
   medians: {

@@ -169,9 +169,20 @@ function ConsoleLayout() {
   const groups: { title?: TKey; links: NavItem[] }[] = [
     {
       links: [
-        { to: '/app/incidents', label: 'shell.nav.incidents', icon: <Inbox />, count: counts.attention, countTone: 'accent' },
+        {
+          to: '/app/incidents',
+          label: 'shell.nav.incidents',
+          icon: <Inbox />,
+          count: counts.attention,
+          countTone: 'accent',
+        },
         { to: '/app/dashboard', label: 'shell.nav.dashboard', icon: <LayoutDashboard /> },
-        { to: '/app/reassignments', label: 'shell.nav.reassignments', icon: <ArrowLeftRight />, count: counts.reassignments },
+        {
+          to: '/app/reassignments',
+          label: 'shell.nav.reassignments',
+          icon: <ArrowLeftRight />,
+          count: counts.reassignments,
+        },
       ],
     },
     {
@@ -247,7 +258,12 @@ function ConsoleLayout() {
             <RadixDialog.Title className="sr-only">{t('shell.mainNavigation')}</RadixDialog.Title>
             <RadixDialog.Description className="sr-only">{t('shell.mainNavigation')}</RadixDialog.Description>
             <RadixDialog.Close asChild>
-              <IconButton label={t('shell.closeMenu')} size="sm" className="absolute top-3.5 -right-10 bg-surface" tooltip={false}>
+              <IconButton
+                label={t('shell.closeMenu')}
+                size="sm"
+                className="absolute top-3.5 -right-10 bg-surface"
+                tooltip={false}
+              >
                 <X className="size-4" />
               </IconButton>
             </RadixDialog.Close>

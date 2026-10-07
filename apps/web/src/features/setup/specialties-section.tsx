@@ -135,7 +135,11 @@ export function SpecialtiesSection() {
       );
   } else if (specialties.isError) {
     body = (
-      <LoadError error={specialties.error} onRetry={() => void specialties.refetch()} retrying={specialties.isFetching} />
+      <LoadError
+        error={specialties.error}
+        onRetry={() => void specialties.refetch()}
+        retrying={specialties.isFetching}
+      />
     );
   } else {
     body = <SpecialtiesTable specialties={[]} loading />;

@@ -20,5 +20,3 @@
 ## Workspace Hygiene
 
 - **No Scratch Artifacts:** Never leave temporary `.patch` or diff text files in the repository root. All temporary data or scripts must reside in designated scratch directories or be cleaned up before review handoff.
-
-

@@ -28,17 +28,23 @@ export function BottomBar({ children, label }: { children: ReactNode; label?: st
 }
 
 /** Segmented control sized for gloved fingers: full width, 44 px tall. */
-export const largeSegments = 'flex w-full [&>button]:h-11 [&>button]:flex-1 [&>button]:text-base [&>button]:leading-tight';
+export const largeSegments =
+  'flex w-full [&>button]:h-11 [&>button]:flex-1 [&>button]:text-base [&>button]:leading-tight';
 
 /** "Step 1 of 3" with a thin segmented bar. */
 export function StepProgress({ current, total }: { current: number; total: number }) {
   const { t } = useT();
   return (
     <div className="grid gap-2">
-      <p className="text-sm font-medium text-ink-3 tabular-nums">{t('field.stepOf', { current: current + 1, total })}</p>
+      <p className="text-sm font-medium text-ink-3 tabular-nums">
+        {t('field.stepOf', { current: current + 1, total })}
+      </p>
       <div className="grid grid-flow-col gap-1" aria-hidden>
         {Array.from({ length: total }, (_, index) => (
-          <span key={index} className={cn('h-1 rounded-full transition-colors', index <= current ? 'bg-ink' : 'bg-muted')} />
+          <span
+            key={index}
+            className={cn('h-1 rounded-full transition-colors', index <= current ? 'bg-ink' : 'bg-muted')}
+          />
         ))}
       </div>
     </div>
@@ -159,14 +165,22 @@ export function FormSheet({
             </p>
             {description && <p className="mt-1 text-md text-ink-2">{description}</p>}
           </div>
-          <IconButton label={t('common.close')} size="xl" tooltip={false} className="-mr-2" onClick={() => change(false)}>
+          <IconButton
+            label={t('common.close')}
+            size="xl"
+            tooltip={false}
+            className="-mr-2"
+            onClick={() => change(false)}
+          >
             <X className="size-5" />
           </IconButton>
         </header>
         <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5">
           <div className="grid gap-6">{children}</div>
         </div>
-        <footer className="border-t border-line bg-surface px-4 pt-3 pb-[calc(12px+env(safe-area-inset-bottom))]">{footer}</footer>
+        <footer className="border-t border-line bg-surface px-4 pt-3 pb-[calc(12px+env(safe-area-inset-bottom))]">
+          {footer}
+        </footer>
       </form>
     </Sheet>
   );

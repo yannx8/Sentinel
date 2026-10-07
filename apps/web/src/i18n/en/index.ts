@@ -12,5 +12,19 @@ import { shell } from './shell';
 import { team } from './team';
 import { thread } from './thread';
 
-export const en = { common, auth, shell, incidents, dashboard, team, setup, audit, notifications, field, platform, account, thread };
+export const en = {
+  common,
+  auth,
+  shell,
+  incidents,
+  dashboard,
+  team,
+  setup,
+  audit,
+  notifications,
+  field,
+  platform,
+  account,
+  thread,
+};
 export type Dictionary = typeof en;

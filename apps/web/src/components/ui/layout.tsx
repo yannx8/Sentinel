@@ -30,13 +30,31 @@ export function PageHeader({
 }
 
 /** Scrollable page body with consistent gutters and a max width. */
-export function Page({ children, width = 'wide', className }: { children: ReactNode; width?: 'wide' | 'narrow' | 'full'; className?: string }) {
+export function Page({
+  children,
+  width = 'wide',
+  className,
+}: {
+  children: ReactNode;
+  width?: 'wide' | 'narrow' | 'full';
+  className?: string;
+}) {
   const max = { wide: 'max-w-[1240px]', narrow: 'max-w-[880px]', full: 'max-w-none' }[width];
   return <div className={cn('mx-auto w-full px-4 py-6 sm:px-8 sm:py-8', max, className)}>{children}</div>;
 }
 
 /** A flat bordered surface for tables and grouped content. */
-export function Panel({ children, className, title, actions }: { children: ReactNode; className?: string; title?: ReactNode; actions?: ReactNode }) {
+export function Panel({
+  children,
+  className,
+  title,
+  actions,
+}: {
+  children: ReactNode;
+  className?: string;
+  title?: ReactNode;
+  actions?: ReactNode;
+}) {
   return (
     <section className={cn('overflow-hidden rounded-lg border border-line bg-surface', className)}>
       {(title || actions) && (

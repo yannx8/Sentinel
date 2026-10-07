@@ -54,7 +54,15 @@ export function Field({ label, children, hint, error, optional, aside, className
 }
 
 /** Groups fields under a heading in long forms. */
-export function FieldGroup({ title, description, children }: { title: ReactNode; description?: ReactNode; children: ReactNode }) {
+export function FieldGroup({
+  title,
+  description,
+  children,
+}: {
+  title: ReactNode;
+  description?: ReactNode;
+  children: ReactNode;
+}) {
   return (
     <section className="grid gap-x-10 gap-y-4 border-t border-line py-6 first:border-t-0 first:pt-0 md:grid-cols-[minmax(0,240px)_minmax(0,1fr)]">
       <div>

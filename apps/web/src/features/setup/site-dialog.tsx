@@ -97,7 +97,9 @@ function SiteDialogContent({ site, onClose }: { site: SiteDTO | null; onClose: (
     if (!site) return;
     try {
       const saved = await update.mutateAsync({ id: site.id, patch: { isActive } });
-      toast.success(t(saved.isActive ? 'setup.sites.toast.reactivated' : 'setup.sites.toast.deactivated', { name: saved.name }));
+      toast.success(
+        t(saved.isActive ? 'setup.sites.toast.reactivated' : 'setup.sites.toast.deactivated', { name: saved.name }),
+      );
       onClose();
     } catch (error) {
       toastError(error, t);
@@ -116,7 +118,10 @@ function SiteDialogContent({ site, onClose }: { site: SiteDTO | null; onClose: (
               variant="ghost"
               disabled={isSubmitting}
               onClick={() => setConfirming(true)}
-              className={cn('mr-auto', site.isActive && 'text-critical-ink hover:bg-critical-subtle hover:text-critical-ink')}
+              className={cn(
+                'mr-auto',
+                site.isActive && 'text-critical-ink hover:bg-critical-subtle hover:text-critical-ink',
+              )}
             >
               {site.isActive ? t('setup.sites.form.deactivate') : t('setup.sites.form.reactivate')}
             </Button>

@@ -68,13 +68,21 @@ export function TrendChart({ trend }: { trend: DashboardDTO['trend'] }) {
   const x = (index: number) => PAD.left + (n <= 1 ? plotW / 2 : (index / (n - 1)) * plotW);
   const y = (value: number) => PAD.top + plotH - (value / top) * plotH;
   const path = (key: 'created' | 'resolved') =>
-    trend.map((point, index) => `${index === 0 ? 'M' : 'L'}${x(index).toFixed(1)},${y(point[key]).toFixed(1)}`).join(' ');
+    trend
+      .map((point, index) => `${index === 0 ? 'M' : 'L'}${x(index).toFixed(1)},${y(point[key]).toFixed(1)}`)
+      .join(' ');
 
   const yTicks: number[] = [];
   for (let value = 0; value <= top; value += step) yTicks.push(value);
   const labelCount = Math.min(n, Math.max(2, Math.floor(plotW / 96)));
   const xTicks =
-    n <= 1 ? [0] : [...new Set(Array.from({ length: labelCount }, (_, k) => Math.round((k * (n - 1)) / Math.max(1, labelCount - 1))))];
+    n <= 1
+      ? [0]
+      : [
+          ...new Set(
+            Array.from({ length: labelCount }, (_, k) => Math.round((k * (n - 1)) / Math.max(1, labelCount - 1))),
+          ),
+        ];
 
   const activePoint: Point | undefined = active === null ? undefined : trend[active];
   const describe = (point: Point) =>
@@ -107,7 +115,11 @@ export function TrendChart({ trend }: { trend: DashboardDTO['trend'] }) {
   // The tooltip sits beside the crosshair, never over the day it describes.
   const TOOLTIP_W = 160;
   const tooltipLeft =
-    active === null ? 0 : x(active) + 12 + TOOLTIP_W <= width ? x(active) + 12 : Math.max(0, x(active) - 12 - TOOLTIP_W);
+    active === null
+      ? 0
+      : x(active) + 12 + TOOLTIP_W <= width
+        ? x(active) + 12
+        : Math.max(0, x(active) - 12 - TOOLTIP_W);
 
   return (
     <Panel
@@ -133,7 +145,10 @@ export function TrendChart({ trend }: { trend: DashboardDTO['trend'] }) {
           ref={ref}
           role="img"
           tabIndex={0}
-          aria-label={t('dashboard.trend.summary', { created: number(totals.created), resolved: number(totals.resolved) })}
+          aria-label={t('dashboard.trend.summary', {
+            created: number(totals.created),
+            resolved: number(totals.resolved),
+          })}
           onKeyDown={onKey}
           onBlur={() => setActive(null)}
           className="relative mt-2 rounded-sm"
@@ -143,8 +158,22 @@ export function TrendChart({ trend }: { trend: DashboardDTO['trend'] }) {
             <svg width={width} height={HEIGHT} className="block overflow-visible" aria-hidden>
               {yTicks.map((tick) => (
                 <g key={tick}>
-                  <line x1={PAD.left} x2={width - PAD.right} y1={y(tick)} y2={y(tick)} className="stroke-line" strokeWidth={1} shapeRendering="crispEdges" />
-                  <text x={PAD.left - 8} y={y(tick)} dy="0.32em" textAnchor="end" className="fill-ink-3 text-2xs tabular-nums">
+                  <line
+                    x1={PAD.left}
+                    x2={width - PAD.right}
+                    y1={y(tick)}
+                    y2={y(tick)}
+                    className="stroke-line"
+                    strokeWidth={1}
+                    shapeRendering="crispEdges"
+                  />
+                  <text
+                    x={PAD.left - 8}
+                    y={y(tick)}
+                    dy="0.32em"
+                    textAnchor="end"
+                    className="fill-ink-3 text-2xs tabular-nums"
+                  >
                     {number(tick)}
                   </text>
                 </g>
@@ -154,26 +183,66 @@ export function TrendChart({ trend }: { trend: DashboardDTO['trend'] }) {
                 if (!point) return null;
                 const anchor = index === 0 && n > 1 ? 'start' : index === n - 1 && n > 1 ? 'end' : 'middle';
                 return (
-                  <text key={point.date} x={x(index)} y={HEIGHT - 8} textAnchor={anchor} className="fill-ink-3 text-2xs tabular-nums">
+                  <text
+                    key={point.date}
+                    x={x(index)}
+                    y={HEIGHT - 8}
+                    textAnchor={anchor}
+                    className="fill-ink-3 text-2xs tabular-nums"
+                  >
                     {format.short(point.date)}
                   </text>
                 );
               })}
 
               {activePoint && active !== null && (
-                <line x1={x(active)} x2={x(active)} y1={PAD.top} y2={PAD.top + plotH} className="stroke-line-strong" strokeWidth={1} shapeRendering="crispEdges" />
+                <line
+                  x1={x(active)}
+                  x2={x(active)}
+                  y1={PAD.top}
+                  y2={PAD.top + plotH}
+                  className="stroke-line-strong"
+                  strokeWidth={1}
+                  shapeRendering="crispEdges"
+                />
               )}
 
-              <path d={path('resolved')} fill="none" className="stroke-ink-3" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
-              <path d={path('created')} fill="none" className="stroke-accent" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+              <path
+                d={path('resolved')}
+                fill="none"
+                className="stroke-ink-3"
+                strokeWidth={2}
+                strokeLinejoin="round"
+                strokeLinecap="round"
+              />
+              <path
+                d={path('created')}
+                fill="none"
+                className="stroke-accent"
+                strokeWidth={2}
+                strokeLinejoin="round"
+                strokeLinecap="round"
+              />
 
               {(activePoint && active !== null ? [active] : n > 0 ? [n - 1] : []).map((index) => {
                 const point = trend[index];
                 if (!point) return null;
                 return (
                   <g key={index}>
-                    <circle cx={x(index)} cy={y(point.resolved)} r={4} className="fill-ink-3 stroke-surface" strokeWidth={2} />
-                    <circle cx={x(index)} cy={y(point.created)} r={4} className="fill-accent stroke-surface" strokeWidth={2} />
+                    <circle
+                      cx={x(index)}
+                      cy={y(point.resolved)}
+                      r={4}
+                      className="fill-ink-3 stroke-surface"
+                      strokeWidth={2}
+                    />
+                    <circle
+                      cx={x(index)}
+                      cy={y(point.created)}
+                      r={4}
+                      className="fill-accent stroke-surface"
+                      strokeWidth={2}
+                    />
                   </g>
                 );
               })}

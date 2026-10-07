@@ -70,7 +70,12 @@ export function PhotoPicker({
   };
 
   return (
-    <div role="group" aria-labelledby={`${id}-label`} aria-describedby={message ? `${id}-message` : hint ? `${id}-hint` : undefined} className="grid gap-2">
+    <div
+      role="group"
+      aria-labelledby={`${id}-label`}
+      aria-describedby={message ? `${id}-message` : hint ? `${id}-hint` : undefined}
+      className="grid gap-2"
+    >
       <div className="flex items-baseline justify-between gap-3">
         <span id={`${id}-label`} className="text-sm font-medium text-ink">
           {label}
@@ -86,8 +91,15 @@ export function PhotoPicker({
       {(photos.length > 0 || preparing > 0) && (
         <ul className={cn('grid gap-2', max > 1 ? 'grid-cols-3' : 'grid-cols-2 sm:grid-cols-3')}>
           {photos.map((photo, index) => (
-            <li key={photo.id} className="relative aspect-square overflow-hidden rounded-md border border-line bg-subtle">
-              <img src={photo.preview} alt={t('field.photos.alt', { index: index + 1 })} className="size-full object-cover" />
+            <li
+              key={photo.id}
+              className="relative aspect-square overflow-hidden rounded-md border border-line bg-subtle"
+            >
+              <img
+                src={photo.preview}
+                alt={t('field.photos.alt', { index: index + 1 })}
+                className="size-full object-cover"
+              />
               <button
                 type="button"
                 onClick={() => remove(photo)}

@@ -9,8 +9,7 @@ export type ButtonSize = 'sm' | 'md' | 'lg' | 'xl';
 const variants: Record<ButtonVariant, string> = {
   primary: 'bg-primary text-on-primary hover:bg-primary-hover shadow-control',
   accent: 'bg-accent text-white hover:bg-accent-hover shadow-control',
-  secondary:
-    'bg-surface text-ink border border-line-strong/80 hover:bg-subtle hover:border-line-strong shadow-control',
+  secondary: 'bg-surface text-ink border border-line-strong/80 hover:bg-subtle hover:border-line-strong shadow-control',
   ghost: 'text-ink-2 hover:bg-muted hover:text-ink',
   danger: 'bg-critical text-white hover:brightness-95 shadow-control',
   link: 'text-accent hover:text-accent-hover underline-offset-4 hover:underline px-0 h-auto',
@@ -24,7 +23,11 @@ const sizes: Record<ButtonSize, string> = {
 };
 
 /** Button styling for links that navigate, so an anchor never wraps a button. */
-export function buttonClass({ variant = 'secondary', size = 'md', block }: { variant?: ButtonVariant; size?: ButtonSize; block?: boolean } = {}) {
+export function buttonClass({
+  variant = 'secondary',
+  size = 'md',
+  block,
+}: { variant?: ButtonVariant; size?: ButtonSize; block?: boolean } = {}) {
   return cn(
     'inline-flex shrink-0 items-center justify-center font-medium whitespace-nowrap transition-colors duration-150',
     variants[variant],

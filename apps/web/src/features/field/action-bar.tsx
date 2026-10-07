@@ -60,7 +60,9 @@ function AnswerBar({ incident, assignmentId }: { incident: IncidentDetail; assig
         size="xl"
         className="flex-1"
         loading={accept.isPending}
-        onClick={() => accept.mutate({ path: `/assignments/${assignmentId}/accept`, success: t('field.actions.accepted') })}
+        onClick={() =>
+          accept.mutate({ path: `/assignments/${assignmentId}/accept`, success: t('field.actions.accepted') })
+        }
       >
         {t('field.actions.accept')}
       </Button>
@@ -105,11 +107,23 @@ function WorkBar({ incident, assignmentId }: { incident: IncidentDetail; assignm
         {t('field.actions.resolve')}
       </Button>
 
-      <ResolveSheet open={sheet === 'resolve'} onOpenChange={toggle('resolve')} incident={incident} assignmentId={assignmentId} />
+      <ResolveSheet
+        open={sheet === 'resolve'}
+        onOpenChange={toggle('resolve')}
+        incident={incident}
+        assignmentId={assignmentId}
+      />
       {canProgress && (
-        <ProgressSheet open={sheet === 'progress'} onOpenChange={toggle('progress')} incident={incident} assignmentId={assignmentId} />
+        <ProgressSheet
+          open={sheet === 'progress'}
+          onOpenChange={toggle('progress')}
+          incident={incident}
+          assignmentId={assignmentId}
+        />
       )}
-      {canReassign && <ReassignSheet open={sheet === 'reassign'} onOpenChange={toggle('reassign')} assignmentId={assignmentId} />}
+      {canReassign && (
+        <ReassignSheet open={sheet === 'reassign'} onOpenChange={toggle('reassign')} assignmentId={assignmentId} />
+      )}
     </BottomBar>
   );
 }

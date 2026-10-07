@@ -45,10 +45,13 @@ export function AuditPage() {
   const log = useAuditLog(filters);
 
   const entries = useMemo(() => log.data?.pages.flatMap((page) => page.data) ?? [], [log.data]);
-  const actorName = filters.actor ? (entries.find((entry) => entry.actor?.membershipId === filters.actor)?.actor?.name ?? null) : null;
+  const actorName = filters.actor
+    ? (entries.find((entry) => entry.actor?.membershipId === filters.actor)?.actor?.name ?? null)
+    : null;
   const filtered = hasFilters(filters);
 
-  const update = (patch: AuditSearchPatch) => void navigate({ search: (prev) => ({ ...prev, ...patch }), replace: true });
+  const update = (patch: AuditSearchPatch) =>
+    void navigate({ search: (prev) => ({ ...prev, ...patch }), replace: true });
   const clear = () => void navigate({ search: {}, replace: true });
 
   const exportCsv = async () => {
@@ -97,7 +100,10 @@ export function AuditPage() {
   } else {
     body = (
       <>
-        <div className={cn('transition-opacity', log.isPlaceholderData && 'opacity-60')} aria-busy={log.isPlaceholderData || undefined}>
+        <div
+          className={cn('transition-opacity', log.isPlaceholderData && 'opacity-60')}
+          aria-busy={log.isPlaceholderData || undefined}
+        >
           <AuditTable entries={entries} />
         </div>
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-4 py-3">

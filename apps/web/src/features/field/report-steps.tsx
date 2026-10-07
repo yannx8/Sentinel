@@ -169,7 +169,10 @@ export function StepWhere({
   }));
   // The employee's own or last used site comes first.
   const options = preferred
-    ? [...list.filter((option) => option.value === preferred.id), ...list.filter((option) => option.value !== preferred.id)]
+    ? [
+        ...list.filter((option) => option.value === preferred.id),
+        ...list.filter((option) => option.value !== preferred.id),
+      ]
     : list;
 
   // One site: nothing to choose.
@@ -285,7 +288,11 @@ export function StepReview({
 
   return (
     <div className="grid gap-8">
-      <ReviewSection title={t('field.report.reviewWhat')} editLabel={t('field.report.editWhat')} onEdit={() => onEdit(0)}>
+      <ReviewSection
+        title={t('field.report.reviewWhat')}
+        editLabel={t('field.report.editWhat')}
+        onEdit={() => onEdit(0)}
+      >
         <ReviewRow label={t('field.report.titleLabel')}>{values.title}</ReviewRow>
         <ReviewRow label={t('field.report.descriptionLabel')}>
           <span className="line-clamp-6 whitespace-pre-line">{values.description}</span>
@@ -308,7 +315,11 @@ export function StepReview({
           )}
         </ReviewRow>
       </ReviewSection>
-      <ReviewSection title={t('field.report.reviewWhere')} editLabel={t('field.report.editWhere')} onEdit={() => onEdit(1)}>
+      <ReviewSection
+        title={t('field.report.reviewWhere')}
+        editLabel={t('field.report.editWhere')}
+        onEdit={() => onEdit(1)}
+      >
         <ReviewRow label={t('field.report.siteLabel')}>{site?.name ?? notGiven}</ReviewRow>
         <ReviewRow label={t('field.report.locationDetailLabel')}>{values.locationDetail?.trim() || notGiven}</ReviewRow>
         <ReviewRow label={t('field.report.positionLabel')}>

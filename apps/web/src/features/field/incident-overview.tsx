@@ -63,7 +63,9 @@ export function IncidentOverview({ incident }: { incident: IncidentDetail }) {
   const assignee = incident.liveAssignment;
   const mine = assignee?.intervenant.membershipId === membership.id;
   const position =
-    incident.latitude !== null && incident.longitude !== null ? { lat: incident.latitude, lng: incident.longitude } : null;
+    incident.latitude !== null && incident.longitude !== null
+      ? { lat: incident.latitude, lng: incident.longitude }
+      : null;
 
   return (
     <>
@@ -76,7 +78,9 @@ export function IncidentOverview({ incident }: { incident: IncidentDetail }) {
         </div>
       </header>
 
-      {mine && assignee?.status === 'REASSIGNMENT_REQUESTED' && <Banner tone="info">{t('field.incident.reassignmentPending')}</Banner>}
+      {mine && assignee?.status === 'REASSIGNMENT_REQUESTED' && (
+        <Banner tone="info">{t('field.incident.reassignmentPending')}</Banner>
+      )}
       {mine && incident.flags.sentBack && <Banner tone="warning">{t('field.incident.sentBack')}</Banner>}
 
       <dl className="divide-y divide-line border-y border-line">

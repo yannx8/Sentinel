@@ -22,7 +22,9 @@ function CategoryRow({ category, onOpen }: { category: CategoryDTO; onOpen: (cat
       {
         onSuccess: (saved) =>
           toast.success(
-            t(saved.isActive ? 'setup.categories.toast.reactivated' : 'setup.categories.toast.deactivated', { name: saved.name }),
+            t(saved.isActive ? 'setup.categories.toast.reactivated' : 'setup.categories.toast.deactivated', {
+              name: saved.name,
+            }),
             {
               action: {
                 label: t('setup.undo'),
@@ -52,7 +54,9 @@ function CategoryRow({ category, onOpen }: { category: CategoryDTO; onOpen: (cat
       </Td>
       <Td className="hidden md:table-cell">
         {category.specialty ? (
-          <span className={cn('block max-w-56 truncate', muted ? 'text-ink-3' : 'text-ink-2')}>{category.specialty.name}</span>
+          <span className={cn('block max-w-56 truncate', muted ? 'text-ink-3' : 'text-ink-2')}>
+            {category.specialty.name}
+          </span>
         ) : (
           <NotSet />
         )}

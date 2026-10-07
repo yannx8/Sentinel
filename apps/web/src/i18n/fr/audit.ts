@@ -3,7 +3,8 @@ import type { Translation } from '../types';
 
 export const audit: Translation<typeof en> = {
   title: 'Journal d’audit',
-  description: 'Chaque modification dans votre organisation, dans l’ordre. Les entrées ne peuvent être ni modifiées ni supprimées.',
+  description:
+    'Chaque modification dans votre organisation, dans l’ordre. Les entrées ne peuvent être ni modifiées ni supprimées.',
   export: 'Exporter en CSV',
   exported: 'Journal d’audit exporté en CSV',
   filters: {

@@ -154,7 +154,8 @@ export const common = {
     UNAUTHENTICATED: 'Your session has ended. Sign in again.',
     FORBIDDEN: 'You are not allowed to do this.',
     NOT_FOUND: 'This item no longer exists or you no longer have access to it.',
-    CONFLICT_CONCURRENT_UPDATE: 'Someone else changed this just now. The latest version is shown. Review it and try again.',
+    CONFLICT_CONCURRENT_UPDATE:
+      'Someone else changed this just now. The latest version is shown. Review it and try again.',
     RATE_LIMITED: 'Too many attempts. Wait a few minutes and try again.',
     ORG_SUSPENDED: 'This organization is suspended.',
     MEMBERSHIP_INACTIVE: 'Your access to this organization has ended.',

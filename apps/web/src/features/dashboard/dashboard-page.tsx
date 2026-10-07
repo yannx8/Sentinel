@@ -16,7 +16,11 @@ import { TrendChart } from './trend-chart';
 
 /** Used only when the setup checklist is unavailable. */
 function looksEmpty(data: DashboardDTO) {
-  return data.counts.open === 0 && data.oldestOpen.length === 0 && data.trend.every((day) => day.created === 0 && day.resolved === 0);
+  return (
+    data.counts.open === 0 &&
+    data.oldestOpen.length === 0 &&
+    data.trend.every((day) => day.created === 0 && day.resolved === 0)
+  );
 }
 
 function DashboardContent({ data }: { data: DashboardDTO }) {

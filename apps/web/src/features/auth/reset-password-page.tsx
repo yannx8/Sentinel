@@ -19,7 +19,10 @@ export function ResetPasswordPage() {
   const schema = z
     .object({ password: passwordSchema, confirm: z.string() })
     .refine((v) => v.password === v.confirm, { path: ['confirm'], message: t('auth.passwordsDiffer') });
-  const form = useForm<z.input<typeof schema>>({ resolver: zodResolver(schema), defaultValues: { password: '', confirm: '' } });
+  const form = useForm<z.input<typeof schema>>({
+    resolver: zodResolver(schema),
+    defaultValues: { password: '', confirm: '' },
+  });
 
   if (state === 'done') {
     return (
@@ -52,12 +55,17 @@ export function ResetPasswordPage() {
             await api.post('/auth/password/reset', { token, password: values.password });
             setState('done');
           } catch (error) {
-            if (error instanceof ApiError && (error.code === 'TOKEN_INVALID' || error.code === 'TOKEN_EXPIRED')) setState('invalid');
+            if (error instanceof ApiError && (error.code === 'TOKEN_INVALID' || error.code === 'TOKEN_EXPIRED'))
+              setState('invalid');
             else toastError(error, t);
           }
         })}
       >
-        <Field label={t('auth.newPassword')} hint={t('auth.passwordHint')} error={form.formState.errors.password?.message}>
+        <Field
+          label={t('auth.newPassword')}
+          hint={t('auth.passwordHint')}
+          error={form.formState.errors.password?.message}
+        >
           <PasswordInput autoComplete="new-password" autoFocus {...form.register('password')} />
         </Field>
         <Field label={t('auth.confirmPassword')} error={form.formState.errors.confirm?.message}>

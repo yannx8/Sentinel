@@ -26,7 +26,10 @@ function toAppError(error: unknown): AppError {
   if (typeof error === 'object' && error !== null && 'type' in error && error.type === 'entity.too.large') {
     return new AppError('VALIDATION_FAILED', 'The request body is too large', undefined, 413);
   }
-  return new AppError('INTERNAL', 'Something went wrong on our side. Try again, or contact support with the request id.');
+  return new AppError(
+    'INTERNAL',
+    'Something went wrong on our side. Try again, or contact support with the request id.',
+  );
 }
 
 export function errorHandler(error: unknown, req: Request, res: Response, _next: NextFunction) {

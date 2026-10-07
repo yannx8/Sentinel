@@ -16,7 +16,9 @@ const isoDay = /^\d{4}-\d{2}-\d{2}$/;
 
 /** Turns the URL search into filters the API accepts. Anything malformed is ignored rather than sent. */
 export function filtersFromSearch(search: RawSearch): AuditFilters {
-  const type = (auditEventTypes as readonly string[]).includes(search.type ?? '') ? (search.type as AuditEventType) : undefined;
+  const type = (auditEventTypes as readonly string[]).includes(search.type ?? '')
+    ? (search.type as AuditEventType)
+    : undefined;
   const from = search.from && isoDay.test(search.from) ? search.from : undefined;
   const to = search.to && isoDay.test(search.to) ? search.to : undefined;
   return {
@@ -48,7 +50,10 @@ export function useAuditLog(filters: AuditFilters) {
   return useInfiniteQuery({
     queryKey: auditKeys.list(filters),
     queryFn: ({ pageParam, signal }) =>
-      api.page<AuditEntryDTO>('/audit', { query: { ...toQuery(filters), cursor: pageParam, limit: PAGE_SIZE }, signal }),
+      api.page<AuditEntryDTO>('/audit', {
+        query: { ...toQuery(filters), cursor: pageParam, limit: PAGE_SIZE },
+        signal,
+      }),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (last) => (last.page.hasMore ? (last.page.nextCursor ?? undefined) : undefined),
     placeholderData: keepPreviousData,

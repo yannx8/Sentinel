@@ -119,7 +119,10 @@ export function ReassignSheet({ open, onOpenChange, assignmentId }: SheetProps) 
           <ChoiceList
             name={field.name}
             label={t('field.actions.reassignReason')}
-            options={reassignmentReasons.map((reason) => ({ value: reason, label: t(`common.reassignmentReason.${reason}`) }))}
+            options={reassignmentReasons.map((reason) => ({
+              value: reason,
+              label: t(`common.reassignmentReason.${reason}`),
+            }))}
             value={field.value}
             onChange={field.onChange}
             onBlur={field.onBlur}

@@ -53,7 +53,9 @@ export function CategoryDialog({
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      {open && <CategoryDialogContent key={category?.id ?? 'new'} category={category} onClose={() => onOpenChange(false)} />}
+      {open && (
+        <CategoryDialogContent key={category?.id ?? 'new'} category={category} onClose={() => onOpenChange(false)} />
+      )}
     </Dialog>
   );
 }
@@ -73,7 +75,8 @@ function CategoryDialogContent({ category, onClose }: { category: CategoryDTO | 
   const { errors, isSubmitting, isDirty } = form.formState;
 
   const priorityOptions = useMemo<SelectOption[]>(
-    () => [...priorities].reverse().map((priority) => ({ value: priority, label: <PriorityLabel priority={priority} /> })),
+    () =>
+      [...priorities].reverse().map((priority) => ({ value: priority, label: <PriorityLabel priority={priority} /> })),
     [],
   );
 
@@ -160,7 +163,9 @@ function CategoryDialogContent({ category, onClose }: { category: CategoryDTO | 
           render={({ field, fieldState }) => (
             <Field
               label={t('setup.categories.form.specialty')}
-              hint={t(noSpecialties ? 'setup.categories.form.noSpecialtiesHint' : 'setup.categories.form.specialtyHint')}
+              hint={t(
+                noSpecialties ? 'setup.categories.form.noSpecialtiesHint' : 'setup.categories.form.specialtyHint',
+              )}
               error={fieldState.error?.message}
             >
               <Select

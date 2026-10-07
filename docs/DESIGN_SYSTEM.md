@@ -1,11 +1,11 @@
 # Sentinel design system
 
-| | |
-|---|---|
-| Version | 2.0, October 2026 |
-| Status | Implemented in `apps/web`. Replaces the v1 draft (Atkinson Hyperlegible, Bricolage Grotesque, ultramarine) |
+|                 |                                                                                                                                      |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Version         | 2.0, October 2026                                                                                                                    |
+| Status          | Implemented in `apps/web`. Replaces the v1 draft (Atkinson Hyperlegible, Bricolage Grotesque, ultramarine)                           |
 | Source of truth | `apps/web/src/styles/app.css` (tokens), `apps/web/src/components/ui` (primitives), `apps/web/src/components/domain` (glyphs, Thread) |
-| Checks | `apps/web/src/styles/tokens.test.ts` asserts WCAG contrast for every text and glyph pairing in both themes |
+| Checks          | `apps/web/src/styles/tokens.test.ts` asserts WCAG contrast for every text and glyph pairing in both themes                           |
 
 ## 1. Direction
 
@@ -25,60 +25,60 @@ Tokens are named by role. Application code uses Tailwind classes generated from 
 
 ### 2.1 Colour
 
-| Token | Light | Dark | Use |
-|---|---|---|---|
-| `bg` | `#F7F7F8` | `#0B0B0E` | App canvas, sidebar |
-| `surface` | `#FFFFFF` | `#141418` | Content panel, tables, inputs, dialogs |
-| `subtle` | `#F3F3F5` | `#1B1B20` | Table header, hover, quiet zones |
-| `muted` | `#EBEBEE` | `#232329` | Segmented track, selected menu item, skeleton |
-| `line` | `#E6E6EA` | `#26262D` | Hairlines and panel borders |
-| `line-strong` | `#D4D4DA` | `#393941` | Input borders, Thread line |
-| `ink` | `#111114` | `#EDEDF0` | Primary text |
-| `ink-2` | `#4A4A55` | `#A8A8B3` | Secondary text |
-| `ink-3` | `#6B6B76` | `#8A8A95` | Metadata, placeholders (4.5:1 floor) |
-| `ink-4` | `#A0A0AA` | `#5C5C66` | Disabled only, never unique meaning |
-| `accent` | `#3B4BD8` | `#8C97FF` | Focus ring, links, selection, live node |
-| `accent-subtle` | `#EEF0FD` | `#1C1F3D` | Selected row, info banner |
-| `primary` / `on-primary` | `#111114` / `#FFFFFF` | `#EDEDF0` / `#111114` | Primary button |
+| Token                    | Light                 | Dark                  | Use                                           |
+| ------------------------ | --------------------- | --------------------- | --------------------------------------------- |
+| `bg`                     | `#F7F7F8`             | `#0B0B0E`             | App canvas, sidebar                           |
+| `surface`                | `#FFFFFF`             | `#141418`             | Content panel, tables, inputs, dialogs        |
+| `subtle`                 | `#F3F3F5`             | `#1B1B20`             | Table header, hover, quiet zones              |
+| `muted`                  | `#EBEBEE`             | `#232329`             | Segmented track, selected menu item, skeleton |
+| `line`                   | `#E6E6EA`             | `#26262D`             | Hairlines and panel borders                   |
+| `line-strong`            | `#D4D4DA`             | `#393941`             | Input borders, Thread line                    |
+| `ink`                    | `#111114`             | `#EDEDF0`             | Primary text                                  |
+| `ink-2`                  | `#4A4A55`             | `#A8A8B3`             | Secondary text                                |
+| `ink-3`                  | `#6B6B76`             | `#8A8A95`             | Metadata, placeholders (4.5:1 floor)          |
+| `ink-4`                  | `#A0A0AA`             | `#5C5C66`             | Disabled only, never unique meaning           |
+| `accent`                 | `#3B4BD8`             | `#8C97FF`             | Focus ring, links, selection, live node       |
+| `accent-subtle`          | `#EEF0FD`             | `#1C1F3D`             | Selected row, info banner                     |
+| `primary` / `on-primary` | `#111114` / `#FFFFFF` | `#EDEDF0` / `#111114` | Primary button                                |
 
 Semantic colours come as a triple: the glyph colour (3:1 or more on every surface), `-ink` for text (4.5:1 or more) and `-subtle` for tints.
 
-| Meaning | Glyph (light) | Text (light) | Glyph and text (dark) |
-|---|---|---|---|
-| Critical | `#D92D20` | `#B42318` | `#F97066` |
-| High | `#D9480F` | `#B93815` | `#F38744` |
-| Medium | `#B47B00` | `#8A5100` | `#E8B416` |
-| Low | `#8A8A94` | `#55555F` | `#A8A8B3` |
-| Success | `#079455` | `#067647` | `#47CD89` |
+| Meaning  | Glyph (light) | Text (light) | Glyph and text (dark) |
+| -------- | ------------- | ------------ | --------------------- |
+| Critical | `#D92D20`     | `#B42318`    | `#F97066`             |
+| High     | `#D9480F`     | `#B93815`    | `#F38744`             |
+| Medium   | `#B47B00`     | `#8A5100`    | `#E8B416`             |
+| Low      | `#8A8A94`     | `#55555F`    | `#A8A8B3`             |
+| Success  | `#079455`     | `#067647`    | `#47CD89`             |
 
 ### 2.2 Typography
 
 One family: **Inter** (variable, with optical sizing), self-hosted through Fontsource. Character variants `cv05` (tailed `l`) and `cv08` (serifed `I`) are on, so codes and names such as `Il` or `INC-2026-00042` read unambiguously. Tables and figures use tabular numbers.
 
-| Token | Size / line | Use |
-|---|---|---|
-| `text-2xs` | 11 / 16 | Counters in pills, tab labels on phones |
-| `text-xs` | 12 / 16 | Metadata, table headers, badges, hints |
-| `text-sm` | 13 / 20 | Default for console UI and tables |
-| `text-base` | 14 / 20 | Body text |
-| `text-md` | 15 / 22 | Field app body, large inputs |
-| `text-lg` / `text-xl` | 16 / 24, 18 / 26 | Dialog and section titles |
-| `text-2xl` | 22 / 28 | Page titles (semibold, `-0.011em`) |
-| `text-figure` | 30 / 36 | Dashboard figures |
+| Token                 | Size / line      | Use                                     |
+| --------------------- | ---------------- | --------------------------------------- |
+| `text-2xs`            | 11 / 16          | Counters in pills, tab labels on phones |
+| `text-xs`             | 12 / 16          | Metadata, table headers, badges, hints  |
+| `text-sm`             | 13 / 20          | Default for console UI and tables       |
+| `text-base`           | 14 / 20          | Body text                               |
+| `text-md`             | 15 / 22          | Field app body, large inputs            |
+| `text-lg` / `text-xl` | 16 / 24, 18 / 26 | Dialog and section titles               |
+| `text-2xl`            | 22 / 28          | Page titles (semibold, `-0.011em`)      |
+| `text-figure`         | 30 / 36          | Dashboard figures                       |
 
 Sentence case everywhere. No all-caps labels.
 
 ### 2.3 Shape, depth, motion
 
-| Token | Value | Use |
-|---|---|---|
-| `rounded-sm` | 6 px | Buttons, inputs |
-| `rounded-md` | 8 px | Menus, banners |
-| `rounded-lg` | 10 px | Panels, content area |
-| `rounded-xl` | 14 px | Dialogs, auth cards |
+| Token            | Value                | Use                                |
+| ---------------- | -------------------- | ---------------------------------- |
+| `rounded-sm`     | 6 px                 | Buttons, inputs                    |
+| `rounded-md`     | 8 px                 | Menus, banners                     |
+| `rounded-lg`     | 10 px                | Panels, content area               |
+| `rounded-xl`     | 14 px                | Dialogs, auth cards                |
 | `shadow-control` | 1 px hairline shadow | Buttons, inputs, the content panel |
-| `shadow-pop` | soft 20 px | Menus, popovers, toasts |
-| `shadow-dialog` | deep 64 px | Dialogs, slide-overs |
+| `shadow-pop`     | soft 20 px           | Menus, popovers, toasts            |
+| `shadow-dialog`  | deep 64 px           | Dialogs, slide-overs               |
 
 Motion answers a user action and stays between 140 and 220 ms with one ease-out curve. The single exception is the live node of the Thread, which pulses three times when it appears. `prefers-reduced-motion` turns animation off.
 
@@ -86,20 +86,20 @@ Motion answers a user action and stays between 140 and 220 ms with one ease-out 
 
 Never colour alone: each has its own shape and a label (`components/domain/glyphs.tsx`).
 
-| Priority | Glyph |
-|---|---|
+| Priority | Glyph                                          |
+| -------- | ---------------------------------------------- |
 | Critical | Filled rounded square with an exclamation mark |
-| High | Three bars |
-| Medium | Two of three bars |
-| Low | One of three bars |
+| High     | Three bars                                     |
+| Medium   | Two of three bars                              |
+| Low      | One of three bars                              |
 
-| Status | Glyph |
-|---|---|
-| New | Dashed circle |
-| Assigned | Circle with a centre dot (accent) |
-| In progress | Half-filled circle (accent) |
-| Resolved | Circle with a check (success) |
-| Closed | Filled circle with a check (muted) |
+| Status      | Glyph                              |
+| ----------- | ---------------------------------- |
+| New         | Dashed circle                      |
+| Assigned    | Circle with a centre dot (accent)  |
+| In progress | Half-filled circle (accent)        |
+| Resolved    | Circle with a check (success)      |
+| Closed      | Filled circle with a check (muted) |
 
 ## 4. Layout
 
@@ -113,18 +113,18 @@ Never colour alone: each has its own shape and a label (`components/domain/glyph
 
 Primitives live in `components/ui` and wrap Radix where behaviour matters (dialogs, menus, selects, tooltips, tabs, checkboxes, switches).
 
-| Component | Rules |
-|---|---|
-| Button | Variants primary, secondary, ghost, danger, accent, link. Heights 28, 32, 40, 48. One primary per view. Labels are verbs. Loading keeps the width |
-| Field | Label above, hint below, error replaces the hint, ids and `aria-*` wired automatically |
-| Table | Inside a `Panel`, sticky header on `subtle`, 44 px rows, hover tint, horizontal scroll on phones |
-| Dialog | 420, 520 or 680 px, title and one-line description, footer with cancel then the action |
-| ConfirmDialog | Names the object and the consequence; the button repeats the verb |
-| Toast | Bottom right, one line, optional action ("Undo", "View"), same verb as the button |
-| EmptyState | One sentence about what belongs here and one action |
-| Skeleton | Matches the final layout, never a full-page spinner |
-| Badge | Small tinted label for flags (Declined, Sent back, Not triaged, Owner) |
-| Thread | `components/domain/thread.tsx`, shared by the console and the field app |
+| Component     | Rules                                                                                                                                             |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Button        | Variants primary, secondary, ghost, danger, accent, link. Heights 28, 32, 40, 48. One primary per view. Labels are verbs. Loading keeps the width |
+| Field         | Label above, hint below, error replaces the hint, ids and `aria-*` wired automatically                                                            |
+| Table         | Inside a `Panel`, sticky header on `subtle`, 44 px rows, hover tint, horizontal scroll on phones                                                  |
+| Dialog        | 420, 520 or 680 px, title and one-line description, footer with cancel then the action                                                            |
+| ConfirmDialog | Names the object and the consequence; the button repeats the verb                                                                                 |
+| Toast         | Bottom right, one line, optional action ("Undo", "View"), same verb as the button                                                                 |
+| EmptyState    | One sentence about what belongs here and one action                                                                                               |
+| Skeleton      | Matches the final layout, never a full-page spinner                                                                                               |
+| Badge         | Small tinted label for flags (Declined, Sent back, Not triaged, Owner)                                                                            |
+| Thread        | `components/domain/thread.tsx`, shared by the console and the field app                                                                           |
 
 ## 6. Content
 

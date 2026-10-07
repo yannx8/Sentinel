@@ -89,7 +89,13 @@ auditRoutes.get('/export.csv', async (req, res) => {
     ['time', 'event', 'actor', 'incident', 'details'],
     rows.map((row) => {
       const entry = toDto(row);
-      return [entry.createdAt, entry.type, entry.actor?.name ?? '', entry.incident?.reference ?? '', JSON.stringify(entry.payload)];
+      return [
+        entry.createdAt,
+        entry.type,
+        entry.actor?.name ?? '',
+        entry.incident?.reference ?? '',
+        JSON.stringify(entry.payload),
+      ];
     }),
   );
   res

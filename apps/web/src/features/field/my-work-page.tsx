@@ -15,7 +15,9 @@ type Group = { key: string; title: TKey; items: IncidentListItem[] };
 /** Splits live assignments by what the intervenant has to do next, in that order. */
 function groupWork(items: IncidentListItem[]): Group[] {
   const needs = items.filter((incident) => incident.assignee?.status === 'PENDING_ACCEPTANCE');
-  const working = items.filter((incident) => incident.status === 'IN_PROGRESS' && incident.assignee?.status !== 'PENDING_ACCEPTANCE');
+  const working = items.filter(
+    (incident) => incident.status === 'IN_PROGRESS' && incident.assignee?.status !== 'PENDING_ACCEPTANCE',
+  );
   const review = items.filter((incident) => incident.status === 'RESOLVED');
   return [
     { key: 'needs', title: 'field.work.needsAnswer', items: needs },

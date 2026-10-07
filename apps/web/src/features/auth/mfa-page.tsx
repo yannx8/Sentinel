@@ -24,11 +24,14 @@ export function MfaPage() {
   const submit = form.handleSubmit(async (values) => {
     try {
       const next = await api.post<Me>('/auth/totp', values);
-      signedIn(next);
+      await signedIn(next);
       await navigate({ to: '/platform', replace: true });
     } catch (cause) {
       form.setError('code', {
-        message: cause instanceof ApiError && cause.code === 'VALIDATION_FAILED' ? t('auth.mfa.invalid') : errorMessage(cause, t),
+        message:
+          cause instanceof ApiError && cause.code === 'VALIDATION_FAILED'
+            ? t('auth.mfa.invalid')
+            : errorMessage(cause, t),
       });
     }
   });

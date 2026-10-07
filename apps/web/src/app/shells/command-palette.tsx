@@ -91,7 +91,9 @@ export function CommandPalette({
             </div>
             <Command.List className="max-h-[min(420px,60vh)] overflow-y-auto p-1.5">
               {term.length >= 2 && !busy && incidentRows.length === 0 && peopleRows.length === 0 && (
-                <Command.Empty className="px-3 py-8 text-center text-sm text-ink-3">{t('shell.palette.empty')}</Command.Empty>
+                <Command.Empty className="px-3 py-8 text-center text-sm text-ink-3">
+                  {t('shell.palette.empty')}
+                </Command.Empty>
               )}
               {incidentRows.length > 0 && (
                 <Command.Group heading={t('shell.palette.incidents')} className={groupClass}>
@@ -114,7 +116,12 @@ export function CommandPalette({
                 <Command.Group heading={t('shell.palette.people')} className={groupClass}>
                   {peopleRows.map((member) => {
                     const name = `${member.firstName} ${member.lastName}`;
-                    const tab = member.role === 'REPORTER' ? 'employees' : member.role === 'INTERVENANT' ? 'intervenants' : 'supervisors';
+                    const tab =
+                      member.role === 'REPORTER'
+                        ? 'employees'
+                        : member.role === 'INTERVENANT'
+                          ? 'intervenants'
+                          : 'supervisors';
                     return (
                       <Command.Item
                         key={member.id}
@@ -138,7 +145,12 @@ export function CommandPalette({
                     return [link.label, ...(link.keywords ?? [])].some((value) => value.toLowerCase().includes(needle));
                   })
                   .map((link) => (
-                    <Command.Item key={link.to} value={`page-${link.to}`} onSelect={() => go(link.to)} className={itemClass}>
+                    <Command.Item
+                      key={link.to}
+                      value={`page-${link.to}`}
+                      onSelect={() => go(link.to)}
+                      className={itemClass}
+                    >
                       {link.icon}
                       <span className="flex-1">{link.label}</span>
                     </Command.Item>

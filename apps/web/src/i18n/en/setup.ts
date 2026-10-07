@@ -101,7 +101,8 @@ export const setup = {
   },
   specialties: {
     title: 'Specialties',
-    description: 'Skills your intervenants cover. When a category has a specialty, intervenants who have it are ranked first.',
+    description:
+      'Skills your intervenants cover. When a category has a specialty, intervenants who have it are ranked first.',
     add: 'Add specialty',
     empty: {
       title: 'No specialties yet',
@@ -143,7 +144,8 @@ export const setup = {
       title: 'Language and time',
       description: 'Defaults for everyone in the organization.',
       language: 'Default language',
-      languageHint: 'Invitations are sent in this language and new members start in it. Each person can change their own.',
+      languageHint:
+        'Invitations are sent in this language and new members start in it. Each person can change their own.',
       timezone: 'Time zone',
       timezoneHint: 'Dates and daily figures use this time zone.',
     },

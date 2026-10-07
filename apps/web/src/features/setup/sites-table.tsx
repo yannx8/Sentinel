@@ -50,7 +50,11 @@ function SiteRow({ site, onOpen }: { site: SiteDTO; onOpen: (site: SiteDTO) => v
         {place ? <Stacked main={place} detail={site.address ? site.city : null} muted={muted} /> : <NotSet />}
       </Td>
       <Td className="hidden lg:table-cell">
-        {contact ? <Stacked main={contact} detail={site.contactName ? site.contactPhone : null} muted={muted} /> : <NotSet />}
+        {contact ? (
+          <Stacked main={contact} detail={site.contactName ? site.contactPhone : null} muted={muted} />
+        ) : (
+          <NotSet />
+        )}
       </Td>
       <Td className="text-right">
         <OpenIncidentsLink
@@ -73,7 +77,9 @@ function SiteRow({ site, onOpen }: { site: SiteDTO; onOpen: (site: SiteDTO) => v
         )}
       </Td>
       <Td className="hidden sm:table-cell">
-        <Badge tone={site.isActive ? 'success' : 'neutral'}>{t(site.isActive ? 'common.active' : 'common.inactive')}</Badge>
+        <Badge tone={site.isActive ? 'success' : 'neutral'}>
+          {t(site.isActive ? 'common.active' : 'common.inactive')}
+        </Badge>
       </Td>
     </Tr>
   );

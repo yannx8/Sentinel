@@ -99,7 +99,11 @@ function canSee(viewer: ThreadViewer, row: { id: string; fileName: string; kind:
  * Photos of an incident the caller already passed through findVisibleIncident,
  * oldest first. Pass the viewer when it is already known to save a query.
  */
-export async function listAttachments(tenant: Tenant, incidentId: string, viewer?: ThreadViewer): Promise<AttachmentDTO[]> {
+export async function listAttachments(
+  tenant: Tenant,
+  incidentId: string,
+  viewer?: ThreadViewer,
+): Promise<AttachmentDTO[]> {
   const [rows, resolvedViewer] = await Promise.all([
     prisma.attachment.findMany({
       where: { organizationId: tenant.orgId, incidentId },
@@ -141,7 +145,8 @@ async function authorizeUpload(
       const added = await db.attachment.count({
         where: { organizationId: tenant.orgId, incidentId: incident.id, uploadedByMembershipId: tenant.membershipId },
       });
-      if (added >= REPORTER_PHOTO_LIMIT) throw forbidden(`You can add up to ${REPORTER_PHOTO_LIMIT} photos to an incident.`);
+      if (added >= REPORTER_PHOTO_LIMIT)
+        throw forbidden(`You can add up to ${REPORTER_PHOTO_LIMIT} photos to an incident.`);
       return kind;
     }
     case 'INTERVENANT': {
@@ -217,7 +222,11 @@ export async function addAttachment(
         },
         include: withUploader,
       });
-      await recordIncidentEvent(tx, tenant, current.id, 'ATTACHMENT_ADDED', { attachmentId: created.id, fileName, kind });
+      await recordIncidentEvent(tx, tenant, current.id, 'ATTACHMENT_ADDED', {
+        attachmentId: created.id,
+        fileName,
+        kind,
+      });
       return created;
     });
     return toAttachmentDTO(row);
@@ -267,7 +276,10 @@ function sendPhoto(req: Request, res: Response, next: NextFunction, file: Readab
   const stream = storage.read(file.storageKey);
   res.on('close', () => stream.destroy());
   stream.on('error', (error) => {
-    logger.warn({ err: error, attachmentId: file.id, requestId: req.requestId }, 'Photo could not be read from storage');
+    logger.warn(
+      { err: error, attachmentId: file.id, requestId: req.requestId },
+      'Photo could not be read from storage',
+    );
     if (res.headersSent) {
       res.destroy();
       return;

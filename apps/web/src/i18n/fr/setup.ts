@@ -88,11 +88,13 @@ export const setup: Translation<typeof en> = {
       name: 'Nom',
       nameTaken: 'Une autre catégorie porte déjà ce nom. Choisissez-en un autre.',
       priority: 'Priorité par défaut',
-      priorityHint: "Appliquée lorsque l'employé ne choisit pas de priorité. Vous pouvez la modifier lors de la qualification.",
+      priorityHint:
+        "Appliquée lorsque l'employé ne choisit pas de priorité. Vous pouvez la modifier lors de la qualification.",
       specialty: 'Spécialité',
       specialtyHint: "Les intervenants qui ont cette spécialité apparaissent en premier lors de l'affectation.",
       noSpecialty: 'Aucune spécialité',
-      noSpecialtiesHint: 'Ajoutez des spécialités sur cette page pour classer les intervenants selon leurs compétences.',
+      noSpecialtiesHint:
+        'Ajoutez des spécialités sur cette page pour classer les intervenants selon leurs compétences.',
       active: 'Active',
       activeHint:
         "Les employés peuvent choisir cette catégorie lorsqu'ils signalent un problème. Les incidents déjà déclarés la conservent dans tous les cas.",

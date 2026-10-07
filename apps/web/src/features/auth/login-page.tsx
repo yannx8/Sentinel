@@ -33,7 +33,7 @@ export function LoginPage() {
     setError(null);
     try {
       const me = await api.post<Me>('/auth/login', values);
-      signedIn(me);
+      await signedIn(me);
       const target = me.platformAdmin ? homePath(me, null) : (safeRedirect(search.redirect) ?? '/');
       await navigate({ to: target, replace: true });
     } catch (cause) {

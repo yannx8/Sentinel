@@ -74,7 +74,8 @@ export function isThreadEventVisible(event: VisibilityInput, viewer: ThreadViewe
   if (viewer.role === 'SUPERVISOR') return true;
 
   if (viewer.role === 'REPORTER') {
-    if (event.type === 'COMMENT_ADDED') return (event.payload as ThreadPayloads['COMMENT_ADDED']).visibility === 'PUBLIC';
+    if (event.type === 'COMMENT_ADDED')
+      return (event.payload as ThreadPayloads['COMMENT_ADDED']).visibility === 'PUBLIC';
     if (event.type === 'ATTACHMENT_ADDED') {
       return (event.payload as ThreadPayloads['ATTACHMENT_ADDED']).kind !== 'PROGRESS';
     }

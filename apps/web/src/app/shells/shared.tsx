@@ -88,7 +88,13 @@ export function OrgSwitcher({ compact }: { compact?: boolean }) {
               switchOrganization(m.organization.id);
               void navigate({ to: homePath(me, m) });
             }}
-            shortcut={m.organization.id === membership.organization.id ? <Check className="size-3.5 text-ink" /> : t(roleLabelKey(m))}
+            shortcut={
+              m.organization.id === membership.organization.id ? (
+                <Check className="size-3.5 text-ink" />
+              ) : (
+                t(roleLabelKey(m))
+              )
+            }
           >
             {m.organization.displayName}
           </MenuItem>
@@ -120,7 +126,15 @@ export function useChangeLocale() {
   };
 }
 
-export function UserMenu({ accountPath, side = 'top', compact }: { accountPath: string; side?: 'top' | 'bottom'; compact?: boolean }) {
+export function UserMenu({
+  accountPath,
+  side = 'top',
+  compact,
+}: {
+  accountPath: string;
+  side?: 'top' | 'bottom';
+  compact?: boolean;
+}) {
   const { t, locale } = useT();
   const { me, signOut } = useSession();
   const [theme, setTheme] = useTheme();
@@ -226,7 +240,9 @@ export function SuspendedScreen({ membership }: { membership: MembershipSummary 
     <div className="flex min-h-dvh flex-col items-center justify-center bg-bg px-6 text-center">
       <Logo className="mb-10" />
       <div className="max-w-md rounded-xl border border-line bg-surface p-8 shadow-pop">
-        <h1 className="text-xl font-semibold text-ink">{t('shell.suspended.title', { organization: organization.displayName })}</h1>
+        <h1 className="text-xl font-semibold text-ink">
+          {t('shell.suspended.title', { organization: organization.displayName })}
+        </h1>
         <p className="mt-2 text-sm text-ink-2">{t('shell.suspended.body')}</p>
         <p className="mt-4 text-sm text-ink">
           {organization.ownerName
@@ -317,4 +333,3 @@ export function NavCount({ value, tone = 'neutral' }: { value: number | undefine
     </span>
   );
 }
-

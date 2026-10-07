@@ -72,7 +72,10 @@ export function useIncidentAction() {
       if (input.success) toast.success(input.success);
     },
     onError: (error) => {
-      if (error instanceof ApiError && (error.code === 'CONFLICT_CONCURRENT_UPDATE' || error.code === 'INVALID_STATE_TRANSITION')) {
+      if (
+        error instanceof ApiError &&
+        (error.code === 'CONFLICT_CONCURRENT_UPDATE' || error.code === 'INVALID_STATE_TRANSITION')
+      ) {
         void queryClient.invalidateQueries({ queryKey: ['incident'] });
         void queryClient.invalidateQueries({ queryKey: incidentKeys.all });
       }
@@ -89,7 +92,9 @@ export function useAddComment(key: string) {
     mutationFn: (input: { body: string; visibility: 'PUBLIC' | 'INTERNAL' }) =>
       api.post<ThreadEvent>(`/incidents/${encodeURIComponent(key)}/comments`, input),
     onSuccess: (event) => {
-      queryClient.setQueryData<ThreadEvent[]>(incidentKeys.thread(key), (events) => (events ? [...events, event] : [event]));
+      queryClient.setQueryData<ThreadEvent[]>(incidentKeys.thread(key), (events) =>
+        events ? [...events, event] : [event],
+      );
       void queryClient.invalidateQueries({ queryKey: incidentKeys.thread(key) });
     },
     onError: (error) => toastError(error, t),

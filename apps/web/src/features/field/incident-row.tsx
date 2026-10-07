@@ -41,8 +41,16 @@ export function IncidentRow({
       >
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-3">
-            {lead === 'status' ? <StatusLabel status={incident.status} /> : <PriorityLabel priority={incident.priority} />}
-            <time dateTime={incident.createdAt} title={date(incident.createdAt)} className="shrink-0 text-xs text-ink-3">
+            {lead === 'status' ? (
+              <StatusLabel status={incident.status} />
+            ) : (
+              <PriorityLabel priority={incident.priority} />
+            )}
+            <time
+              dateTime={incident.createdAt}
+              title={date(incident.createdAt)}
+              className="shrink-0 text-xs text-ink-3"
+            >
               {relative(incident.createdAt)}
             </time>
           </div>

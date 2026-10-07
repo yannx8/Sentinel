@@ -119,7 +119,9 @@ export function MenuSubTrigger({ children, icon }: { children: ReactNode; icon?:
     <RadixMenu.SubTrigger className={cn(itemClass, 'data-[state=open]:bg-muted')}>
       {icon}
       <span className="flex-1">{children}</span>
-      <span aria-hidden className="text-ink-3">›</span>
+      <span aria-hidden className="text-ink-3">
+        ›
+      </span>
     </RadixMenu.SubTrigger>
   );
 }

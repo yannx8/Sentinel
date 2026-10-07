@@ -29,7 +29,10 @@ export function RootLayout() {
   return (
     <TooltipProvider delayDuration={350} skipDelayDuration={150}>
       {!online && (
-        <div role="status" className="fixed inset-x-0 top-0 z-[95] flex items-center justify-center gap-2 bg-primary px-4 py-1.5 text-xs font-medium text-on-primary">
+        <div
+          role="status"
+          className="fixed inset-x-0 top-0 z-[95] flex items-center justify-center gap-2 bg-primary px-4 py-1.5 text-xs font-medium text-on-primary"
+        >
           <WifiOff className="size-3.5" aria-hidden />
           {t('common.offline')}
         </div>
@@ -87,7 +90,9 @@ export function RouteError({ error, reset }: ErrorComponentProps) {
       description={
         <>
           {t('common.errorBody')}
-          {requestId && <span className="mt-2 block text-xs text-ink-3">{t('common.requestId', { id: requestId })}</span>}
+          {requestId && (
+            <span className="mt-2 block text-xs text-ink-3">{t('common.requestId', { id: requestId })}</span>
+          )}
         </>
       }
       action={

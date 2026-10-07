@@ -31,7 +31,8 @@ type SessionValue = {
   /** The organization the person is working in now. */
   membership: MembershipSummary | null;
   switchOrganization: (orgId: string) => void;
-  signedIn: (me: Me) => void;
+  /** Resolves once the new session has reached every component, so a redirect right after it sees the person. */
+  signedIn: (me: Me) => Promise<void>;
   signOut: () => Promise<void>;
   /** Language before sign-in. Signed-in people change it in their profile. */
   setGuestLocale: (locale: Locale) => void;
@@ -86,9 +87,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   );
 
   const signedIn = useCallback(
-    (next: Me) => {
+    async (next: Me) => {
+      // The initial "who am I" check may still be in flight. Without cancelling it, its late
+      // "signed out" answer would overwrite the session we just created.
+      void queryClient.cancelQueries({ queryKey: meQueryKey }, { revert: false });
       resetTenantCache(queryClient);
       queryClient.setQueryData(meQueryKey, next);
+      // Query observers are notified on the next macrotask.
+      await new Promise((resolve) => setTimeout(resolve, 0));
     },
     [queryClient],
   );
@@ -152,7 +158,7 @@ export function homePath(me: Me | null, membership: MembershipSummary | null): s
   if (!membership) return '/no-access';
   if (membership.role === 'SUPERVISOR') return '/app/incidents';
   if (membership.role === 'INTERVENANT') return '/field/work';
-  return '/field/incidents';
+  return '/field/report';
 }
 
 function ValidationMessages() {

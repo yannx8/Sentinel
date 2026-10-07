@@ -11,7 +11,8 @@ import { api, ApiError } from '../../lib/api';
 import { errorMessage } from '../../lib/forms';
 import { AuthStatus } from './parts';
 
-type State = { kind: 'working' } | { kind: 'expired'; email: string | null } | { kind: 'invalid' } | { kind: 'already' };
+type State =
+  { kind: 'working' } | { kind: 'expired'; email: string | null } | { kind: 'invalid' } | { kind: 'already' };
 
 export function VerifyEmailPage() {
   const { t } = useT();
@@ -27,13 +28,16 @@ export function VerifyEmailPage() {
     api
       .post<Me>('/public/organizations/verify', { token })
       .then(async (me) => {
-        signedIn(me);
+        await signedIn(me);
         await navigate({ to: '/app/dashboard', replace: true });
       })
       .catch((error: unknown) => {
         if (error instanceof ApiError && error.code === 'TOKEN_EXPIRED') {
           setState({ kind: 'expired', email: (error.details as { email?: string } | undefined)?.email ?? null });
-        } else if (error instanceof ApiError && (error.details as { alreadyVerified?: boolean } | undefined)?.alreadyVerified) {
+        } else if (
+          error instanceof ApiError &&
+          (error.details as { alreadyVerified?: boolean } | undefined)?.alreadyVerified
+        ) {
           setState({ kind: 'already' });
         } else setState({ kind: 'invalid' });
       });

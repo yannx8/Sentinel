@@ -135,10 +135,16 @@ describe('thread visibility', () => {
   it('hides internal comments and progress from employees', () => {
     const viewer = { role: 'REPORTER' } as const;
     expect(
-      isThreadEventVisible({ type: 'COMMENT_ADDED', createdAt: at, payload: { visibility: 'INTERNAL', body: 'x' } }, viewer),
+      isThreadEventVisible(
+        { type: 'COMMENT_ADDED', createdAt: at, payload: { visibility: 'INTERNAL', body: 'x' } },
+        viewer,
+      ),
     ).toBe(false);
     expect(
-      isThreadEventVisible({ type: 'COMMENT_ADDED', createdAt: at, payload: { visibility: 'PUBLIC', body: 'x' } }, viewer),
+      isThreadEventVisible(
+        { type: 'COMMENT_ADDED', createdAt: at, payload: { visibility: 'PUBLIC', body: 'x' } },
+        viewer,
+      ),
     ).toBe(true);
     expect(isThreadEventVisible({ type: 'PROGRESS_POSTED', createdAt: at, payload: {} }, viewer)).toBe(false);
     expect(isThreadEventVisible({ type: 'ASSIGNMENT_DECLINED', createdAt: at, payload: {} }, viewer)).toBe(false);
@@ -146,11 +152,14 @@ describe('thread visibility', () => {
 
   it('cuts a past assignee off at the end of their assignment', () => {
     const viewer = { role: 'INTERVENANT', liveAssignee: false, accessEndsAt: at } as const;
-    expect(isThreadEventVisible({ type: 'CLOSED', createdAt: new Date(at.getTime() + 1000), payload: {} }, viewer)).toBe(
-      false,
-    );
     expect(
-      isThreadEventVisible({ type: 'COMMENT_ADDED', createdAt: at, payload: { visibility: 'INTERNAL', body: 'x' } }, viewer),
+      isThreadEventVisible({ type: 'CLOSED', createdAt: new Date(at.getTime() + 1000), payload: {} }, viewer),
+    ).toBe(false);
+    expect(
+      isThreadEventVisible(
+        { type: 'COMMENT_ADDED', createdAt: at, payload: { visibility: 'INTERNAL', body: 'x' } },
+        viewer,
+      ),
     ).toBe(false);
   });
 
@@ -196,7 +205,12 @@ describe('schemas', () => {
   });
 
   it('lower-cases invitation emails and fills empty profiles', () => {
-    const parsed = inviteMemberSchema.parse({ role: 'REPORTER', email: ' Lea@ACME.test ', firstName: 'Léa', lastName: 'M' });
+    const parsed = inviteMemberSchema.parse({
+      role: 'REPORTER',
+      email: ' Lea@ACME.test ',
+      firstName: 'Léa',
+      lastName: 'M',
+    });
     expect(parsed.email).toBe('lea@acme.test');
     expect(parsed.role === 'REPORTER' && parsed.employee.homeSiteId).toBeNull();
   });

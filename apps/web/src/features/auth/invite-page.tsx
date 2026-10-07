@@ -48,7 +48,7 @@ export function InvitePage() {
     if (!invitation) return;
     try {
       const next = await api.post<Me>(`/public/invitations/${encodeURIComponent(token)}/accept`, body);
-      signedIn(next);
+      await signedIn(next);
       toast.success(t('auth.invite.joined', { organization: invitation.organization }));
       const joined = next.memberships.find((m) => m.organization.displayName === invitation.organization);
       if (joined) {
@@ -74,7 +74,10 @@ export function InvitePage() {
   if (preview.error) {
     const expired = preview.error instanceof ApiError && preview.error.code === 'TOKEN_EXPIRED';
     return (
-      <AuthStatus icon={expired ? <Clock /> : <Link2Off />} title={t(expired ? 'auth.invite.expiredTitle' : 'auth.invite.invalidTitle')}>
+      <AuthStatus
+        icon={expired ? <Clock /> : <Link2Off />}
+        title={t(expired ? 'auth.invite.expiredTitle' : 'auth.invite.invalidTitle')}
+      >
         <p>{t(expired ? 'auth.invite.expiredBody' : 'auth.invite.invalidBody')}</p>
       </AuthStatus>
     );
@@ -93,9 +96,15 @@ export function InvitePage() {
           {t('auth.invite.title', { organization: invitation.organization })}
         </span>
       }
-      description={t('auth.invite.subtitle', { name: invitation.firstName, organization: invitation.organization, role })}
+      description={t('auth.invite.subtitle', {
+        name: invitation.firstName,
+        organization: invitation.organization,
+        role,
+      })}
     >
-      <p className="mb-5 rounded-md bg-subtle px-3.5 py-3 text-sm text-ink-2">{t(`auth.invite.roleIntro.${invitation.role}`)}</p>
+      <p className="mb-5 rounded-md bg-subtle px-3.5 py-3 text-sm text-ink-2">
+        {t(`auth.invite.roleIntro.${invitation.role}`)}
+      </p>
 
       {invitation.existingAccount ? (
         signedInAsInvitee ? (
@@ -104,7 +113,9 @@ export function InvitePage() {
           </Button>
         ) : me ? (
           <div className="grid gap-3">
-            <Banner tone="warning">{t('auth.invite.wrongAccount', { current: me.user.email, email: invitation.email })}</Banner>
+            <Banner tone="warning">
+              {t('auth.invite.wrongAccount', { current: me.user.email, email: invitation.email })}
+            </Banner>
             <Button
               block
               onClick={async () => {
@@ -130,15 +141,26 @@ export function InvitePage() {
         <form
           noValidate
           className="grid gap-4"
-          onSubmit={form.handleSubmit((values) => accept({ password: values.password, phone: values.phone || undefined }))}
+          onSubmit={form.handleSubmit((values) =>
+            accept({ password: values.password, phone: values.phone || undefined }),
+          )}
         >
           <Field label={t('auth.email')}>
             <Input value={invitation.email} readOnly disabled inputSize="lg" aria-label={name} />
           </Field>
-          <Field label={t('auth.password')} hint={t('auth.invite.choosePassword')} error={form.formState.errors.password?.message}>
+          <Field
+            label={t('auth.password')}
+            hint={t('auth.invite.choosePassword')}
+            error={form.formState.errors.password?.message}
+          >
             <PasswordInput autoComplete="new-password" autoFocus {...form.register('password')} />
           </Field>
-          <Field label={t('auth.invite.phone')} optional hint={t('auth.invite.phoneHint')} error={form.formState.errors.phone?.message}>
+          <Field
+            label={t('auth.invite.phone')}
+            optional
+            hint={t('auth.invite.phoneHint')}
+            error={form.formState.errors.phone?.message}
+          >
             <Input type="tel" autoComplete="tel" inputSize="lg" {...form.register('phone')} />
           </Field>
           <Button type="submit" variant="primary" size="lg" block loading={form.formState.isSubmitting}>

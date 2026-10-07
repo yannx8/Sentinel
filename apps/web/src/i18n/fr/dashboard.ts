@@ -119,7 +119,8 @@ export const dashboard: Translation<typeof en> = {
     resolved: 'Résolus',
     day: 'Jour',
     total: '{count} au total',
-    summary: 'Courbes des incidents créés et résolus par jour sur les 30 derniers jours. {created} créés, {resolved} résolus. Utilisez les flèches gauche et droite pour lire chaque jour.',
+    summary:
+      'Courbes des incidents créés et résolus par jour sur les 30 derniers jours. {created} créés, {resolved} résolus. Utilisez les flèches gauche et droite pour lire chaque jour.',
     caption: 'Incidents créés et résolus par jour',
   },
   medians: {

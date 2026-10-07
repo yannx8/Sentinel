@@ -12,7 +12,15 @@ function minutesSince(iso: string) {
   return (Date.now() - Date.parse(iso)) / 60_000;
 }
 
-function PanelLink({ children, to, search }: { children: string; to: '/app/incidents' | '/app/team'; search: Record<string, string> }) {
+function PanelLink({
+  children,
+  to,
+  search,
+}: {
+  children: string;
+  to: '/app/incidents' | '/app/team';
+  search: Record<string, string>;
+}) {
   return (
     <Link to={to} search={search} className={buttonClass({ variant: 'link', size: 'sm' })}>
       <span className="text-sm">{children}</span>
@@ -68,7 +76,9 @@ export function NeedsDecision({ rows }: { rows: DashboardDTO['oldestOpen'] }) {
                 <Td className="hidden whitespace-nowrap sm:table-cell">
                   <StatusLabel status={row.status} />
                 </Td>
-                <Td className="text-right whitespace-nowrap text-ink-2 tabular-nums">{duration(minutesSince(row.createdAt))}</Td>
+                <Td className="text-right whitespace-nowrap text-ink-2 tabular-nums">
+                  {duration(minutesSince(row.createdAt))}
+                </Td>
               </Tr>
             ))}
           </tbody>
@@ -149,7 +159,9 @@ export function Workload({ rows }: { rows: DashboardDTO['workload'] }) {
                   <AvailabilityLabel value={row.availability} />
                 </Td>
                 <Td className={cn('text-right tabular-nums', row.live === 0 && 'text-ink-3')}>{number(row.live)}</Td>
-                <Td className={cn('text-right tabular-nums', row.pending === 0 && 'text-ink-3')}>{number(row.pending)}</Td>
+                <Td className={cn('text-right tabular-nums', row.pending === 0 && 'text-ink-3')}>
+                  {number(row.pending)}
+                </Td>
                 <Td className="hidden text-right whitespace-nowrap text-ink-2 tabular-nums sm:table-cell">
                   {row.oldestLiveAt ? duration(minutesSince(row.oldestLiveAt)) : <span className="text-ink-3">-</span>}
                 </Td>

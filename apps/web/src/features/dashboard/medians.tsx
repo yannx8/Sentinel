@@ -26,7 +26,11 @@ export function MedianTimes({ medians }: { medians: DashboardDTO['medians'] }) {
                 <span className="block text-xs text-ink-3">{t(row.hint)}</span>
               </dt>
               <dd className="text-2xl font-semibold text-ink tabular-nums">
-                {value === null ? <span className="text-base font-normal text-ink-3">{t('dashboard.medians.none')}</span> : duration(value)}
+                {value === null ? (
+                  <span className="text-base font-normal text-ink-3">{t('dashboard.medians.none')}</span>
+                ) : (
+                  duration(value)
+                )}
               </dd>
             </div>
           );

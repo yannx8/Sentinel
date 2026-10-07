@@ -38,7 +38,7 @@ export const thread: Translation<typeof en> = {
     triage: "En attente de qualification et d'affectation par un superviseur",
     acceptance: "En attente de l'acceptation de {name}",
     work: '{name} intervient',
-    review: "En attente de vérification et de clôture par un superviseur",
+    review: 'En attente de vérification et de clôture par un superviseur',
     reassignment: 'En attente de la décision d’un superviseur sur la demande de réaffectation',
   },
 };

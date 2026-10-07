@@ -1,4 +1,10 @@
-import { forwardRef, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react';
+import {
+  forwardRef,
+  type InputHTMLAttributes,
+  type ReactNode,
+  type SelectHTMLAttributes,
+  type TextareaHTMLAttributes,
+} from 'react';
 import { cn } from '../../lib/cn';
 
 export const controlBase = cn(
@@ -39,13 +45,19 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   );
 });
 
-export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<HTMLTextAreaElement>>(
-  function Textarea({ className, rows = 4, ...props }, ref) {
-    return (
-      <textarea ref={ref} rows={rows} className={cn(controlBase, 'min-h-16 resize-y px-2.5 py-2 text-sm', className)} {...props} />
-    );
-  },
-);
+export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<HTMLTextAreaElement>>(function Textarea(
+  { className, rows = 4, ...props },
+  ref,
+) {
+  return (
+    <textarea
+      ref={ref}
+      rows={rows}
+      className={cn(controlBase, 'min-h-16 resize-y px-2.5 py-2 text-sm', className)}
+      {...props}
+    />
+  );
+});
 
 type NativeSelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
   options: { value: string; label: string }[];
@@ -62,11 +74,7 @@ export const NativeSelect = forwardRef<HTMLSelectElement, NativeSelectProps>(fun
     <div className={cn('relative', className)}>
       <select
         ref={ref}
-        className={cn(
-          controlBase,
-          'appearance-none pr-8 pl-2.5',
-          inputSize === 'lg' ? 'h-11 text-md' : 'h-8 text-sm',
-        )}
+        className={cn(controlBase, 'appearance-none pr-8 pl-2.5', inputSize === 'lg' ? 'h-11 text-md' : 'h-8 text-sm')}
         {...props}
       >
         {placeholder !== undefined && <option value="">{placeholder}</option>}
@@ -76,8 +84,19 @@ export const NativeSelect = forwardRef<HTMLSelectElement, NativeSelectProps>(fun
           </option>
         ))}
       </select>
-      <svg viewBox="0 0 16 16" className="pointer-events-none absolute top-1/2 right-2.5 size-4 -translate-y-1/2 text-ink-3" aria-hidden>
-        <path d="m4.5 6.5 3.5 3.5 3.5-3.5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <svg
+        viewBox="0 0 16 16"
+        className="pointer-events-none absolute top-1/2 right-2.5 size-4 -translate-y-1/2 text-ink-3"
+        aria-hidden
+      >
+        <path
+          d="m4.5 6.5 3.5 3.5 3.5-3.5"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
       </svg>
     </div>
   );
