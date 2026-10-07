@@ -279,6 +279,42 @@ export const assignSchema = z.object({
   note: optionalText(1000),
 });
 
+/** The inbox filters a supervisor can save, as they appear in the console URL. */
+export const savedViewParams = z
+  .object({
+    view: z.enum(inboxViews).optional(),
+    q: z.string().trim().max(100).optional(),
+    priority: z
+      .string()
+      .max(60)
+      .refine((v) => v.split(',').every((p) => (priorities as readonly string[]).includes(p)), 'Unknown priority')
+      .optional(),
+    site: uuidSchema.optional(),
+    category: uuidSchema.optional(),
+    assignee: uuidSchema.optional(),
+    sort: z.enum(['urgency', 'newest', 'oldest', 'updated']).optional(),
+  })
+  .strict();
+export const savedViewSchema = z.object({ name: text(1, 40), params: savedViewParams });
+
+const bulkItem = z.object({ reference: z.string().trim().min(1).max(40), expectedVersion: versionSchema });
+/** Per-incident results: each one is its own transaction and version check. */
+export const bulkIncidentsSchema = z.discriminatedUnion('action', [
+  z.object({
+    action: z.literal('priority'),
+    priority: z.enum(priorities),
+    items: z
+      .array(bulkItem.extend({ categoryId: uuidSchema }))
+      .min(1)
+      .max(25),
+  }),
+  z.object({
+    action: z.literal('assign'),
+    intervenantMembershipId: uuidSchema,
+    items: z.array(bulkItem).min(1).max(25),
+  }),
+]);
+
 export const unassignSchema = z.object({ expectedVersion: versionSchema, reason: optionalText(500) });
 export const closeSchema = z.object({ expectedVersion: versionSchema });
 export const sendBackSchema = z.object({ expectedVersion: versionSchema, reason: text(10, 500) });
@@ -325,6 +361,8 @@ export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterOrganizationInput = z.infer<typeof registerOrganizationSchema>;
 export type InviteMemberInput = z.infer<typeof inviteMemberSchema>;
 export type CreateIncidentInput = z.infer<typeof createIncidentSchema>;
+export type SavedViewInput = z.infer<typeof savedViewSchema>;
+export type BulkIncidentsInput = z.infer<typeof bulkIncidentsSchema>;
 export type ListIncidentsQuery = z.infer<typeof listIncidentsQuery>;
 export type SiteInput = z.infer<typeof siteSchema>;
 export type CategoryInput = z.infer<typeof categorySchema>;

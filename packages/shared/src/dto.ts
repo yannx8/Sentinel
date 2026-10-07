@@ -90,6 +90,18 @@ export type IncidentListItem = {
   version: number;
 };
 
+export type SavedViewDTO = {
+  id: string;
+  name: string;
+  params: Record<string, string>;
+  createdAt: string;
+};
+
+export type BulkIncidentsResult = {
+  done: string[];
+  failed: { reference: string; code: string; message: string }[];
+};
+
 export type AttachmentDTO = {
   id: string;
   fileName: string;

@@ -10,6 +10,8 @@ import { api, ApiError } from '../../lib/api';
 import { isTyping, type IncidentCounts } from '../../app/shells/console-shell';
 import { incidentCountsKey } from '../../app/shells/console-shell';
 import type { IncidentsSearch } from '../../app/router';
+import { useDensity } from '../../lib/density';
+import { BulkBar } from './bulk';
 import { CaseFile } from './case-file';
 import { CreateIncidentDialog } from './create-dialog';
 import { FilterBar } from './filter-bar';
@@ -24,6 +26,19 @@ export function IncidentsPage() {
   const wide = useMediaQuery('(min-width: 1280px)');
   const list = useIncidentList(search);
   const [creating, setCreating] = useState(false);
+  const [density, setDensity] = useDensity();
+  const [picked, setPicked] = useState<ReadonlySet<string>>(new Set());
+  const togglePicked = useCallback(
+    (reference: string, on: boolean) =>
+      setPicked((prev) => {
+        const next = new Set(prev);
+        if (on) next.add(reference);
+        else next.delete(reference);
+        return next;
+      }),
+    [],
+  );
+  const pickedItems = list.items.filter((item) => picked.has(item.reference));
   const containerRef = useRef<HTMLDivElement>(null);
   const counts = useQuery({
     queryKey: incidentCountsKey,
@@ -95,7 +110,14 @@ export function IncidentsPage() {
 
   const listPane = (
     <div className="flex h-full min-h-0 flex-col">
-      <FilterBar search={search} counts={viewCounts} onCreate={() => setCreating(true)} />
+      <FilterBar
+        search={search}
+        counts={viewCounts}
+        density={density}
+        onDensity={setDensity}
+        onCreate={() => setCreating(true)}
+      />
+      {pickedItems.length > 0 && <BulkBar items={pickedItems} onClear={() => setPicked(new Set())} />}
       <div ref={containerRef} className="min-h-0 flex-1 overflow-y-auto">
         {list.isPending ? (
           <ListSkeleton />
@@ -125,7 +147,14 @@ export function IncidentsPage() {
           />
         ) : (
           <>
-            <IncidentList items={list.items} selected={selected} onSelect={select} />
+            <IncidentList
+              items={list.items}
+              selected={selected}
+              picked={picked}
+              density={density}
+              onSelect={select}
+              onToggle={togglePicked}
+            />
             {list.hasNextPage && (
               <div className="p-3 text-center">
                 <Button variant="ghost" loading={list.isFetchingNextPage} onClick={() => void list.fetchNextPage()}>

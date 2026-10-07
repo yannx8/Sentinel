@@ -23,7 +23,7 @@ export function useCategories() {
   });
 }
 
-function Candidate({
+export function Candidate({
   candidate,
   selected,
   onSelect,

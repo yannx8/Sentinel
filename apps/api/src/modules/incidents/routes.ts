@@ -1,5 +1,6 @@
 import {
   assignSchema,
+  bulkIncidentsSchema,
   closeSchema,
   commentSchema,
   createIncidentSchema,
@@ -14,6 +15,7 @@ import { requireRole, tenantOf } from '../../auth/context';
 import { notFound } from '../../http/errors';
 import { idempotent } from '../../http/idempotency';
 import { parse } from '../../http/validate';
+import { bulkIncidents } from './bulk';
 import {
   addComment,
   assignIncident,
@@ -65,6 +67,12 @@ incidentRoutes.post('/', requireRole('REPORTER', 'SUPERVISOR'), async (req, res)
   const tenant = tenantOf(req);
   const input = parse(createIncidentSchema, req.body);
   await respondOnce(req, res, 'incidents.create', 201, () => createIncident(tenant, input));
+});
+
+incidentRoutes.post('/bulk', requireRole('SUPERVISOR'), async (req, res) => {
+  const tenant = tenantOf(req);
+  const input = parse(bulkIncidentsSchema, req.body);
+  await respondOnce(req, res, 'incidents.bulk', 200, () => bulkIncidents(tenant, input));
 });
 
 incidentRoutes.get('/:key', async (req, res) => {
