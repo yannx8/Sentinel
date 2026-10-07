@@ -51,3 +51,7 @@ uploads/
 
 # Local TLS inspection certificates (see .certs/README.md)
 .certs/*.pem
+
+# Test uploads
+.test-uploads/
+sentinel.code-workspace

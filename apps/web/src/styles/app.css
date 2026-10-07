@@ -1,0 +1,290 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/inter/opsz.css';
+
+/*
+ * Sentinel design tokens. Names describe roles, never colours.
+ * The interface is near-monochrome so that priority and status colours carry
+ * meaning. Contrast for every text and glyph pairing is checked in
+ * src/styles/tokens.test.ts. See docs/DESIGN_SYSTEM.md.
+ */
+
+:root {
+  --bg: #f7f7f8;
+  --surface: #ffffff;
+  --subtle: #f3f3f5;
+  --muted: #ebebee;
+  --line: #e6e6ea;
+  --line-strong: #d4d4da;
+  --ink: #111114;
+  --ink-2: #4a4a55;
+  --ink-3: #6b6b76;
+  --ink-4: #a0a0aa;
+  --accent: #3b4bd8;
+  --accent-hover: #2f3dbd;
+  --accent-subtle: #eef0fd;
+  --accent-line: #c9cef7;
+  --primary: #111114;
+  --primary-hover: #2a2a31;
+  --on-primary: #ffffff;
+  --scrim: rgb(17 17 20 / 0.32);
+
+  --critical: #d92d20;
+  --critical-ink: #b42318;
+  --critical-subtle: #fef3f2;
+  --high: #d9480f;
+  --high-ink: #b93815;
+  --high-subtle: #fff4ed;
+  --medium: #b47b00;
+  --medium-ink: #8a5100;
+  --medium-subtle: #fefbe8;
+  --low: #8a8a94;
+  --low-ink: #55555f;
+  --low-subtle: #f4f4f5;
+  --success: #079455;
+  --success-ink: #067647;
+  --success-subtle: #ecfdf3;
+
+  --shadow-pop: 0 1px 2px rgb(17 17 20 / 0.04), 0 6px 20px -4px rgb(17 17 20 / 0.12);
+  --shadow-dialog: 0 2px 6px rgb(17 17 20 / 0.06), 0 28px 64px -16px rgb(17 17 20 / 0.28);
+  --shadow-control: 0 1px 1px rgb(17 17 20 / 0.04);
+
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  --bg: #0b0b0e;
+  --surface: #141418;
+  --subtle: #1b1b20;
+  --muted: #232329;
+  --line: #26262d;
+  --line-strong: #393941;
+  --ink: #ededf0;
+  --ink-2: #a8a8b3;
+  --ink-3: #8a8a95;
+  --ink-4: #5c5c66;
+  --accent: #8c97ff;
+  --accent-hover: #a7afff;
+  --accent-subtle: #1c1f3d;
+  --accent-line: #343a78;
+  --primary: #ededf0;
+  --primary-hover: #ffffff;
+  --on-primary: #111114;
+  --scrim: rgb(0 0 0 / 0.6);
+
+  --critical: #f97066;
+  --critical-ink: #f97066;
+  --critical-subtle: #2c1514;
+  --high: #f38744;
+  --high-ink: #f38744;
+  --high-subtle: #2b1a10;
+  --medium: #e8b416;
+  --medium-ink: #e8b416;
+  --medium-subtle: #2a220c;
+  --low: #8a8a95;
+  --low-ink: #a8a8b3;
+  --low-subtle: #1f1f24;
+  --success: #47cd89;
+  --success-ink: #47cd89;
+  --success-subtle: #0f2619;
+
+  --shadow-pop: 0 0 0 1px rgb(255 255 255 / 0.06), 0 8px 24px -4px rgb(0 0 0 / 0.6);
+  --shadow-dialog: 0 0 0 1px rgb(255 255 255 / 0.06), 0 28px 64px -16px rgb(0 0 0 / 0.8);
+  --shadow-control: none;
+
+  color-scheme: dark;
+}
+
+@theme {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --color-*: initial;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+  --color-white: #ffffff;
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-subtle: var(--subtle);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-ink-4: var(--ink-4);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-subtle: var(--accent-subtle);
+  --color-accent-line: var(--accent-line);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-on-primary: var(--on-primary);
+  --color-scrim: var(--scrim);
+  --color-critical: var(--critical);
+  --color-critical-ink: var(--critical-ink);
+  --color-critical-subtle: var(--critical-subtle);
+  --color-high: var(--high);
+  --color-high-ink: var(--high-ink);
+  --color-high-subtle: var(--high-subtle);
+  --color-medium: var(--medium);
+  --color-medium-ink: var(--medium-ink);
+  --color-medium-subtle: var(--medium-subtle);
+  --color-low: var(--low);
+  --color-low-ink: var(--low-ink);
+  --color-low-subtle: var(--low-subtle);
+  --color-success: var(--success);
+  --color-success-ink: var(--success-ink);
+  --color-success-subtle: var(--success-subtle);
+
+  --text-2xs: 11px;
+  --text-2xs--line-height: 16px;
+  --text-xs: 12px;
+  --text-xs--line-height: 16px;
+  --text-sm: 13px;
+  --text-sm--line-height: 20px;
+  --text-base: 14px;
+  --text-base--line-height: 20px;
+  --text-md: 15px;
+  --text-md--line-height: 22px;
+  --text-lg: 16px;
+  --text-lg--line-height: 24px;
+  --text-xl: 18px;
+  --text-xl--line-height: 26px;
+  --text-2xl: 22px;
+  --text-2xl--line-height: 28px;
+  --text-3xl: 28px;
+  --text-3xl--line-height: 34px;
+  --text-figure: 30px;
+  --text-figure--line-height: 36px;
+
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+
+  --shadow-pop: var(--shadow-pop);
+  --shadow-dialog: var(--shadow-dialog);
+  --shadow-control: var(--shadow-control);
+
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+  --animate-fade-in: fade-in 140ms var(--ease-out);
+  --animate-pop-in: pop-in 160ms var(--ease-out);
+  --animate-sheet-in: sheet-in 220ms var(--ease-out);
+  --animate-panel-in: panel-in 220ms var(--ease-out);
+  --animate-live: live-ring 1.6s var(--ease-out) 3;
+  --animate-shimmer: shimmer 1.4s linear infinite;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-2px) scale(0.98);
+  }
+}
+@keyframes sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+}
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+}
+@keyframes live-ring {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 7px color-mix(in srgb, var(--accent) 0%, transparent);
+  }
+}
+@keyframes shimmer {
+  from {
+    background-position: -200% 0;
+  }
+  to {
+    background-position: 200% 0;
+  }
+}
+
+@layer base {
+  html {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-feature-settings: 'cv05', 'cv08';
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    margin: 0;
+    font-size: var(--text-base);
+    line-height: var(--text-base--line-height);
+    min-height: 100dvh;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+    letter-spacing: -0.011em;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  button {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: default;
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--accent) 22%, transparent);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  ::placeholder {
+    color: var(--ink-3);
+    opacity: 1;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--line-strong) transparent;
+  }
+
+  [data-tabular],
+  table {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+}

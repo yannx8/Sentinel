@@ -1,3 +1,8 @@
+// Sentinel data model. Rules and invariants: docs/PRD.md sections 6 and 7.
+// Every tenant table carries organizationId and composite foreign keys keep
+// child rows in their parent's organization (I1). Constraints Prisma cannot
+// express live in prisma/sql/invariants.sql and are part of the baseline.
+
 generator client {
   provider      = "prisma-client-js"
   binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
@@ -9,7 +14,6 @@ datasource db {
 }
 
 enum OrganizationStatus {
-  PENDING_VERIFICATION
   ACTIVE
   SUSPENDED
   CLOSED
@@ -21,10 +25,34 @@ enum Plan {
   BUSINESS
 }
 
+enum Industry {
+  FACILITIES
+  PROPERTY
+  MANUFACTURING
+  RETAIL
+  HEALTHCARE
+  EDUCATION
+  HOSPITALITY
+  LOGISTICS
+  PUBLIC_SECTOR
+  OTHER
+}
+
+enum SizeBand {
+  XS
+  S
+  M
+  L
+  XL
+}
+
 enum UserStatus {
   ACTIVE
   SUSPENDED
-  REVOKED
+}
+
+enum UserTokenKind {
+  PASSWORD_RESET
 }
 
 enum MembershipRole {
@@ -34,37 +62,15 @@ enum MembershipRole {
 }
 
 enum MembershipStatus {
-  INVITED
   ACTIVE
   SUSPENDED
   REVOKED
 }
 
-enum IntervenantAvailability {
+enum Availability {
   AVAILABLE
   BUSY
   OFF
-}
-
-enum SiteAccessStatus {
-  ACTIVE
-  REVOKED
-}
-
-enum ImportJobKind {
-  EMPLOYEES
-}
-
-enum ImportJobStatus {
-  PENDING
-  PROCESSING
-  COMPLETED
-  FAILED
-}
-
-enum DevicePlatform {
-  IOS
-  ANDROID
 }
 
 enum IncidentStatus {
@@ -82,23 +88,16 @@ enum Priority {
   CRITICAL
 }
 
-enum LocationSource {
-  GPS
-  SITE_FALLBACK
-  MANUAL_PIN
-}
-
 enum AssignmentStatus {
   PENDING_ACCEPTANCE
   ACCEPTED
-  DECLINED
   REASSIGNMENT_REQUESTED
+  DECLINED
   SUPERSEDED
   COMPLETED
 }
 
 enum ProgressType {
-  STARTED
   ON_SITE
   BLOCKED
   UPDATE
@@ -109,107 +108,189 @@ enum CommentVisibility {
   INTERNAL
 }
 
+enum DismissReason {
+  DUPLICATE
+  NOT_AN_INCIDENT
+  NO_ACTION_NEEDED
+}
+
+enum ReassignmentReason {
+  CANNOT_ACCESS
+  WRONG_SPECIALTY
+  UNAVAILABLE
+  OTHER
+}
+
 enum AttachmentKind {
-  REPORT_PHOTO
+  REPORT
   EVIDENCE
+  PROGRESS
 }
 
 enum AuditEventType {
-  CREATED
-  UPDATED
-  DELETED
-  STATUS_CHANGED
-  PRIORITY_CHANGED
-  CATEGORY_CHANGED
+  INCIDENT_CREATED
+  TRIAGED
   ASSIGNED
-  COMMENTED
-}
-
-enum PlatformEventType {
-  SUSPENDED
-  REACTIVATED
-  PLAN_CHANGED
-}
-
-enum NotificationEventType {
-  ASSIGNED
-  ACCEPTED
-  DECLINED
+  UNASSIGNED
+  ASSIGNMENT_ACCEPTED
+  ASSIGNMENT_DECLINED
   REASSIGNMENT_REQUESTED
-  PROGRESS
+  REASSIGNMENT_REJECTED
+  PROGRESS_POSTED
   RESOLVED
   SENT_BACK
   CLOSED
+  DISMISSED
+  COMMENT_ADDED
+  ATTACHMENT_ADDED
+  MEMBER_INVITED
+  INVITATION_REVOKED
+  MEMBER_JOINED
+  MEMBER_UPDATED
+  MEMBER_SUSPENDED
+  MEMBER_REACTIVATED
+  MEMBER_REVOKED
+  SITE_CREATED
+  SITE_UPDATED
+  CATEGORY_CREATED
+  CATEGORY_UPDATED
+  SPECIALTY_CREATED
+  ORG_UPDATED
+}
+
+enum NotificationType {
+  INCIDENT_CREATED
+  ASSIGNED
+  ASSIGNED_REPORTER
+  ACCEPTED
+  DECLINED
+  REASSIGNMENT_REQUESTED
+  REASSIGNMENT_REJECTED
+  UNASSIGNED
+  PROGRESS_POSTED
+  RESOLVED
+  SENT_BACK
+  CLOSED
+  COMMENT_ADDED
   INVITATION_ACCEPTED
-  CERTIFICATION_EXPIRING
 }
 
-enum SiteBoundaryType {
-  CIRCLE
-  POLYGON
+enum PlatformEventType {
+  ORG_SUSPENDED
+  ORG_REACTIVATED
+  PLAN_CHANGED
+  REGISTRATION_RESENT
 }
 
-model Organization {
-  id                    String             @id @default(uuid()) @db.Uuid
-  clerkOrgId            String             @unique
-  slug                  String             @unique
-  legalName             String
-  displayName           String
-  registrationNumber    String
-  taxId                 String?
-  industry              String
-  sizeBand              String
-  country               String
-  addressLine           String
-  city                  String
-  postalCode            String
-  timezone              String
-  defaultLocale         String
-  website               String?
-  billingEmail          String
-  status                OrganizationStatus
-  plan                  Plan
-  trialEndsAt           DateTime?
-  termsVersion          String
-  termsAcceptedAt       DateTime
-  termsAcceptedByUserId String             @db.Uuid
-  createdAt             DateTime           @default(now())
-
-  memberships        Membership[]
-  sites              Site[]
-  incidentCategories IncidentCategory[]
-  incidents          Incident[]
-  assignments        Assignment[]
-  progressUpdates    ProgressUpdate[]
-  comments           Comment[]
-  attachments        Attachment[]
-  auditEvents        AuditEvent[]
-  notifications      Notification[]
-  invitations        Invitation[]
-  importJobs         ImportJob[]
-  specialties        Specialty[]
-  counters           OrganizationCounter[]
-
-  @@unique([id])
-}
+// Identity
 
 model User {
-  id          String     @id @default(uuid()) @db.Uuid
-  clerkUserId String     @unique
-  email       String     @unique
-  firstName   String
-  lastName    String
-  phone       String?
-  locale      String?
-  status      UserStatus @default(ACTIVE)
-  lastLoginAt DateTime?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  id               String     @id @default(uuid()) @db.Uuid
+  email            String     @unique
+  passwordHash     String?
+  firstName        String
+  lastName         String
+  phone            String?
+  locale           String     @default("en")
+  status           UserStatus @default(ACTIVE)
+  emailVerifiedAt  DateTime?
+  failedLoginCount Int        @default(0)
+  lockedUntil      DateTime?
+  lastLoginAt      DateTime?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
 
-  memberships    Membership[]
-  certifications Certification[]
-  devices        DeviceToken[]
-  identity       IntervenantIdentity?
+  sessions      Session[]
+  tokens        UserToken[]
+  memberships   Membership[]
+  platformAdmin PlatformAdmin?
+}
+
+model Session {
+  id            String    @id @default(uuid()) @db.Uuid
+  userId        String    @db.Uuid
+  tokenHash     String    @unique
+  userAgent     String?
+  ip            String?
+  mfaVerifiedAt DateTime?
+  createdAt     DateTime  @default(now())
+  lastSeenAt    DateTime  @default(now())
+  expiresAt     DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model UserToken {
+  id        String        @id @default(uuid()) @db.Uuid
+  userId    String        @db.Uuid
+  kind      UserTokenKind
+  tokenHash String        @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime      @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Registration waits here until the email is verified. Nothing is created in tenant tables before.
+model OrganizationRegistration {
+  id             String    @id @default(uuid()) @db.Uuid
+  email          String
+  companyName    String
+  contactName    String
+  payload        Json
+  tokenHash      String    @unique
+  expiresAt      DateTime
+  verifiedAt     DateTime?
+  organizationId String?   @db.Uuid
+  createdAt      DateTime  @default(now())
+
+  @@index([email])
+}
+
+// Tenancy
+
+model Organization {
+  id                     String             @id @default(uuid()) @db.Uuid
+  slug                   String             @unique
+  legalName              String
+  displayName            String
+  registrationNumber     String?
+  industry               Industry
+  sizeBand               SizeBand
+  country                String
+  city                   String?
+  timezone               String
+  defaultLocale          String
+  website                String?
+  billingEmail           String
+  status                 OrganizationStatus @default(ACTIVE)
+  plan                   Plan               @default(TRIAL)
+  trialEndsAt            DateTime?
+  requireResolutionPhoto Boolean            @default(false)
+  showReporterPhone      Boolean            @default(false)
+  termsVersion           String
+  termsAcceptedAt        DateTime
+  termsAcceptedByUserId  String             @db.Uuid
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+
+  memberships   Membership[]
+  sites         Site[]
+  specialties   Specialty[]
+  categories    IncidentCategory[]
+  incidents     Incident[]
+  assignments   Assignment[]
+  progress      ProgressUpdate[]
+  comments      Comment[]
+  attachments   Attachment[]
+  invitations   Invitation[]
+  auditEvents   AuditEvent[]
+  notifications Notification[]
+  counters      OrganizationCounter[]
+  platformAudit PlatformAuditEvent[]
 }
 
 model Membership {
@@ -218,92 +299,75 @@ model Membership {
   userId                String           @db.Uuid
   role                  MembershipRole
   isOwner               Boolean          @default(false)
-  status                MembershipStatus @default(INVITED)
+  status                MembershipStatus @default(ACTIVE)
   invitedByMembershipId String?          @db.Uuid
-  joinedAt              DateTime?
+  joinedAt              DateTime         @default(now())
+  statusChangedAt       DateTime?
 
-  organization        Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  user                User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  invitedByMembership Membership?  @relation("InvitedBy", fields: [invitedByMembershipId, organizationId], references: [id, organizationId], onDelete: NoAction)
-  invitedMemberships  Membership[] @relation("InvitedBy")
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  invitedBy    Membership?  @relation("InvitedBy", fields: [invitedByMembershipId, organizationId], references: [id, organizationId], onDelete: NoAction, onUpdate: NoAction)
+  invited      Membership[] @relation("InvitedBy")
 
   employeeProfile    EmployeeProfile?
   intervenantProfile IntervenantProfile?
-  siteAccesses       SiteAccess[]
   specialties        IntervenantSpecialty[]
+  siteAccesses       SiteAccess[]
 
-  reportedIncidents   Incident[]       @relation("IncidentReporter")
-  assignments         Assignment[]     @relation("Assignee")
-  assignedAssignments Assignment[]     @relation("Assigner")
-  progressUpdates     ProgressUpdate[]
-  comments            Comment[]
-  uploadedAttachments Attachment[]
-  auditEvents         AuditEvent[]
-  notifications       Notification[]
+  reportedIncidents Incident[]       @relation("Reporter")
+  createdIncidents  Incident[]       @relation("CreatedBy")
+  assignments       Assignment[]     @relation("Assignee")
+  assignmentsGiven  Assignment[]     @relation("Assigner")
+  progressUpdates   ProgressUpdate[]
+  comments          Comment[]
+  attachments       Attachment[]
+  auditEvents       AuditEvent[]
+  notifications     Notification[]
+  invitationsSent   Invitation[]
 
   @@unique([id, organizationId])
   @@unique([organizationId, userId])
+  @@index([userId])
 }
 
 model EmployeeProfile {
   membershipId   String  @id @db.Uuid
   organizationId String  @db.Uuid
-  employeeCode   String
+  employeeCode   String?
   jobTitle       String?
   department     String?
   homeSiteId     String? @db.Uuid
-  workPhone      String?
 
   membership Membership @relation(fields: [membershipId, organizationId], references: [id, organizationId], onDelete: Cascade)
-  homeSite   Site?      @relation(fields: [homeSiteId, organizationId], references: [id, organizationId], onDelete: NoAction)
+  homeSite   Site?      @relation(fields: [homeSiteId, organizationId], references: [id, organizationId], onDelete: NoAction, onUpdate: NoAction)
 
   @@unique([membershipId, organizationId])
   @@unique([organizationId, employeeCode])
 }
 
 model IntervenantProfile {
-  membershipId   String                  @id @db.Uuid
-  organizationId String                  @db.Uuid
-  internalRef    String?
-  availability   IntervenantAvailability @default(AVAILABLE)
-  coverageNotes  String?
+  membershipId   String       @id @db.Uuid
+  organizationId String       @db.Uuid
+  companyName    String?
+  availability   Availability @default(AVAILABLE)
 
   membership Membership @relation(fields: [membershipId, organizationId], references: [id, organizationId], onDelete: Cascade)
 
   @@unique([membershipId, organizationId])
 }
 
-model IntervenantIdentity {
-  userId       String  @id @db.Uuid
-  companyName  String
-  tradeSummary String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model Certification {
-  id          String    @id @default(uuid()) @db.Uuid
-  userId      String    @db.Uuid
-  name        String
-  issuer      String
-  number      String?
-  issuedAt    DateTime?
-  expiresAt   DateTime?
-  documentRef String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
 model Specialty {
-  id             String @id @default(uuid()) @db.Uuid
-  organizationId String @db.Uuid
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
   name           String
+  createdAt      DateTime @default(now())
 
   organization Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   intervenants IntervenantSpecialty[]
   categories   IncidentCategory[]
 
   @@unique([id, organizationId])
+  @@unique([organizationId, name])
 }
 
 model IntervenantSpecialty {
@@ -318,24 +382,20 @@ model IntervenantSpecialty {
 }
 
 model Site {
-  id              String           @id @default(uuid()) @db.Uuid
-  organizationId  String           @db.Uuid
-  code            String
-  name            String
-  address         String?
-  latitude        Float
-  longitude       Float
-  boundaryType    SiteBoundaryType @default(CIRCLE)
-  radiusMeters    Float?
-  boundaryGeoJson Json?
-  timezone        String
-  contactName     String?
-  contactPhone    String?
-  isActive        Boolean          @default(true)
-  createdAt       DateTime         @default(now())
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  code           String
+  name           String
+  address        String?
+  city           String?
+  contactName    String?
+  contactPhone   String?
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  siteAccesses SiteAccess[]
+  accesses     SiteAccess[]
   incidents    Incident[]
   employees    EmployeeProfile[]
 
@@ -343,74 +403,42 @@ model Site {
   @@unique([organizationId, code])
 }
 
+// An intervenant may be assigned only on sites they have access to (I10).
 model SiteAccess {
-  membershipId   String           @db.Uuid
-  siteId         String           @db.Uuid
-  organizationId String           @db.Uuid
-  status         SiteAccessStatus @default(ACTIVE)
+  membershipId   String   @db.Uuid
+  siteId         String   @db.Uuid
+  organizationId String   @db.Uuid
+  createdAt      DateTime @default(now())
 
   membership Membership @relation(fields: [membershipId, organizationId], references: [id, organizationId], onDelete: Cascade)
   site       Site       @relation(fields: [siteId, organizationId], references: [id, organizationId], onDelete: Cascade)
 
   @@id([membershipId, siteId])
+  @@index([siteId])
 }
 
 model Invitation {
   id                    String         @id @default(uuid()) @db.Uuid
   organizationId        String         @db.Uuid
   email                 String
+  firstName             String
+  lastName              String
   role                  MembershipRole
+  profile               Json
   tokenHash             String         @unique
-  profilePayload        Json?
   invitedByMembershipId String         @db.Uuid
+  createdAt             DateTime       @default(now())
   expiresAt             DateTime
   acceptedAt            DateTime?
   revokedAt             DateTime?
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invitedBy    Membership   @relation(fields: [invitedByMembershipId, organizationId], references: [id, organizationId], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([organizationId, email])
 }
 
-model ImportJob {
-  id                    String          @id @default(uuid()) @db.Uuid
-  organizationId        String          @db.Uuid
-  kind                  ImportJobKind
-  fileRef               String
-  status                ImportJobStatus
-  totalRows             Int
-  createdRows           Int
-  errorReportRef        String?
-  createdByMembershipId String          @db.Uuid
-
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-}
-
-model PlatformAdmin {
-  userId    String   @id @db.Uuid
-  createdAt DateTime @default(now())
-}
-
-model PlatformAuditEvent {
-  id                  String            @id @default(uuid()) @db.Uuid
-  platformAdminUserId String            @db.Uuid
-  organizationId      String?           @db.Uuid
-  eventType           PlatformEventType
-  reason              String?
-  payload             Json?
-  createdAt           DateTime          @default(now())
-}
-
-model DeviceToken {
-  id         String         @id @default(uuid()) @db.Uuid
-  userId     String         @db.Uuid
-  platform   DevicePlatform
-  pushToken  String         @unique
-  appVersion String?
-  locale     String?
-  lastSeenAt DateTime?
-  revokedAt  DateTime?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
+// Operations
 
 model IncidentCategory {
   id              String   @id @default(uuid()) @db.Uuid
@@ -419,45 +447,56 @@ model IncidentCategory {
   defaultPriority Priority
   specialtyId     String?  @db.Uuid
   isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
 
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  specialty    Specialty?   @relation(fields: [specialtyId, organizationId], references: [id, organizationId], onDelete: NoAction)
-  incidents    Incident[]
+  organization      Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  specialty         Specialty?   @relation(fields: [specialtyId, organizationId], references: [id, organizationId], onDelete: NoAction, onUpdate: NoAction)
+  incidents         Incident[]   @relation("Category")
+  reportedIncidents Incident[]   @relation("ReportedCategory")
 
   @@unique([id, organizationId])
+  @@unique([organizationId, name])
 }
 
 model Incident {
-  id                           String         @id @default(uuid()) @db.Uuid
-  organizationId               String         @db.Uuid
-  reference                    String
-  siteId                       String         @db.Uuid
-  reporterMembershipId         String         @db.Uuid
-  title                        String
-  description                  String
-  categoryId                   String         @db.Uuid
-  reportedPriority             Priority
-  priority                     Priority?
-  status                       IncidentStatus @default(NEW)
-  latitude                     Float?
-  longitude                    Float?
-  locationSource               LocationSource @default(GPS)
-  locationAccuracyMeters       Float?
-  distanceFromSiteCenterMeters Float?
-  resolutionText               String?
-  version                      Int            @default(1)
-  createdAt                    DateTime       @default(now())
-  triagedAt                    DateTime?
-  firstAssignedAt              DateTime?
-  startedAt                    DateTime?
-  resolvedAt                   DateTime?
-  closedAt                     DateTime?
-  updatedAt                    DateTime       @updatedAt
+  id                    String         @id @default(uuid()) @db.Uuid
+  organizationId        String         @db.Uuid
+  reference             String
+  siteId                String         @db.Uuid
+  reporterMembershipId  String         @db.Uuid
+  createdByMembershipId String         @db.Uuid
+  // Original report, immutable after submission (I5).
+  title                 String
+  description           String
+  reportedCategoryId    String         @db.Uuid
+  reportedPriority      Priority
+  locationDetail        String?
+  latitude              Float?
+  longitude             Float?
+  // Triage, written through audited events. Starts as the reported priority.
+  categoryId            String         @db.Uuid
+  priority              Priority
+  status                IncidentStatus @default(NEW)
+  version               Int            @default(1)
+  declinedAt            DateTime?
+  sentBackAt            DateTime?
+  resolutionNote        String?
+  dismissReason         DismissReason?
+  dismissNote           String?
+  createdAt             DateTime       @default(now())
+  triagedAt             DateTime?
+  firstAssignedAt       DateTime?
+  startedAt             DateTime?
+  resolvedAt            DateTime?
+  closedAt              DateTime?
+  updatedAt             DateTime       @updatedAt
 
-  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  site         Site             @relation(fields: [siteId, organizationId], references: [id, organizationId], onDelete: NoAction)
-  reporter     Membership       @relation("IncidentReporter", fields: [reporterMembershipId, organizationId], references: [id, organizationId], onDelete: NoAction)
-  category     IncidentCategory @relation(fields: [categoryId, organizationId], references: [id, organizationId], onDelete: NoAction)
+  organization     Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  site             Site             @relation(fields: [siteId, organizationId], references: [id, organizationId], onDelete: NoAction, onUpdate: NoAction)
+  reporter         Membership       @relation("Reporter", fields: [reporterMembershipId, organizationId], references: [id, organizationId], onDelete: NoAction, onUpdate: NoAction)
+  createdBy        Membership       @relation("CreatedBy", fields: [createdByMembershipId, organizationId], references: [id, organizationId], onDelete: NoAction, onUpdate: NoAction)
+  category         IncidentCategory @relation("Category", fields: [categoryId, organizationId], references: [id, organizationId], onDelete: NoAction, onUpdate: NoAction)
+  reportedCategory IncidentCategory @relation("ReportedCategory", fields: [reportedCategoryId, organizationId], references: [id, organizationId], onDelete: NoAction, onUpdate: NoAction)
 
   assignments     Assignment[]
   progressUpdates ProgressUpdate[]
@@ -469,30 +508,38 @@ model Incident {
   @@unique([id, organizationId])
   @@unique([organizationId, reference])
   @@index([organizationId, status, priority])
+  @@index([organizationId, createdAt])
+  @@index([organizationId, siteId])
+  @@index([organizationId, categoryId])
+  @@index([organizationId, reporterMembershipId])
 }
 
 model Assignment {
-  id                      String           @id @default(uuid()) @db.Uuid
-  organizationId          String           @db.Uuid
-  incidentId              String           @db.Uuid
-  intervenantMembershipId String           @db.Uuid
-  assignedByMembershipId  String           @db.Uuid
-  status                  AssignmentStatus @default(PENDING_ACCEPTANCE)
+  id                      String              @id @default(uuid()) @db.Uuid
+  organizationId          String              @db.Uuid
+  incidentId              String              @db.Uuid
+  intervenantMembershipId String              @db.Uuid
+  assignedByMembershipId  String              @db.Uuid
+  status                  AssignmentStatus    @default(PENDING_ACCEPTANCE)
+  note                    String?
   declineReason           String?
-  reassignReason          String?
-  assignedAt              DateTime         @default(now())
+  reassignmentReason      ReassignmentReason?
+  reassignmentNote        String?
+  reassignmentRequestedAt DateTime?
+  assignedAt              DateTime            @default(now())
   respondedAt             DateTime?
   endedAt                 DateTime?
-  version                 Int              @default(1)
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   incident     Incident     @relation(fields: [incidentId, organizationId], references: [id, organizationId], onDelete: Cascade)
-  intervenant  Membership   @relation("Assignee", fields: [intervenantMembershipId, organizationId], references: [id, organizationId], onDelete: NoAction)
-  assignedBy   Membership   @relation("Assigner", fields: [assignedByMembershipId, organizationId], references: [id, organizationId], onDelete: NoAction)
+  intervenant  Membership   @relation("Assignee", fields: [intervenantMembershipId, organizationId], references: [id, organizationId], onDelete: NoAction, onUpdate: NoAction)
+  assignedBy   Membership   @relation("Assigner", fields: [assignedByMembershipId, organizationId], references: [id, organizationId], onDelete: NoAction, onUpdate: NoAction)
 
   progressUpdates ProgressUpdate[]
 
   @@unique([id, organizationId])
+  @@index([intervenantMembershipId, status])
+  @@index([incidentId, assignedAt])
 }
 
 model ProgressUpdate {
@@ -508,11 +555,7 @@ model ProgressUpdate {
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   incident     Incident     @relation(fields: [incidentId, organizationId], references: [id, organizationId], onDelete: Cascade)
   assignment   Assignment   @relation(fields: [assignmentId, organizationId], references: [id, organizationId], onDelete: Cascade)
-  author       Membership   @relation(fields: [authorMembershipId, organizationId], references: [id, organizationId], onDelete: NoAction)
-
-  attachments Attachment[]
-
-  @@unique([id, organizationId])
+  author       Membership   @relation(fields: [authorMembershipId, organizationId], references: [id, organizationId], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model Comment {
@@ -526,57 +569,64 @@ model Comment {
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   incident     Incident     @relation(fields: [incidentId, organizationId], references: [id, organizationId], onDelete: Cascade)
-  author       Membership   @relation(fields: [authorMembershipId, organizationId], references: [id, organizationId], onDelete: NoAction)
+  author       Membership   @relation(fields: [authorMembershipId, organizationId], references: [id, organizationId], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model Attachment {
   id                     String         @id @default(uuid()) @db.Uuid
   organizationId         String         @db.Uuid
   incidentId             String         @db.Uuid
-  progressUpdateId       String?        @db.Uuid
   uploadedByMembershipId String         @db.Uuid
   kind                   AttachmentKind
-  originalName           String
+  fileName               String
   mimeType               String
   sizeBytes              Int
-  storageKey             String
+  storageKey             String         @unique
   createdAt              DateTime       @default(now())
 
-  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  incident       Incident        @relation(fields: [incidentId, organizationId], references: [id, organizationId], onDelete: Cascade)
-  progressUpdate ProgressUpdate? @relation(fields: [progressUpdateId, organizationId], references: [id, organizationId], onDelete: Cascade)
-  uploadedBy     Membership      @relation(fields: [uploadedByMembershipId, organizationId], references: [id, organizationId], onDelete: NoAction)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  incident     Incident     @relation(fields: [incidentId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  uploadedBy   Membership   @relation(fields: [uploadedByMembershipId, organizationId], references: [id, organizationId], onDelete: NoAction, onUpdate: NoAction)
 }
 
+// Cross-cutting
+
+// Append-only (I7, trigger in prisma/sql/invariants.sql). Also the source of each incident's Thread.
 model AuditEvent {
   id                String         @id @default(uuid()) @db.Uuid
   organizationId    String         @db.Uuid
   incidentId        String?        @db.Uuid
   actorMembershipId String?        @db.Uuid
   actorUserId       String?        @db.Uuid
-  eventType         AuditEventType
-  payload           Json?
+  type              AuditEventType
+  payload           Json           @default("{}")
   createdAt         DateTime       @default(now())
 
   organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  incident        Incident?    @relation(fields: [incidentId, organizationId], references: [id, organizationId], onDelete: Cascade)
-  actorMembership Membership?  @relation(fields: [actorMembershipId, organizationId], references: [id, organizationId], onDelete: NoAction)
+  incident        Incident?    @relation(fields: [incidentId, organizationId], references: [id, organizationId], onDelete: NoAction, onUpdate: NoAction)
+  actorMembership Membership?  @relation(fields: [actorMembershipId, organizationId], references: [id, organizationId], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([organizationId, incidentId, createdAt])
+  @@index([organizationId, createdAt])
 }
 
 model Notification {
-  id                    String                @id @default(uuid()) @db.Uuid
-  organizationId        String                @db.Uuid
-  recipientMembershipId String                @db.Uuid
-  eventType             NotificationEventType
-  incidentId            String?               @db.Uuid
-  title                 String
-  body                  String
+  id                    String           @id @default(uuid()) @db.Uuid
+  organizationId        String           @db.Uuid
+  recipientMembershipId String           @db.Uuid
+  type                  NotificationType
+  incidentId            String?          @db.Uuid
+  actorName             String?
+  dedupeKey             String
   readAt                DateTime?
-  createdAt             DateTime              @default(now())
+  createdAt             DateTime         @default(now())
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   recipient    Membership   @relation(fields: [recipientMembershipId, organizationId], references: [id, organizationId], onDelete: Cascade)
-  incident     Incident?    @relation(fields: [incidentId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  incident     Incident?    @relation(fields: [incidentId, organizationId], references: [id, organizationId], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([recipientMembershipId, dedupeKey])
+  @@index([recipientMembershipId, readAt, createdAt])
 }
 
 model OrganizationCounter {
@@ -587,4 +637,45 @@ model OrganizationCounter {
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@id([organizationId, name])
+}
+
+// Replayed responses for retried creates and transitions, kept 24 hours.
+model IdempotencyKey {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @db.Uuid
+  scope        String
+  key          String
+  requestHash  String
+  statusCode   Int
+  responseBody Json
+  createdAt    DateTime @default(now())
+
+  @@unique([userId, scope, key])
+  @@index([createdAt])
+}
+
+// Platform
+
+model PlatformAdmin {
+  userId     String   @id @db.Uuid
+  totpSecret String
+  createdAt  DateTime @default(now())
+
+  user   User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  events PlatformAuditEvent[]
+}
+
+model PlatformAuditEvent {
+  id             String            @id @default(uuid()) @db.Uuid
+  adminUserId    String            @db.Uuid
+  organizationId String?           @db.Uuid
+  type           PlatformEventType
+  reason         String?
+  payload        Json              @default("{}")
+  createdAt      DateTime          @default(now())
+
+  admin        PlatformAdmin @relation(fields: [adminUserId], references: [userId], onDelete: NoAction)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: NoAction)
+
+  @@index([organizationId, createdAt])
 }

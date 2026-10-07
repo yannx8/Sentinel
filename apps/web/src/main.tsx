@@ -1,17 +1,25 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider } from '@tanstack/react-router';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { ToastProvider } from './components/ui/Toast';
-import { applyTheme, readTheme } from './lib/util';
-import { router } from './routes/router';
-import './styles/index.css';
-
-// Set the theme before the first paint so there is no flash.
-applyTheme(readTheme());
+import { router } from './app/router';
+import { SessionProvider } from './app/session';
+import { ApiError } from './lib/api';
+import './styles/app.css';
 
 const queryClient = new QueryClient({
-  defaultOptions: { queries: { staleTime: 15_000, refetchOnWindowFocus: true } },
+  queryCache: new QueryCache(),
+  defaultOptions: {
+    queries: {
+      staleTime: 20_000,
+      refetchOnWindowFocus: true,
+      retry: (count, error) => {
+        if (error instanceof ApiError && error.status > 0 && error.status < 500) return false;
+        return count < 2;
+      },
+    },
+    mutations: { retry: false },
+  },
 });
 
 const root = document.getElementById('root');
@@ -20,9 +28,9 @@ if (!root) throw new Error('Missing #root');
 createRoot(root).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <ToastProvider>
+      <SessionProvider>
         <RouterProvider router={router} />
-      </ToastProvider>
+      </SessionProvider>
     </QueryClientProvider>
   </StrictMode>,
 );

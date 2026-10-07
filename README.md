@@ -1,79 +1,100 @@
 # Sentinel
 
-Multi-tenant incident management for organizations with several sites. Employees report, supervisors triage and assign, intervenants resolve, supervisors verify and close, with a full audit trail.
+Incident management for organizations that run several sites. Employees report a problem, supervisors triage and assign it, intervenants (technicians or external contractors) resolve it with proof, and supervisors verify and close it, with a full audit trail and strict separation between organizations.
 
-> Status: greenfield rebuild in progress. Start with `docs/PRD.md` (product spec and milestones R0 to R7) and `docs/DESIGN_SYSTEM.md`.
+## What is in the box
 
-## Where things stand
+| Surface  | For                                                                                       | Path                                    |
+| -------- | ----------------------------------------------------------------------------------------- | --------------------------------------- |
+| Console  | Supervisors: triage desk, dashboard, team, sites, categories, audit log, settings         | `/app`                                  |
+| Field    | Employees (report in three steps) and intervenants (accept, update, resolve), phone first | `/field`                                |
+| Platform | Sentinel staff: organizations, suspension, registrations. Never shows incident content    | `/platform`                             |
+| Public   | Sign-in, organization registration with email verification, invitations, password reset   | `/login`, `/register`, `/invite/:token` |
 
-| Area | State |
-|---|---|
-| Web console (`apps/web`) | The Triage desk works end to end on in-memory demo data: list, docked case file with the Thread, assign dialog, close, send back, dismiss, comments, undo, dark theme, phone layout. No API behind it yet. Review page: `/design` |
-| Shared (`packages/shared`) | Design tokens (generated CSS, contrast tests), incident state machine, candidate ranking. 66 tests |
-| API (`apps/api`) | Legacy code, protected routes answer 401 until auth lands in R1 and R2 |
-| Mobile (`apps/mobile`) | Legacy shell. Not usable until it is rebuilt in R2, so there is nothing to test on a phone yet except the web console in a mobile browser |
+English and French throughout, light and dark themes, WCAG 2.2 AA contrast checked by test.
 
-Next steps, in order: R1 data model and auth, R2 incident loop slice with the API and mobile report and My work screens. Design prototypes are being made in Claude Design with `docs/design-system/claude-design-prompts.md`.
+## Stack
 
-## Run the web console
+| Layer  | Choice                                                                                                        |
+| ------ | ------------------------------------------------------------------------------------------------------------- |
+| Web    | React 19, Vite, TanStack Router and Query, React Hook Form, Radix, Tailwind v4, Inter                         |
+| API    | Express 5, Prisma 6, PostgreSQL 16, zod, pino                                                                 |
+| Auth   | In-house: scrypt hashes, opaque session tokens, lockout, TOTP for platform admins                             |
+| Shared | `packages/shared`: zod schemas, DTO types, incident state machine, candidate ranking, Thread visibility rules |
 
-```bash
-pnpm install
-pnpm --filter @sentinel/web dev      # http://localhost:5173/app/triage
-pnpm --filter @sentinel/shared test  # tokens contrast and domain rules
-pnpm --filter @sentinel/web build
-```
+Decisions and rules: [docs/PRD.md](docs/PRD.md) (section 12 lists what differs from the original plan). Visual language: [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md).
 
-On a machine behind TLS inspection (antivirus HTTPS scanning), set `NODE_EXTRA_CA_CERTS` to the inspecting root CA before running Node tools. See `.certs/README.md`.
+## Getting started
 
-## Deploy the web console on Vercel
-
-Import the repository in the Vercel dashboard with Root Directory `apps/web` and Node 22. `apps/web/vercel.json` already sets the build command, output directory and single-page rewrites. The deployed site shows demo data only.
-
-## Repository layout
-
-| Path | What it is |
-|---|---|
-| `apps/api` | REST API: Express 5, Prisma 6, PostgreSQL 16 |
-| `apps/web` | Web console for supervisors and platform admins: React, Vite, Tailwind v4 |
-| `apps/mobile` | Expo app for employees and intervenants |
-| `packages/shared` | Types, API client and design tokens shared by the apps |
-
-## Requirements
-
-- Node 22 or newer
-- pnpm 10.15 (`corepack enable`)
-- Docker Desktop, for Postgres and Mailpit
-
-## Local development
+Requirements: Node 22 or newer, pnpm 10.15 (`corepack enable`), Docker (or a local PostgreSQL 16 with the `pg_trgm` extension).
 
 ```bash
 pnpm install
 cp apps/api/.env.example apps/api/.env
 docker compose up -d db mailpit
 pnpm db:generate
-pnpm db:migrate:deploy
-pnpm dev            # api on :4000, web on :5173
-pnpm dev:mobile     # Expo dev server
+pnpm db:migrate
+pnpm db:seed          # optional demo data
+pnpm dev              # API on :4000, web on :5173
 ```
 
-Local services:
+| Service              | URL                                         |
+| -------------------- | ------------------------------------------- |
+| Web                  | http://localhost:5173                       |
+| API                  | http://localhost:4000 (`/health`, `/ready`) |
+| Mail inbox (Mailpit) | http://localhost:8025                       |
 
-| Service | URL |
-|---|---|
-| API | http://localhost:4000 (health: `/health`, `/ready`) |
-| Web console | http://localhost:5173 |
-| Mailpit inbox | http://localhost:8025 |
+Without `SMTP_HOST`, emails are printed in the API log, and registration also returns the confirmation link in development.
+
+### Demo accounts
+
+After `pnpm db:seed`, every account uses the password `sentinel-demo`.
+
+| Email                        | Role                                                           |
+| ---------------------------- | -------------------------------------------------------------- |
+| `claire@northwind.test`      | Supervisor and owner, Northwind Facilities                     |
+| `karim@rhone-plomberie.test` | Intervenant in two organizations                               |
+| `lea@northwind.test`         | Employee                                                       |
+| `admin@sentinel.test`        | Platform admin, TOTP secret `JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP` |
+
+The seed data is fictional and the seed refuses to run in production.
+
+### Create a real platform admin
+
+```bash
+PLATFORM_ADMIN_PASSWORD='choose a long passphrase' \
+  pnpm --filter @sentinel/api admin:create -- --email you@company.com --first Ada --last Lovelace
+```
+
+It prints the TOTP secret once. Platform admins cannot be created from the UI.
 
 ## Checks
 
 ```bash
 pnpm typecheck
-pnpm test           # API tests, run against the sentinel_test database
+pnpm test             # shared rules, token contrast, and API integration tests on Postgres
 pnpm build
+pnpm format:check
 ```
 
-API tests always run with `--no-file-parallelism` to avoid exhausting the local connection pool.
+API tests run against a database whose name ends in `_test` (`apps/api/.env.test`), one file at a time. They refuse to run against anything else because suites truncate tables.
+
+## Configuration
+
+Read by `apps/api/src/env.ts`:
+
+| Variable                                                            | Default                 | Purpose                                       |
+| ------------------------------------------------------------------- | ----------------------- | --------------------------------------------- |
+| `DATABASE_URL`                                                      | required                | PostgreSQL connection string                  |
+| `PORT`                                                              | `4000`                  | API port                                      |
+| `WEB_ORIGIN`                                                        | `http://localhost:5173` | CORS origin and base of links in emails       |
+| `TRUST_PROXY`                                                       | `false`                 | Set `true` behind nginx or another proxy      |
+| `SESSION_COOKIE_SAMESITE`                                           | `lax`                   | `none` only for cross-site setups, over HTTPS |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM` | unset                   | Outgoing email                                |
+| `STORAGE_PATH`                                                      | `./uploads`             | Where photos are stored                       |
+| `LOG_LEVEL`                                                         | `info`                  | pino log level                                |
+
+The web app reads `VITE_API_URL` (default `/api`, proxied to the API by Vite in development and by nginx in Docker).
 
 ## Full stack in Docker
 
@@ -81,8 +102,24 @@ API tests always run with `--no-file-parallelism` to avoid exhausting the local 
 docker compose up --build
 ```
 
-The web console is served on http://localhost:8080 and proxies `/api` to the API container. The API applies pending migrations on start.
+Open http://localhost:8080. The API applies pending migrations on start. Behind TLS inspection, put the inspecting root CA in `.certs/` (see `.certs/README.md`).
+
+## Repository layout
+
+```
+apps/api         Express API, Prisma schema and migration, seed, tests
+apps/web         React app: console, field app, platform, public pages
+packages/shared  Contracts and rules used by both
+docs/            PRD and design system
+```
 
 ## Database
 
-The schema lives in `apps/api/prisma/schema.prisma`, with one baseline migration. Some invariants (partial unique indexes) exist only as raw SQL in the migration, so review every generated migration for unintended `DROP INDEX` statements before applying it.
+One baseline migration in `apps/api/prisma/migrations/0001_baseline`. Constraints that Prisma cannot express live in `apps/api/prisma/sql/invariants.sql` and are appended to it: one live assignment per incident, one employee membership per person, append-only audit rows, immutable original reports, read-only closed incidents, trigram search indexes. Review every generated migration for `DROP` statements against these objects.
+
+## Security notes
+
+- Every request re-checks the user, the membership and the organization status. Anything outside the caller's organization answers 404, identical to a missing id.
+- Platform admins and organization members use separate guards and cannot cross over. A platform admin session needs a verified TOTP code.
+- Uploads are checked by content, not by name or declared type, and served only after a scope check.
+- Mutations carry the incident version, and creates and transitions accept `Idempotency-Key`.

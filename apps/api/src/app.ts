@@ -1,78 +1,105 @@
-import express from 'express';
+import { randomUUID } from 'node:crypto';
 import cors from 'cors';
-import { env } from './env.js';
-import { prisma } from './lib/prisma.js';
-import { AppError } from './lib/errors.js';
-import { errorHandler } from './middleware/errorHandler.js';
-import { contextResolver } from './middleware/contextResolver.js';
-import { requireTenant } from './middleware/requireTenant.js';
-import { apiLimiter } from './lib/rateLimiter.js';
-import platformRoutes from './modules/platform/platform.routes.js';
-import siteRoutes from './modules/sites/sites.routes.js';
-import responsableRoutes from './modules/responsables/responsables.routes.js';
-import incidentRoutes from './modules/incidents/incidents.routes.js';
-import assignmentRoutes from './modules/assignments/assignments.routes.js';
-import notificationRoutes from './modules/notifications/notifications.routes.js';
-import mapRoutes from './modules/map/map.routes.js';
-import dashboardRoutes from './modules/dashboard/dashboard.routes.js';
-import attachmentRoutes from './modules/attachments/attachments.routes.js';
+import express, { Router } from 'express';
+import { env, isProduction } from './env';
+import { authenticate, requireTenant, requireUser, requirePlatformAdmin } from './auth/context';
+import { authRoutes } from './auth/routes';
+import { logger } from './lib/logger';
+import { prisma } from './lib/prisma';
+import { errorHandler, notFoundHandler } from './http/error-handler';
+import { apiLimiter } from './http/rate-limit';
+import { meRoutes } from './modules/me';
+import { registrationRoutes } from './modules/registration';
+import { publicInvitationRoutes } from './modules/people/public-invitations';
+import { invitationRoutes, memberRoutes } from './modules/people/routes';
+import { incidentRoutes } from './modules/incidents/routes';
+import { assignmentRoutes, reassignmentRoutes } from './modules/incidents/assignment-routes';
+import { attachmentFileRoutes, incidentAttachmentRoutes } from './modules/attachments';
+import { organizationRoutes, membershipRoutes } from './modules/organization';
+import { categoryRoutes, siteRoutes, specialtyRoutes } from './modules/catalog';
+import { notificationRoutes } from './modules/notifications';
+import { dashboardRoutes } from './modules/dashboard';
+import { auditRoutes } from './modules/audit';
+import { platformRoutes } from './modules/platform';
 
-const app = express();
-app.set('trust proxy', env.TRUST_PROXY);
-app.disable('x-powered-by');
-app.use((req, res, next) => {
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'DENY');
-  res.setHeader('Referrer-Policy', 'no-referrer');
-  res.setHeader('Permissions-Policy', 'geolocation=(self),camera=(),microphone=()');
-  res.setHeader(
-    'Content-Security-Policy',
-    "default-src 'self'; img-src 'self' data: https://*.tile.openstreetmap.org; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'"
+export function createApp() {
+  const app = express();
+  app.set('trust proxy', env.TRUST_PROXY);
+  app.disable('x-powered-by');
+
+  app.use((req, res, next) => {
+    req.requestId = randomUUID();
+    res.setHeader('X-Request-Id', req.requestId);
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('Referrer-Policy', 'no-referrer');
+    res.setHeader('Cross-Origin-Resource-Policy', 'same-site');
+    if (isProduction) res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    const started = process.hrtime.bigint();
+    res.on('finish', () => {
+      const ms = Number(process.hrtime.bigint() - started) / 1e6;
+      logger.info(
+        { requestId: req.requestId, method: req.method, path: req.path, status: res.statusCode, ms: Math.round(ms) },
+        'request',
+      );
+    });
+    next();
+  });
+
+  app.use(
+    cors({
+      origin: env.WEB_ORIGIN,
+      credentials: true,
+      methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+      allowedHeaders: ['Content-Type', 'X-Org-Id', 'Idempotency-Key', 'Authorization'],
+      exposedHeaders: ['X-Request-Id'],
+    }),
   );
-  if (env.NODE_ENV === 'production') {
-    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
-  }
-  next();
-});
+  app.use(express.json({ limit: '3mb' }));
 
-app.use(
-  cors({
-    origin: env.WEB_ORIGIN,
-    credentials: true,
-    methods: ['GET', 'POST', 'PATCH', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-  })
-);
+  app.get('/health', (_req, res) => {
+    res.json({ status: 'ok' });
+  });
+  app.get('/ready', async (_req, res) => {
+    try {
+      await prisma.$queryRaw`SELECT 1`;
+      res.json({ status: 'ready' });
+    } catch {
+      res.status(503).json({ status: 'unavailable' });
+    }
+  });
 
-app.use(express.json({ limit: '1mb' }));
-app.use(apiLimiter);
+  const v1 = Router();
+  v1.use(apiLimiter, authenticate);
 
-app.get('/health', (_q, res) => res.json({ status: 'ok', service: 'sentinel' }));
-app.get('/ready', async (_q, res, next) => {
-  try {
-    await prisma.$queryRaw`SELECT 1`;
-    res.json({ status: 'ready' });
-  } catch (e) {
-    next(new AppError('NOT_READY', 503, 'Database unavailable'));
-  }
-});
+  v1.use('/auth', authRoutes);
+  v1.use('/public/organizations', registrationRoutes);
+  v1.use('/public/invitations', publicInvitationRoutes);
+  v1.use('/me', requireUser, meRoutes);
+  v1.use('/platform', requireUser, requirePlatformAdmin, platformRoutes);
+  // The attachment id names its organization, so this route resolves the tenant itself.
+  v1.use('/attachments', requireUser, attachmentFileRoutes);
 
-app.use(contextResolver);
+  const tenant = Router();
+  tenant.use(requireUser, requireTenant);
+  tenant.use('/incidents/:incidentId/attachments', incidentAttachmentRoutes);
+  tenant.use('/incidents', incidentRoutes);
+  tenant.use('/assignments', assignmentRoutes);
+  tenant.use('/reassignments', reassignmentRoutes);
+  tenant.use('/members', memberRoutes);
+  tenant.use('/invitations', invitationRoutes);
+  tenant.use('/organization', organizationRoutes);
+  tenant.use('/membership', membershipRoutes);
+  tenant.use('/sites', siteRoutes);
+  tenant.use('/categories', categoryRoutes);
+  tenant.use('/specialties', specialtyRoutes);
+  tenant.use('/notifications', notificationRoutes);
+  tenant.use('/dashboard', dashboardRoutes);
+  tenant.use('/audit', auditRoutes);
+  v1.use(tenant);
 
-app.use('/platform', platformRoutes);
-
-// Every tenant route requires a resolved user, organization and membership.
-const tenant = express.Router();
-tenant.use(requireTenant);
-tenant.use('/sites', siteRoutes);
-tenant.use('/responsables', responsableRoutes);
-tenant.use('/incidents', incidentRoutes);
-tenant.use('/assignments', assignmentRoutes);
-tenant.use('/notifications', notificationRoutes);
-tenant.use('/map', mapRoutes);
-tenant.use('/dashboard', dashboardRoutes);
-tenant.use('/incidents', attachmentRoutes);
-app.use(tenant);
-
-app.use(errorHandler);
-export default app;
+  app.use('/v1', v1);
+  app.use(notFoundHandler);
+  app.use(errorHandler);
+  return app;
+}

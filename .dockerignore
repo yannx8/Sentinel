@@ -3,10 +3,11 @@
 **/.env
 **/.env.*
 !**/.env.example
-**/.expo
 **/uploads
+**/.test-uploads
 .git
 .github
-.vscode
+.claude
+.agents
 coverage
-apps/mobile
+docs

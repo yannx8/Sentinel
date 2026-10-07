@@ -1,124 +1,116 @@
 /**
- * Incident domain rules shared by API, web and mobile.
- * Source: docs/PRD.md sections 6.2 and 6.3. Keep this file pure (no I/O).
+ * Incident and assignment rules shared by the API (enforcement) and the web
+ * app (which actions to show). Pure functions only, no I/O.
+ * Source: docs/PRD.md sections 5.2 and 6.2.
  */
+import type { AssignmentStatus, IncidentStatus, LiveAssignmentStatus, MembershipRole } from './enums';
+import { liveAssignmentStatuses } from './enums';
 
-export const incidentStatuses = ['NEW', 'ASSIGNED', 'IN_PROGRESS', 'RESOLVED', 'CLOSED'] as const;
-export type IncidentStatus = (typeof incidentStatuses)[number];
+export type IncidentTrigger =
+  'assign' | 'reassign' | 'unassign' | 'accept' | 'decline' | 'resolve' | 'close' | 'send-back' | 'dismiss';
 
-export const priorities = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] as const;
-export type Priority = (typeof priorities)[number];
-
-export const availabilities = ['AVAILABLE', 'BUSY', 'OFF'] as const;
-export type Availability = (typeof availabilities)[number];
-
-export type IncidentActor = 'supervisor' | 'intervenant' | 'system';
-
-export type IncidentTransition = {
-  from: IncidentStatus;
-  to: IncidentStatus;
-  trigger: string;
-  actors: readonly IncidentActor[];
-};
+type Transition = { from: IncidentStatus; trigger: IncidentTrigger; to: IncidentStatus };
 
 /** Every legal incident transition. Anything else is INVALID_STATE_TRANSITION. */
-export const incidentTransitions: readonly IncidentTransition[] = [
-  { from: 'NEW', to: 'ASSIGNED', trigger: 'assign', actors: ['supervisor'] },
-  { from: 'ASSIGNED', to: 'IN_PROGRESS', trigger: 'accept', actors: ['intervenant'] },
-  { from: 'ASSIGNED', to: 'NEW', trigger: 'decline', actors: ['intervenant'] },
-  { from: 'ASSIGNED', to: 'NEW', trigger: 'unassign', actors: ['supervisor', 'system'] },
-  { from: 'ASSIGNED', to: 'ASSIGNED', trigger: 'reassign', actors: ['supervisor'] },
-  { from: 'IN_PROGRESS', to: 'ASSIGNED', trigger: 'reassign', actors: ['supervisor'] },
-  { from: 'IN_PROGRESS', to: 'NEW', trigger: 'unassign', actors: ['supervisor', 'system'] },
-  { from: 'IN_PROGRESS', to: 'RESOLVED', trigger: 'resolve', actors: ['intervenant'] },
-  { from: 'RESOLVED', to: 'CLOSED', trigger: 'close', actors: ['supervisor'] },
-  { from: 'RESOLVED', to: 'IN_PROGRESS', trigger: 'send-back', actors: ['supervisor'] },
-  { from: 'NEW', to: 'CLOSED', trigger: 'dismiss', actors: ['supervisor'] },
+export const incidentTransitions: readonly Transition[] = [
+  { from: 'NEW', trigger: 'assign', to: 'ASSIGNED' },
+  { from: 'NEW', trigger: 'dismiss', to: 'CLOSED' },
+  { from: 'ASSIGNED', trigger: 'accept', to: 'IN_PROGRESS' },
+  { from: 'ASSIGNED', trigger: 'decline', to: 'NEW' },
+  { from: 'ASSIGNED', trigger: 'unassign', to: 'NEW' },
+  { from: 'ASSIGNED', trigger: 'reassign', to: 'ASSIGNED' },
+  { from: 'IN_PROGRESS', trigger: 'reassign', to: 'ASSIGNED' },
+  { from: 'IN_PROGRESS', trigger: 'unassign', to: 'NEW' },
+  { from: 'IN_PROGRESS', trigger: 'resolve', to: 'RESOLVED' },
+  { from: 'RESOLVED', trigger: 'close', to: 'CLOSED' },
+  { from: 'RESOLVED', trigger: 'send-back', to: 'IN_PROGRESS' },
 ];
 
-export function canTransition(from: IncidentStatus, trigger: string, actor: IncidentActor): IncidentTransition | undefined {
-  return incidentTransitions.find((t) => t.from === from && t.trigger === trigger && t.actors.includes(actor));
+/** Target status, or null when the transition is not allowed. */
+export function nextStatus(from: IncidentStatus, trigger: IncidentTrigger): IncidentStatus | null {
+  return incidentTransitions.find((t) => t.from === from && t.trigger === trigger)?.to ?? null;
 }
 
-export type SupervisorAction = 'triage-assign' | 'dismiss' | 'reassign' | 'unassign' | 'close' | 'send-back';
-
-/** Actions the supervisor action bar offers per status (docs/DESIGN_SYSTEM.md section 5.2). First entry is the primary action. */
-export const supervisorActions: Record<IncidentStatus, readonly SupervisorAction[]> = {
-  NEW: ['triage-assign', 'dismiss'],
-  ASSIGNED: ['reassign', 'unassign'],
-  IN_PROGRESS: ['reassign', 'unassign'],
-  RESOLVED: ['close', 'send-back'],
-  CLOSED: [],
-};
-
-export type Candidate = {
-  id: string;
-  name: string;
-  /** Membership is ACTIVE. Anything else is not selectable. */
-  active: boolean;
-  specialties: readonly string[];
-  availability: Availability;
-  /** Live assignments right now. */
-  openAssignments: number;
-  /** Used to spread work: oldest first. */
-  lastAssignedAt: number | null;
-  /** Site ids with ACTIVE access. */
-  siteAccess: readonly string[];
-};
-
-export type CandidateFit = {
-  specialtyMatch: boolean;
-  availability: Availability;
-  openAssignments: number;
-  siteAccess: boolean;
-};
-
-export type RankedCandidate = {
-  candidate: Candidate;
-  fit: CandidateFit;
-  /** False means not selectable (I10). `reason` explains it in plain words. */
-  eligible: boolean;
-  reason: string | null;
-  /** True when selectable but worth a warning (availability OFF). */
-  warning: string | null;
-};
-
-const availabilityRank: Record<Availability, number> = { AVAILABLE: 0, BUSY: 1, OFF: 2 };
+export function isLiveAssignment(status: AssignmentStatus): status is LiveAssignmentStatus {
+  return (liveAssignmentStatuses as readonly string[]).includes(status);
+}
 
 /**
- * Explainable ranking, in order: specialty match, availability, fewer live
- * assignments, oldest last assignment. Ineligible candidates sort last.
+ * I14: while an incident is open, its status mirrors its live assignment.
+ * RESOLVED is the exception: the assignment stays ACCEPTED until close.
  */
-export function rankCandidates(
-  candidates: readonly Candidate[],
-  incident: { siteId: string; requiredSpecialty: string | null },
-): RankedCandidate[] {
-  const ranked = candidates.map((candidate): RankedCandidate => {
-    const siteAccess = candidate.siteAccess.includes(incident.siteId);
-    const specialtyMatch = incident.requiredSpecialty !== null && candidate.specialties.includes(incident.requiredSpecialty);
-    const fit: CandidateFit = {
-      specialtyMatch,
-      availability: candidate.availability,
-      openAssignments: candidate.openAssignments,
-      siteAccess,
-    };
-    if (!candidate.active) return { candidate, fit, eligible: false, reason: 'Not an active member', warning: null };
-    if (!siteAccess) return { candidate, fit, eligible: false, reason: 'No access to this site', warning: null };
-    return {
-      candidate,
-      fit,
-      eligible: true,
-      reason: null,
-      warning: candidate.availability === 'OFF' ? 'Marked off duty' : null,
-    };
-  });
-
-  return ranked.sort((a, b) => {
-    if (a.eligible !== b.eligible) return a.eligible ? -1 : 1;
-    if (a.fit.specialtyMatch !== b.fit.specialtyMatch) return a.fit.specialtyMatch ? -1 : 1;
-    const av = availabilityRank[a.fit.availability] - availabilityRank[b.fit.availability];
-    if (av !== 0) return av;
-    if (a.fit.openAssignments !== b.fit.openAssignments) return a.fit.openAssignments - b.fit.openAssignments;
-    return (a.candidate.lastAssignedAt ?? 0) - (b.candidate.lastAssignedAt ?? 0);
-  });
+export function statusForAssignment(status: LiveAssignmentStatus | null): IncidentStatus {
+  if (status === null) return 'NEW';
+  return status === 'PENDING_ACCEPTANCE' ? 'ASSIGNED' : 'IN_PROGRESS';
 }
+
+export type IncidentAction =
+  | 'assign'
+  | 'reassign'
+  | 'unassign'
+  | 'triage'
+  | 'dismiss'
+  | 'close'
+  | 'send-back'
+  | 'accept'
+  | 'decline'
+  | 'request-reassignment'
+  | 'progress'
+  | 'resolve'
+  | 'comment-public'
+  | 'comment-internal';
+
+export type IncidentViewer = {
+  role: MembershipRole;
+  membershipId: string;
+};
+
+export type IncidentFacts = {
+  status: IncidentStatus;
+  reporterMembershipId: string;
+  liveAssignment: { intervenantMembershipId: string; status: LiveAssignmentStatus } | null;
+};
+
+/**
+ * Actions the viewer may take right now. The API enforces the same rules in
+ * its services; this list only drives which controls the UI shows.
+ */
+export function incidentActions(viewer: IncidentViewer, incident: IncidentFacts): IncidentAction[] {
+  const { status, liveAssignment } = incident;
+  if (status === 'CLOSED') return [];
+
+  if (viewer.role === 'SUPERVISOR') {
+    const actions: IncidentAction[] = [];
+    if (status === 'NEW') actions.push('assign', 'triage', 'dismiss');
+    if (status === 'ASSIGNED' || status === 'IN_PROGRESS') actions.push('reassign', 'unassign', 'triage');
+    if (status === 'RESOLVED') actions.push('close', 'send-back');
+    actions.push('comment-public', 'comment-internal');
+    return actions;
+  }
+
+  if (viewer.role === 'INTERVENANT') {
+    const mine = liveAssignment?.intervenantMembershipId === viewer.membershipId;
+    if (!mine || !liveAssignment) return [];
+    const actions: IncidentAction[] = [];
+    if (liveAssignment.status === 'PENDING_ACCEPTANCE') actions.push('accept', 'decline');
+    if (status === 'IN_PROGRESS') {
+      actions.push('progress', 'resolve');
+      if (liveAssignment.status === 'ACCEPTED') actions.push('request-reassignment');
+    }
+    actions.push('comment-public', 'comment-internal');
+    return actions;
+  }
+
+  return incident.reporterMembershipId === viewer.membershipId ? ['comment-public'] : [];
+}
+
+/** Built-in views of the supervisor inbox. */
+export const inboxViews = ['attention', 'unassigned', 'in-progress', 'review', 'open', 'closed', 'all'] as const;
+export type InboxView = (typeof inboxViews)[number];
+
+/** Reference format: INC-2026-00042. */
+export function formatReference(year: number, sequence: number): string {
+  return `INC-${year}-${String(sequence).padStart(5, '0')}`;
+}
+
+export const referencePattern = /^INC-\d{4}-\d{5,}$/;

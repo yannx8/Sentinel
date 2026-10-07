@@ -1,6 +1,6 @@
-# Local stack: Postgres, Mailpit (SMTP), API and web console. Object storage joins in Phase 2.
-# Dev workflow: `docker compose up -d db mailpit` and run api/web with `pnpm dev`.
-# Full stack:   `docker compose up --build`, then open http://localhost:8080
+# Local stack: Postgres, Mailpit (SMTP with a web inbox), API and web app.
+# Development: `docker compose up -d db mailpit`, then `pnpm dev`.
+# Full stack:  `docker compose up --build`, then open http://localhost:8080
 services:
   db:
     image: postgres:16-alpine
@@ -9,12 +9,12 @@ services:
       POSTGRES_USER: sentinel
       POSTGRES_PASSWORD: sentinel
     ports:
-      - "5432:5432"
+      - '5432:5432'
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./scripts/db-init.sql:/docker-entrypoint-initdb.d/db-init.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U sentinel -d sentinel"]
+      test: ['CMD-SHELL', 'pg_isready -U sentinel -d sentinel']
       interval: 5s
       timeout: 5s
       retries: 10
@@ -22,8 +22,8 @@ services:
   mailpit:
     image: axllent/mailpit:latest
     ports:
-      - "1025:1025"
-      - "8025:8025"
+      - '1025:1025'
+      - '8025:8025'
 
   api:
     build:
@@ -35,15 +35,13 @@ services:
       NODE_ENV: production
       PORT: 4000
       WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:8080}
-      TRUST_PROXY: "true"
-      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-dev-only-secret-change-me-0123456789abcdef}
-      BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:8080/api}
+      TRUST_PROXY: 'true'
       SMTP_HOST: mailpit
       SMTP_PORT: 1025
-      SMTP_FROM: "Sentinel <no-reply@sentinel.local>"
+      SMTP_FROM: 'Sentinel <no-reply@sentinel.local>'
       STORAGE_PATH: /app/uploads
-    ports:
-      - "4000:4000"
+    volumes:
+      - uploads:/app/uploads
     depends_on:
       db:
         condition: service_healthy
@@ -56,9 +54,10 @@ services:
       dockerfile: Dockerfile.web
     image: sentinel-web:local
     ports:
-      - "8080:80"
+      - '8080:80'
     depends_on:
       - api
 
 volumes:
   pgdata:
+  uploads:

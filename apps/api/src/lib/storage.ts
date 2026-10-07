@@ -1,32 +1,42 @@
-import fs from 'node:fs/promises';
-import path from 'node:path';
-import crypto from 'node:crypto';
-import { env } from '../env.js';
+import { createReadStream } from 'node:fs';
+import { mkdir, rm, writeFile } from 'node:fs/promises';
+import { join, resolve } from 'node:path';
+import { env } from '../env';
 
 /**
- * Save an image file to local storage with a UUID-based name.
- * @returns A unique file reference suitable for database storage.
+ * Local disk storage for photos. Keys are generated server-side (uuid based),
+ * never taken from the client. Swap for an S3 adapter with the same interface.
  */
-export async function saveFile(buffer: Buffer, mimeType: string) {
-  await fs.mkdir(env.STORAGE_PATH, { recursive: true });
-  const ref = `${crypto.randomUUID()}.${({ 'image/jpeg':'jpg','image/png':'png','image/webp':'webp' } as Record<string,string>)[mimeType]}`;
-  // 'wx' flag fails atomically if file already exists, preventing silent overwrites
-  await fs.writeFile(path.join(env.STORAGE_PATH, ref), new Uint8Array(buffer), { flag:'wx' });
-  return ref;
+const root = resolve(env.STORAGE_PATH);
+
+function pathFor(key: string): string {
+  if (!/^[a-z0-9/-]+\.(jpg|png|webp)$/.test(key)) throw new Error('Invalid storage key');
+  return join(root, key);
 }
 
-/** Read a file from local storage. path.basename prevents directory traversal attacks. */
-export async function readFile(ref: string) {
-  return fs.readFile(path.join(env.STORAGE_PATH, path.basename(ref)));
-}
+export const storage = {
+  async put(key: string, data: Buffer) {
+    const path = pathFor(key);
+    await mkdir(join(path, '..'), { recursive: true });
+    await writeFile(path, data, { flag: 'wx' });
+  },
+  read(key: string) {
+    return createReadStream(pathFor(key));
+  },
+  async remove(key: string) {
+    await rm(pathFor(key), { force: true });
+  },
+};
 
-/** Map a file reference extension to its MIME content type. */
-export function contentType(ref: string) {
-  const ext = path.extname(ref).toLowerCase();
-  return ext === '.jpg' ? 'image/jpeg' : ext === '.png' ? 'image/png' : 'image/webp';
-}
-
-/** SHA-256 hash a token for secure storage (refresh tokens, password reset links). */
-export function hashToken(token: string) {
-  return crypto.createHash('sha256').update(token).digest('hex');
+/** Detects JPEG, PNG and WebP from magic bytes. The declared type and extension are ignored. */
+export function sniffImage(data: Buffer): { mime: string; ext: 'jpg' | 'png' | 'webp' } | null {
+  if (data.length >= 3 && data[0] === 0xff && data[1] === 0xd8 && data[2] === 0xff)
+    return { mime: 'image/jpeg', ext: 'jpg' };
+  if (data.length >= 8 && data.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) {
+    return { mime: 'image/png', ext: 'png' };
+  }
+  if (data.length >= 12 && data.toString('ascii', 0, 4) === 'RIFF' && data.toString('ascii', 8, 12) === 'WEBP') {
+    return { mime: 'image/webp', ext: 'webp' };
+  }
+  return null;
 }
