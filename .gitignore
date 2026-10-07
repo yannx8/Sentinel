@@ -54,3 +54,4 @@ uploads/
 
 # Test uploads
 .test-uploads/
+sentinel.code-workspace
