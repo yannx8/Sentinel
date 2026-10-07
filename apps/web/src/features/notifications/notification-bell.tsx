@@ -7,11 +7,13 @@ import { IconButton } from '../../components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '../../components/ui/popover';
 import { useT } from '../../i18n';
 import { api } from '../../lib/api';
+import { useLiveUpdates } from './live-updates';
 import { NotificationItem, notificationKeys, useMarkAllRead, useOpenNotification } from './parts';
 
 export function NotificationBell({ to }: { to: string }) {
   const { t } = useT();
   const [open, setOpen] = useState(false);
+  useLiveUpdates();
   const open_ = useOpenNotification();
   const markAll = useMarkAllRead();
   const unread = useQuery({

@@ -21,6 +21,7 @@ import { notificationRoutes } from './modules/notifications';
 import { dashboardRoutes } from './modules/dashboard';
 import { auditRoutes } from './modules/audit';
 import { viewRoutes } from './modules/views';
+import { eventRoutes } from './modules/events';
 import { platformRoutes } from './modules/platform';
 
 export function createApp() {
@@ -98,6 +99,7 @@ export function createApp() {
   tenant.use('/dashboard', dashboardRoutes);
   tenant.use('/audit', auditRoutes);
   tenant.use('/views', viewRoutes);
+  tenant.use('/events', eventRoutes);
   v1.use(tenant);
 
   app.use('/v1', v1);

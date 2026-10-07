@@ -99,7 +99,9 @@ export async function resolveTenant(user: User, orgId: string | null): Promise<T
 /** Tenant guard for every organization route. The organization comes from the X-Org-Id header. */
 export async function requireTenant(req: Request, _res: Response, next: NextFunction) {
   const { user } = authOf(req);
-  req.tenant = await resolveTenant(user, req.get('x-org-id') ?? null);
+  // EventSource cannot set headers, so the SSE route alone reads the organization from the query string.
+  const fromQuery = req.path === '/events' && typeof req.query.org === 'string' ? req.query.org : null;
+  req.tenant = await resolveTenant(user, req.get('x-org-id') ?? fromQuery);
   next();
 }
 

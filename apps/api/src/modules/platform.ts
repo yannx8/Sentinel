@@ -382,12 +382,16 @@ function toRegistrationDTO(row: RegistrationRow, now: Date): RegistrationDTO {
   };
 }
 
+/** F-PLT-03: an unverified registration stays visible 7 days after its link expired, then goes. Run on a schedule. */
+export async function purgeExpiredRegistrations() {
+  const { count } = await prisma.organizationRegistration.deleteMany({
+    where: { verifiedAt: null, expiresAt: { lt: new Date(Date.now() - REGISTRATION_RETENTION_MS) } },
+  });
+  return count;
+}
+
 export async function listRegistrations(query: ListRegistrationsQuery) {
   const now = new Date();
-  // F-PLT-03: an unverified registration stays visible 7 days after its link expired, then goes.
-  await prisma.organizationRegistration.deleteMany({
-    where: { verifiedAt: null, expiresAt: { lt: new Date(now.getTime() - REGISTRATION_RETENTION_MS) } },
-  });
 
   const filters: Prisma.OrganizationRegistrationWhereInput[] = [registrationStatusWhere(query.status, now)];
   if (query.q) {
