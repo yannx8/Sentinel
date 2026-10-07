@@ -4,6 +4,8 @@
 services:
   db:
     image: postgres:16-alpine
+    # Local data only: skip disk syncs so Docker-on-Windows volumes do not stall transactions past Prisma's 5 s limit.
+    command: postgres -c fsync=off -c synchronous_commit=off -c full_page_writes=off
     environment:
       POSTGRES_DB: sentinel
       POSTGRES_USER: sentinel
