@@ -44,6 +44,9 @@ Thumbs.db
 *.patch
 diff_output.txt
 
+#graphify 
+
+/graphify-out/
 
 # Expo and local uploads
 .expo/
