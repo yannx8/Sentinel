@@ -55,3 +55,7 @@ uploads/
 # Test uploads
 .test-uploads/
 sentinel.code-workspace
+
+# Playwright
+/apps/web/test-results/
+/apps/web/playwright-report/

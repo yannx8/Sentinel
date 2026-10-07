@@ -40,3 +40,6 @@ jobs:
       - run: pnpm --filter @sentinel/api exec prisma migrate deploy
       - run: pnpm test
       - run: pnpm build
+      - run: pnpm --filter @sentinel/web exec playwright install --with-deps chromium
+      - run: pnpm db:seed
+      - run: pnpm --filter @sentinel/web e2e
