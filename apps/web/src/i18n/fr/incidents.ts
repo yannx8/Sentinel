@@ -177,6 +177,32 @@ export const incidents: Translation<typeof en> = {
     submit: "Créer l'incident",
     created: '{reference} créé',
   },
+  saved: {
+    title: 'Vues enregistrées',
+    empty: 'Aucune vue enregistrée. Définissez des filtres, puis enregistrez-les ici.',
+    namePlaceholder: 'Nommer cette vue',
+    save: 'Enregistrer la vue',
+    saved: 'Vue enregistrée',
+    delete: 'Supprimer la vue {name}',
+    deleted: 'Vue supprimée',
+    nothingToSave: 'Définissez un filtre ou choisissez un onglet d’abord.',
+    full: 'Vous pouvez garder jusqu’à 20 vues. Supprimez-en une d’abord.',
+  },
+  bulk: {
+    selected: '{count} sélectionné(s)',
+    selectRow: 'Sélectionner {reference}',
+    clear: 'Effacer la sélection',
+    priority: 'Définir la priorité',
+    assign: 'Affecter',
+    assignTitle: 'Affecter {count} incidents',
+    assignDescription:
+      'Les candidats sont affichés pour {reference}. Ceux qui ne peuvent pas prendre un incident sont signalés ensuite.',
+    assignSubmit: 'Tout affecter',
+    done: '{count} mis à jour',
+    partial: '{done} mis à jour, {failed} n’ont pas pu être modifiés',
+    failedLine: '{reference} : {message}',
+  },
+  density: { label: 'Densité des lignes', compact: 'Compacte', default: 'Par défaut', comfortable: 'Confortable' },
   reassignments: {
     title: 'Demandes de réaffectation',
     description:

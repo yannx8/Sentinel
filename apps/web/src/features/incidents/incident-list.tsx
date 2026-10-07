@@ -3,10 +3,14 @@ import { memo } from 'react';
 import { PriorityIcon, StatusIcon } from '../../components/domain/glyphs';
 import { Avatar } from '../../components/ui/avatar';
 import { Badge } from '../../components/ui/badge';
+import { Checkbox } from '../../components/ui/checkbox';
 import { Skeleton } from '../../components/ui/feedback';
 import { Tooltip } from '../../components/ui/tooltip';
 import { useT } from '../../i18n';
 import { cn } from '../../lib/cn';
+import type { Density } from '../../lib/density';
+
+const rowPadding: Record<Density, string> = { compact: 'py-1.5', default: 'py-2.5', comfortable: 'py-3.5' };
 
 export function FlagBadges({ item }: { item: Pick<IncidentListItem, 'flags' | 'triaged' | 'status'> }) {
   const { t } = useT();
@@ -23,22 +27,36 @@ export function FlagBadges({ item }: { item: Pick<IncidentListItem, 'flags' | 't
 const Row = memo(function Row({
   item,
   selected,
+  checked,
+  density,
   onSelect,
+  onToggle,
 }: {
   item: IncidentListItem;
   selected: boolean;
+  checked: boolean;
+  density: Density;
   onSelect: (reference: string) => void;
+  onToggle: (reference: string, on: boolean) => void;
 }) {
   const { t, relative, date } = useT();
   return (
-    <li>
+    <li className="flex border-b border-line">
+      <span className="flex w-9 shrink-0 items-start justify-center pt-3.5">
+        <Checkbox
+          checked={checked}
+          onCheckedChange={(on) => onToggle(item.reference, on)}
+          aria-label={t('incidents.bulk.selectRow', { reference: item.reference })}
+        />
+      </span>
       <button
         type="button"
         data-reference={item.reference}
         aria-current={selected ? 'true' : undefined}
         onClick={() => onSelect(item.reference)}
         className={cn(
-          'relative flex w-full flex-col gap-1 border-b border-line px-4 py-2.5 text-left transition-colors hover:bg-subtle',
+          'relative flex min-w-0 flex-1 flex-col gap-1 pr-4 text-left transition-colors hover:bg-subtle',
+          rowPadding[density],
           selected && 'bg-accent-subtle hover:bg-accent-subtle',
         )}
       >
@@ -77,16 +95,30 @@ const Row = memo(function Row({
 export function IncidentList({
   items,
   selected,
+  picked,
+  density,
   onSelect,
+  onToggle,
 }: {
   items: IncidentListItem[];
   selected: string | undefined;
+  picked: ReadonlySet<string>;
+  density: Density;
   onSelect: (reference: string) => void;
+  onToggle: (reference: string, on: boolean) => void;
 }) {
   return (
     <ul>
       {items.map((item) => (
-        <Row key={item.id} item={item} selected={item.reference === selected} onSelect={onSelect} />
+        <Row
+          key={item.id}
+          item={item}
+          selected={item.reference === selected}
+          checked={picked.has(item.reference)}
+          density={density}
+          onSelect={onSelect}
+          onToggle={onToggle}
+        />
       ))}
     </ul>
   );

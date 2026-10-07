@@ -289,6 +289,7 @@ model Organization {
   invitations   Invitation[]
   auditEvents   AuditEvent[]
   notifications Notification[]
+  savedViews    SavedView[]
   counters      OrganizationCounter[]
   platformAudit PlatformAuditEvent[]
 }
@@ -323,6 +324,7 @@ model Membership {
   attachments       Attachment[]
   auditEvents       AuditEvent[]
   notifications     Notification[]
+  savedViews        SavedView[]
   invitationsSent   Invitation[]
 
   @@unique([id, organizationId])
@@ -608,6 +610,21 @@ model AuditEvent {
 
   @@index([organizationId, incidentId, createdAt])
   @@index([organizationId, createdAt])
+}
+
+/// A supervisor's named inbox filter. params holds a subset of the inbox search params (validated in the API).
+model SavedView {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  membershipId   String   @db.Uuid
+  name           String
+  params         Json
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  membership   Membership   @relation(fields: [membershipId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([membershipId, name])
 }
 
 model Notification {
