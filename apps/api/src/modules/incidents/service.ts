@@ -196,7 +196,20 @@ export async function loadDetail(tenant: Tenant, incidentId: string): Promise<In
     include: incidentDetailInclude,
   });
   if (!row) throw notFound('Incident');
-  return toDetail(row, tenant);
+  if (tenant.role !== 'INTERVENANT') return toDetail(row, tenant);
+  // A past assignee sees photos up to the end of their assignment, the same rule as the Thread and the file route (5.3).
+  const viewer = await threadViewerFor(tenant, row.id);
+  const attachments = row.attachments.filter((attachment) =>
+    isThreadEventVisible(
+      {
+        type: 'ATTACHMENT_ADDED',
+        createdAt: attachment.createdAt,
+        payload: { attachmentId: attachment.id, fileName: attachment.fileName, kind: attachment.kind },
+      },
+      viewer,
+    ),
+  );
+  return toDetail({ ...row, attachments }, tenant);
 }
 
 /* Inbox */

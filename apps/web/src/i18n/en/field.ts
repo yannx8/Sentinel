@@ -101,7 +101,6 @@ export const field = {
     availabilitySet: 'Availability set to {value}',
   },
   incident: {
-    reference: 'Reference',
     site: 'Site',
     locationDetail: 'Exactly where',
     category: 'Category',
@@ -162,7 +161,7 @@ export const field = {
     resolved: 'Incident resolved',
     postUpdate: 'Post update',
     progressTitle: 'Post an update',
-    progressDescription: 'Supervisors and the employee follow your progress here.',
+    progressDescription: 'Supervisors follow your progress here.',
     progressType: 'Type of update',
     progressNote: 'Note',
     progressPlaceholder: {

@@ -27,6 +27,9 @@ export function BottomBar({ children, label }: { children: ReactNode; label?: st
   );
 }
 
+/** Segmented control sized for gloved fingers: full width, 44 px tall. */
+export const largeSegments = 'flex w-full [&>button]:h-11 [&>button]:flex-1 [&>button]:text-base [&>button]:leading-tight';
+
 /** "Step 1 of 3" with a thin segmented bar. */
 export function StepProgress({ current, total }: { current: number; total: number }) {
   const { t } = useT();

@@ -1,4 +1,4 @@
-import type { Availability, CategoryDTO, IncidentListItem, MembershipRole, SiteDTO } from '@sentinel/shared';
+import type { Availability, CategoryDTO, IncidentListItem, MembershipRole, Page, SiteDTO } from '@sentinel/shared';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from '../../components/ui/toast';
 import { useT } from '../../i18n';
@@ -28,12 +28,15 @@ export const fieldKeys = {
   lastReported: incidentKeys.list({ scope: 'field-last', view: 'all', sort: 'newest', limit: 1 }),
 };
 
+const activeOnly = <T extends { isActive: boolean }>(items: T[]) => items.filter((item) => item.isActive);
+const firstSite = (page: Page<IncidentListItem>) => page.data[0]?.site ?? null;
+
 /** Active categories an employee can report under. */
 export function useActiveCategories() {
   return useQuery({
     queryKey: fieldKeys.categories,
     queryFn: ({ signal }) => api.get<CategoryDTO[]>('/categories', { signal }),
-    select: (categories) => categories.filter((category) => category.isActive),
+    select: activeOnly<CategoryDTO>,
     staleTime: 5 * 60_000,
   });
 }
@@ -43,7 +46,7 @@ export function useActiveSites() {
   return useQuery({
     queryKey: fieldKeys.sites,
     queryFn: ({ signal }) => api.get<SiteDTO[]>('/sites', { signal }),
-    select: (sites) => sites.filter((site) => site.isActive),
+    select: activeOnly<SiteDTO>,
     staleTime: 5 * 60_000,
   });
 }
@@ -61,7 +64,7 @@ export function useLastReportedSite(enabled: boolean) {
     queryKey: fieldKeys.lastReported,
     queryFn: ({ signal }) =>
       api.page<IncidentListItem>('/incidents', { query: { view: 'all', sort: 'newest', limit: 1 }, signal }),
-    select: (page) => page.data[0]?.site ?? null,
+    select: firstSite,
     enabled,
     staleTime: 5 * 60_000,
   });

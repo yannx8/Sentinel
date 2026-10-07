@@ -139,7 +139,7 @@ describe('invitations (J2)', () => {
 
     const agent = request.agent(app);
     const accepted = await agent.post(`/v1/public/invitations/${token}/accept`).send({ password: 'my own passphrase' });
-    expect(accepted.status).toBe(200);
+    expect(accepted.status).toBe(201);
     expect(accepted.body.data.memberships[0].role).toBe('REPORTER');
     expect((await request(app).get(`/v1/public/invitations/${token}`)).body.error.code).toBe('TOKEN_INVALID');
 
@@ -166,7 +166,7 @@ describe('invitations (J2)', () => {
 
     const karim = await signIn(tech.user.email, null);
     const accepted = await karim.post(`/public/invitations/${token}/accept`);
-    expect(accepted.status).toBe(200);
+    expect(accepted.status).toBe(201);
     expect(accepted.body.data.memberships).toHaveLength(2);
     const access = await prisma.siteAccess.count({ where: { siteId: bravo.site.id } });
     expect(access).toBe(1);

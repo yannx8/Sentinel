@@ -25,7 +25,7 @@ export const field: Translation<typeof en> = {
     searchSites: 'Rechercher un site',
     noMatch: 'Aucun résultat pour cette recherche.',
     homeSite: 'Votre site',
-    lastUsed: 'Dernier utilisé',
+    lastUsed: 'Dernier signalement',
     locationDetailLabel: 'Où exactement ?',
     locationDetailPlaceholder: 'Bâtiment B, 2e étage, à côté des ascenseurs',
     locationDetailHint: 'Bâtiment, étage, pièce ou point de repère.',
@@ -72,10 +72,10 @@ export const field: Translation<typeof en> = {
     wrongType: 'Choisissez une photo au format JPEG, PNG ou WebP.',
   },
   list: {
-    open: 'En cours',
+    open: 'Ouverts',
     closed: 'Clôturés',
     loadError: "Cette liste n'a pas pu se charger",
-    sentBack: 'Renvoyé',
+    sentBack: 'Renvoyé pour reprise',
     reassignmentRequested: 'Réaffectation demandée',
   },
   myIncidents: {
@@ -104,7 +104,6 @@ export const field: Translation<typeof en> = {
     availabilitySet: 'Disponibilité définie sur {value}',
   },
   incident: {
-    reference: 'Référence',
     site: 'Site',
     locationDetail: 'Où exactement',
     category: 'Catégorie',
@@ -120,7 +119,7 @@ export const field: Translation<typeof en> = {
     loadError: "Cet incident n'a pas pu se charger",
     threadError: "L'activité n'a pas pu se charger. Réessayez dans un instant.",
     reassignmentPending:
-      'Vous avez demandé une réaffectation. Un superviseur va décider rapidement. En attendant, cet incident reste sous votre responsabilité.',
+      'Vous avez demandé une réaffectation. Un superviseur va décider rapidement. En attendant, cet incident vous reste assigné.',
     sentBack: "Un superviseur a renvoyé cet incident pour reprise. Le motif figure dans l'activité ci-dessous.",
   },
   statusLine: {
@@ -166,7 +165,7 @@ export const field: Translation<typeof en> = {
     resolved: 'Incident résolu',
     postUpdate: 'Publier un point',
     progressTitle: 'Publier un point',
-    progressDescription: "Les superviseurs et l'employé suivent votre avancement ici.",
+    progressDescription: 'Les superviseurs suivent votre avancement ici.',
     progressType: 'Type de point',
     progressNote: 'Note',
     progressPlaceholder: {

@@ -4,9 +4,9 @@
  * runs for a supervisor of `tenant` and reads or writes that organization only.
  */
 import { Prisma } from '@prisma/client';
+import { employeeProfileSchema } from '@sentinel/shared';
 import type {
   AuditEventType,
-  employeeProfileSchema,
   intervenantProfileSchema,
   InvitationDTO,
   InvitationStatus,
@@ -440,7 +440,9 @@ async function assertInvitable(
   });
   if (pending) {
     throw conflict(
-      exceptInvitationId ? 'Another invitation is already pending for this email.' : messages.invitationPending,
+      exceptInvitationId
+        ? 'Another invitation is already pending for this email. Resend that one instead.'
+        : messages.invitationPending,
       {
         invitationId: pending.id,
         fields: { email: [messages.invitationPending] },
@@ -582,6 +584,16 @@ export async function resendInvitation(tenant: Tenant, id: string): Promise<Invi
   const invitation = await prisma.$transaction(async (tx) => {
     await lockInvitations(tx, tenant);
     await assertInvitable(tx, tenant, current, current.id);
+    // An expired invitation's employee code was free for others until now, so check it again.
+    if (current.role === 'REPORTER') {
+      const stored = employeeProfileSchema.safeParse(current.profile);
+      const code = stored.success ? stored.data.employeeCode : undefined;
+      if (code && (await employeeCodeTaken(tx, tenant, code, current.email))) {
+        throw conflict(
+          `Employee code ${code} is now used by someone else. Revoke this invitation and send a new one with another code.`,
+        );
+      }
+    }
     const { count } = await tx.invitation.updateMany({
       where: { id, organizationId: tenant.orgId, acceptedAt: null, revokedAt: null },
       data: { tokenHash: hashToken(token), expiresAt: new Date(Date.now() + INVITATION_TTL_MS) },

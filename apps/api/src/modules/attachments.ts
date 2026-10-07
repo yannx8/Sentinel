@@ -15,7 +15,7 @@ import {
   type ThreadViewer,
 } from '@sentinel/shared';
 import { Router, type NextFunction, type Request, type Response } from 'express';
-import multer from 'multer';
+import multer, { MulterError } from 'multer';
 import { z } from 'zod';
 import { authOf, resolveTenant, tenantOf, type Tenant } from '../auth/context';
 import { recordIncidentEvent } from '../lib/audit';
@@ -38,6 +38,18 @@ const upload = multer({
   // Browsers send UTF-8 file names. Multer defaults to latin1.
   defParamCharset: 'utf8',
 });
+const receivePhoto = upload.single('file');
+
+/**
+ * Limits arrive as MulterError, which the error handler maps. Busboy reports a malformed,
+ * truncated or aborted body as a plain Error: that is the client's request, not a server failure.
+ */
+function readUpload(req: Request, res: Response, next: NextFunction) {
+  receivePhoto(req, res, (error?: unknown) => {
+    if (!error || error instanceof MulterError) return next(error);
+    next(new AppError('VALIDATION_FAILED', 'The upload could not be read. Try again.', undefined, 400));
+  });
+}
 
 const uploadFieldsSchema = z.object({ kind: z.enum(attachmentKinds).optional() });
 
@@ -220,6 +232,11 @@ export async function addAttachment(
 
 type ReadableAttachment = { id: string; storageKey: string; mimeType: string; fileName: string; sizeBytes: number };
 
+/** Their 404s name the organization or the incident. The body must match a missing photo, or the id would reveal itself. */
+function asMissingAttachment(error: unknown): never {
+  throw error instanceof AppError && error.code === 'NOT_FOUND' ? notFound('Attachment') : error;
+}
+
 /**
  * The attachment names its organization, so the tenant is resolved from it.
  * Anything the caller may not see answers 404, like a missing id.
@@ -227,8 +244,8 @@ type ReadableAttachment = { id: string; storageKey: string; mimeType: string; fi
 export async function findReadableAttachment(user: User, id: string): Promise<ReadableAttachment> {
   const attachment = await prisma.attachment.findUnique({ where: { id } });
   if (!attachment) throw notFound('Attachment');
-  const tenant = await resolveTenant(user, attachment.organizationId);
-  const incident = await findVisibleIncident(tenant, attachment.incidentId);
+  const tenant = await resolveTenant(user, attachment.organizationId).catch(asMissingAttachment);
+  const incident = await findVisibleIncident(tenant, attachment.incidentId).catch(asMissingAttachment);
   const viewer = await threadViewerFor(tenant, incident.id);
   if (!canSee(viewer, attachment)) throw notFound('Attachment');
   return attachment;
@@ -277,7 +294,7 @@ incidentAttachmentRoutes.get<'/', IncidentParams>('/', async (req, res) => {
   res.json({ data: await listIncidentAttachments(tenantOf(req), req.params.incidentId) });
 });
 
-incidentAttachmentRoutes.post<'/', IncidentParams>('/', upload.single('file'), async (req, res) => {
+incidentAttachmentRoutes.post<'/', IncidentParams>('/', readUpload, async (req, res) => {
   const tenant = tenantOf(req);
   const { kind } = parse(uploadFieldsSchema, req.body ?? {});
   const result = await idempotent(req, 'attachments.create', async () => ({

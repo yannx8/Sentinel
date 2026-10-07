@@ -69,6 +69,24 @@ function changedFields<T, K extends keyof T>(keys: readonly K[], current: T, nex
   return keys.filter((key) => next[key] !== current[key]);
 }
 
+/**
+ * The changed fields only. Writing the whole snapshot would revert a field that
+ * another supervisor changed between our read and our write.
+ */
+function pick<T, K extends keyof T>(source: T, keys: readonly K[]): Partial<Pick<T, K>> {
+  const picked: Partial<Pick<T, K>> = {};
+  for (const key of keys) picked[key] = source[key];
+  return picked;
+}
+
+/**
+ * Same name in any case. Prisma runs an insensitive `equals` as ILIKE, so `%`,
+ * `_` and `\` are escaped: unescaped, "Fire_alarm" would match "Fire alarm".
+ */
+function sameName(name: string): Prisma.StringFilter {
+  return { equals: name.replace(/[\\%_]/g, '\\$&'), mode: 'insensitive' };
+}
+
 /* Sites */
 
 const siteCounts = {
@@ -191,7 +209,7 @@ export async function updateSite(tenant: Tenant, siteId: string, input: SiteUpda
         if (next.code !== current.code) await assertSiteCodeFree(tx, tenant, next.code, current.id);
         const site = await tx.site.update({
           where: { id: current.id, organizationId: tenant.orgId },
-          data: next,
+          data: pick(next, fields),
           include: siteCounts,
         });
         await recordOrgEvent(tx, tenant, 'SITE_UPDATED', { siteId: site.id, name: site.name, fields });
@@ -240,7 +258,7 @@ async function assertCategoryNameFree(tx: Tx, tenant: Tenant, name: string, exce
   const other = await tx.incidentCategory.findFirst({
     where: {
       organizationId: tenant.orgId,
-      name: { equals: name, mode: 'insensitive' },
+      name: sameName(name),
       ...(exceptId ? { id: { not: exceptId } } : {}),
     },
     select: { id: true },
@@ -327,7 +345,7 @@ export async function updateCategory(tenant: Tenant, categoryId: string, input: 
         }
         const category = await tx.incidentCategory.update({
           where: { id: current.id, organizationId: tenant.orgId },
-          data: next,
+          data: pick(next, fields),
           include: categoryWithCounts,
         });
         await recordOrgEvent(tx, tenant, 'CATEGORY_UPDATED', { categoryId: category.id, name: category.name, fields });
@@ -370,7 +388,7 @@ export async function createSpecialty(tenant: Tenant, input: SpecialtyInput): Pr
     () =>
       prisma.$transaction(async (tx) => {
         const other = await tx.specialty.findFirst({
-          where: { organizationId: tenant.orgId, name: { equals: input.name, mode: 'insensitive' } },
+          where: { organizationId: tenant.orgId, name: sameName(input.name) },
           select: { id: true },
         });
         if (other) throw specialtyNameTaken();
