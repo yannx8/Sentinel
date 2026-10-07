@@ -23,6 +23,7 @@ export type Tenant = {
 };
 
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace -- Express augmentation requires a namespace
   namespace Express {
     interface Request {
       requestId: string;

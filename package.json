@@ -12,11 +12,17 @@
     "db:generate": "pnpm --filter @sentinel/api db:generate",
     "db:migrate": "pnpm --filter @sentinel/api db:migrate",
     "db:reset": "pnpm --filter @sentinel/api db:reset",
-    "db:seed": "pnpm --filter @sentinel/api db:seed"
+    "db:seed": "pnpm --filter @sentinel/api db:seed",
+    "lint": "eslint ."
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^9.39.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.13.0",
     "prettier": "^3.6.2",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.71.1"
   },
   "engines": {
     "node": ">=22"
