@@ -50,7 +50,7 @@ function PlatformLayout() {
       </aside>
       <main
         id="main"
-        className="min-h-0 flex-1 overflow-y-auto bg-surface lg:my-2 lg:mr-2 lg:rounded-lg lg:border lg:border-line lg:shadow-control"
+        className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain bg-surface lg:my-2 lg:mr-2 lg:rounded-lg lg:border lg:border-line lg:shadow-control"
       >
         <Outlet />
       </main>
