@@ -7,6 +7,7 @@ import { Textarea } from '../../components/ui/input';
 import { Select } from '../../components/ui/select';
 import { useT } from '../../i18n';
 import { useIncidentAction } from '../../lib/incidents';
+import { useActed } from './acted';
 import { useCategories } from './assign-dialog';
 
 type Props = { incident: IncidentDetail; open: boolean; onOpenChange: (open: boolean) => void };
@@ -20,6 +21,7 @@ function Shell({
   variant = 'primary',
   disabled,
   loading,
+  focusSubmit,
   onSubmit,
   children,
 }: {
@@ -31,6 +33,8 @@ function Shell({
   variant?: 'primary' | 'danger';
   disabled?: boolean;
   loading: boolean;
+  /** Puts focus on the submit button so Enter confirms (for dialogs with nothing to type). */
+  focusSubmit?: boolean;
   onSubmit: () => void;
   children?: React.ReactNode;
 }) {
@@ -46,7 +50,7 @@ function Shell({
             <Button variant="ghost" onClick={() => onOpenChange(false)}>
               {t('common.cancel')}
             </Button>
-            <Button variant={variant} disabled={disabled} loading={loading} onClick={onSubmit}>
+            <Button variant={variant} disabled={disabled} loading={loading} onClick={onSubmit} autoFocus={focusSubmit}>
               {submit}
             </Button>
           </>
@@ -60,6 +64,7 @@ function Shell({
 
 function useRun(incident: IncidentDetail, onOpenChange: (open: boolean) => void) {
   const action = useIncidentAction();
+  const acted = useActed();
   return {
     pending: action.isPending,
     run: (suffix: string, body: Record<string, unknown>, success: string) =>
@@ -69,7 +74,12 @@ function useRun(incident: IncidentDetail, onOpenChange: (open: boolean) => void)
           body: { expectedVersion: incident.version, ...body },
           success,
         },
-        { onSuccess: () => onOpenChange(false) },
+        {
+          onSuccess: () => {
+            onOpenChange(false);
+            acted(suffix);
+          },
+        },
       ),
   };
 }
@@ -172,8 +182,39 @@ export function SendBackDialog({ incident, open, onOpenChange }: Props) {
       }
     >
       <Field label={t('incidents.sendBack.reason')} aside={t('common.characters', { count: length, max: 500 })}>
-        <Textarea rows={4} maxLength={500} value={reason} onChange={(e) => setReason(e.target.value)} autoFocus />
+        <Textarea
+          rows={4}
+          maxLength={500}
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && length >= 10 && !pending) {
+              e.preventDefault();
+              run(
+                'send-back',
+                { reason: reason.trim() },
+                t('incidents.sendBack.done', { reference: incident.reference }),
+              );
+            }
+          }}
+          autoFocus
+        />
       </Field>
+      <div className="mt-2 flex flex-wrap gap-1.5" aria-label={t('incidents.sendBack.quickLabel')}>
+        {(['missingPhoto', 'notFixed', 'moreDetail'] as const).map((key) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => {
+              const text = t(`incidents.sendBack.quick.${key}`);
+              setReason((current) => (current.trim() ? `${current.trim()} ${text}` : text).slice(0, 500));
+            }}
+            className="rounded-full border border-line bg-surface px-2.5 py-1 text-xs font-medium text-ink-2 transition-colors hover:bg-subtle hover:text-ink"
+          >
+            {t(`incidents.sendBack.quick.${key}`)}
+          </button>
+        ))}
+      </div>
     </Shell>
   );
 }
@@ -231,6 +272,7 @@ export function CloseDialog({ incident, open, onOpenChange }: Props) {
       description={t('incidents.closeDialog.body')}
       submit={t('incidents.closeDialog.submit')}
       loading={pending}
+      focusSubmit
       onSubmit={() => run('close', {}, t('incidents.closeDialog.done', { reference: incident.reference }))}
     />
   );

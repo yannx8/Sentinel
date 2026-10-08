@@ -109,6 +109,8 @@ function ShortcutsDialog({ open, onOpenChange }: { open: boolean; onOpenChange: 
     [['Enter'], 'shell.shortcuts.open'],
     [['Esc'], 'shell.shortcuts.close'],
     [['A'], 'shell.shortcuts.assign'],
+    [['C'], 'shell.shortcuts.closeIncident'],
+    [['S'], 'shell.shortcuts.sendBack'],
     [['?'], 'shell.shortcuts.help'],
   ];
   return (

@@ -99,6 +99,7 @@ export const incidents = {
     description: 'Choose who should handle this incident. Ranked by fit.',
     priority: 'Priority',
     category: 'Category',
+    keyHint: 'Arrow keys to choose, Enter to assign',
     candidates: 'Intervenants',
     note: 'Note for the intervenant',
     noteHint: 'Internal. Only supervisors and the assignee see it.',
@@ -124,6 +125,12 @@ export const incidents = {
     done: 'Returned {reference} to the inbox',
   },
   sendBack: {
+    quickLabel: 'Common reasons',
+    quick: {
+      missingPhoto: 'The photo of the finished work is missing.',
+      notFixed: 'The problem is still there on site.',
+      moreDetail: 'Please say what was done and what you found.',
+    },
     title: 'Send {reference} back',
     description: 'The intervenant is notified and continues the work.',
     reason: 'What still needs to be done?',

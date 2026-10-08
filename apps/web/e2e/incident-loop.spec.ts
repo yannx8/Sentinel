@@ -62,6 +62,9 @@ test('J3: report, assign, accept, resolve, close', async ({ page }) => {
     await page.goto(`/app/incidents?incident=${reference}`);
     await page.getByRole('button', { name: 'Close', exact: true }).first().click();
     await page.getByRole('dialog').getByRole('button', { name: 'Close incident' }).click();
+    // The inbox advances to the next incident after closing, so reopen this one to check its state.
+    await expect(page.getByRole('dialog')).toBeHidden();
+    await page.goto(`/app/incidents?incident=${reference}`);
     await expect(page.getByText(/Closed on/).first()).toBeVisible();
   });
 });

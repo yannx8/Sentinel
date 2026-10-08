@@ -131,6 +131,18 @@ function waiting(incident: IncidentDetail, t: ReturnType<typeof useT>['t']) {
   return null;
 }
 
+/** A shortcut hint on a button; hidden on small screens where there is no keyboard. */
+function Key({ children }: { children: ReactNode }) {
+  return (
+    <kbd
+      aria-hidden
+      className="ml-0.5 hidden rounded-xs border border-current/25 px-1 text-2xs font-medium opacity-70 xl:inline"
+    >
+      {children}
+    </kbd>
+  );
+}
+
 export function CaseFile({
   reference,
   onClose,
@@ -170,24 +182,26 @@ export function CaseFile({
   let primary: ReactNode = null;
   if (can('assign'))
     primary = (
-      <Button variant="primary" data-case-primary onClick={open('assign')}>
+      <Button variant="primary" data-case-primary trailing={<Key>A</Key>} onClick={open('assign')}>
         {t(data.triaged ? 'incidents.actions.assign' : 'incidents.actions.triageAssign')}
       </Button>
     );
   else if (can('reassign'))
     primary = (
-      <Button variant="primary" data-case-primary onClick={open('assign')}>
+      <Button variant="primary" data-case-primary trailing={<Key>A</Key>} onClick={open('assign')}>
         {t('incidents.actions.reassign')}
       </Button>
     );
   else if (can('close'))
     primary = (
-      <Button variant="primary" onClick={open('close')}>
+      <Button variant="primary" data-case-close trailing={<Key>C</Key>} onClick={open('close')}>
         {t('incidents.actions.close')}
       </Button>
     );
   const sendBack = can('send-back') ? (
-    <Button onClick={open('send-back')}>{t('incidents.actions.sendBack')}</Button>
+    <Button data-case-sendback trailing={<Key>S</Key>} onClick={open('send-back')}>
+      {t('incidents.actions.sendBack')}
+    </Button>
   ) : null;
   const triageButton = can('assign') ? <Button onClick={open('triage')}>{t('incidents.actions.triage')}</Button> : null;
   const overflow = can('assign') ? menuItems.filter((m) => m.key !== 'triage') : menuItems;

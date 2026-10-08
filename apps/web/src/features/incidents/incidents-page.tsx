@@ -11,6 +11,7 @@ import { isTyping, type IncidentCounts } from '../../app/shells/console-shell';
 import { incidentCountsKey } from '../../app/shells/console-shell';
 import type { IncidentsSearch } from '../../app/router';
 import { useDensity } from '../../lib/density';
+import { ActedContext } from './acted';
 import { BulkBar } from './bulk';
 import { CaseFile } from './case-file';
 import { CreateIncidentDialog } from './create-dialog';
@@ -59,6 +60,18 @@ export function IncidentsPage() {
     [navigate, selected],
   );
 
+  // After assign, close, send back or dismiss, move on to the next incident (or close the sheet on small screens).
+  const advance = useCallback(
+    (action: string) => {
+      if (!['assign', 'close', 'send-back', 'dismiss'].includes(action)) return;
+      const index = list.items.findIndex((item) => item.reference === selected);
+      if (index < 0) return;
+      if (!wide) return select(undefined);
+      select((list.items[index + 1] ?? list.items[index - 1])?.reference);
+    },
+    [list.items, selected, select, wide],
+  );
+
   useEffect(() => {
     if (missing) select(undefined);
   }, [missing, select]);
@@ -91,6 +104,12 @@ export function IncidentsPage() {
       else if (event.key === 'a' && selectedIncident.data?.actions.some((a) => a === 'assign' || a === 'reassign')) {
         event.preventDefault();
         document.querySelector<HTMLButtonElement>('[data-case-primary]')?.click();
+      } else if (event.key === 'c' && selectedIncident.data?.actions.includes('close')) {
+        event.preventDefault();
+        document.querySelector<HTMLButtonElement>('[data-case-close]')?.click();
+      } else if (event.key === 's' && selectedIncident.data?.actions.includes('send-back')) {
+        event.preventDefault();
+        document.querySelector<HTMLButtonElement>('[data-case-sendback]')?.click();
       }
     };
     window.addEventListener('keydown', onKey);
@@ -169,33 +188,35 @@ export function IncidentsPage() {
   );
 
   return (
-    <div className="flex h-full min-h-0">
-      <section
-        aria-label={t('incidents.title')}
-        className="min-w-0 flex-1 xl:max-w-[560px] xl:border-r xl:border-line xl:flex-none xl:w-[44%]"
-      >
-        {listPane}
-      </section>
-      {wide ? (
-        <section aria-label={t('incidents.caseFile.activity')} className="min-w-0 flex-1 bg-surface">
-          {selected ? (
-            <CaseFile key={selected} reference={selected} onClose={() => select(undefined)} />
-          ) : (
-            <div className="flex h-full items-center justify-center px-6 text-center text-sm text-ink-3">
-              {t('incidents.select')}
-            </div>
-          )}
-        </section>
-      ) : (
-        <Sheet
-          open={!!selected}
-          onOpenChange={(open) => !open && select(undefined)}
-          title={t('incidents.caseFile.activity')}
+    <ActedContext.Provider value={advance}>
+      <div className="flex h-full min-h-0">
+        <section
+          aria-label={t('incidents.title')}
+          className="min-w-0 flex-1 xl:max-w-[560px] xl:border-r xl:border-line xl:flex-none xl:w-[44%]"
         >
-          {selected && <CaseFile key={selected} reference={selected} onClose={() => select(undefined)} />}
-        </Sheet>
-      )}
-      <CreateIncidentDialog open={creating} onOpenChange={setCreating} onCreated={(reference) => select(reference)} />
-    </div>
+          {listPane}
+        </section>
+        {wide ? (
+          <section aria-label={t('incidents.caseFile.activity')} className="min-w-0 flex-1 bg-surface">
+            {selected ? (
+              <CaseFile key={selected} reference={selected} onClose={() => select(undefined)} />
+            ) : (
+              <div className="flex h-full items-center justify-center px-6 text-center text-sm text-ink-3">
+                {t('incidents.select')}
+              </div>
+            )}
+          </section>
+        ) : (
+          <Sheet
+            open={!!selected}
+            onOpenChange={(open) => !open && select(undefined)}
+            title={t('incidents.caseFile.activity')}
+          >
+            {selected && <CaseFile key={selected} reference={selected} onClose={() => select(undefined)} />}
+          </Sheet>
+        )}
+        <CreateIncidentDialog open={creating} onOpenChange={setCreating} onCreated={(reference) => select(reference)} />
+      </div>
+    </ActedContext.Provider>
   );
 }
