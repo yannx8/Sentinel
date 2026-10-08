@@ -8,22 +8,25 @@ import { Popover, PopoverContent, PopoverTrigger } from '../../components/ui/pop
 import { useT } from '../../i18n';
 import { api } from '../../lib/api';
 import { useLiveUpdates } from './live-updates';
-import { NotificationItem, notificationKeys, useMarkAllRead, useOpenNotification } from './parts';
+import { useSession } from '../../app/session';
+import { NotificationItem, useMarkAllRead, useNotificationScope, useOpenNotification } from './parts';
 
 export function NotificationBell({ to }: { to: string }) {
   const { t } = useT();
   const [open, setOpen] = useState(false);
   useLiveUpdates();
+  const scope = useNotificationScope();
+  const many = (useSession().me?.memberships.length ?? 0) > 1;
   const open_ = useOpenNotification();
   const markAll = useMarkAllRead();
   const unread = useQuery({
-    queryKey: notificationKeys.unread,
-    queryFn: () => api.get<{ count: number }>('/notifications/unread-count'),
+    queryKey: scope.keys.unread,
+    queryFn: () => api.get<{ count: number }>(`${scope.path}/unread-count`),
     refetchInterval: 30_000,
   });
   const recent = useQuery({
-    queryKey: notificationKeys.recent,
-    queryFn: () => api.page<NotificationDTO>('/notifications', { query: { limit: 8 } }),
+    queryKey: scope.keys.recent,
+    queryFn: () => api.page<NotificationDTO>(scope.path, { query: { limit: 8 } }),
     enabled: open,
   });
   const count = unread.data?.count ?? 0;
@@ -64,6 +67,7 @@ export function NotificationBell({ to }: { to: string }) {
               <NotificationItem
                 key={item.id}
                 item={item}
+                showOrganization={scope.person && many}
                 onOpen={(n) => {
                   setOpen(false);
                   open_(n);

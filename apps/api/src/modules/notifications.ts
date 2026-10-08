@@ -1,5 +1,6 @@
+import type { Prisma } from '@prisma/client';
 import { cursorQuery, type NotificationDTO } from '@sentinel/shared';
-import { Router } from 'express';
+import { Router, type Request } from 'express';
 import { z } from 'zod';
 import { tenantOf } from '../auth/context';
 import { prisma } from '../lib/prisma';
@@ -7,19 +8,25 @@ import { decodeCursor, page } from '../http/cursor';
 import { notFound } from '../http/errors';
 import { parse, parseId } from '../http/validate';
 
-/** Always scoped to the caller's own membership in the active organization. */
-export const notificationRoutes = Router();
+export const notificationQuery = cursorQuery.extend({ unread: z.enum(['true', 'false']).optional() });
+export type Recipient = { id: string; organizationId: string };
 
-const query = cursorQuery.extend({ unread: z.enum(['true', 'false']).optional() });
+/** Only ever called with the caller's own memberships: one on tenant routes, all of them on /me. */
+function addressedTo(recipients: Recipient[]): Prisma.NotificationWhereInput {
+  return {
+    organizationId: { in: recipients.map((r) => r.organizationId) },
+    recipientMembershipId: { in: recipients.map((r) => r.id) },
+  };
+}
 
-notificationRoutes.get('/', async (req, res) => {
-  const tenant = tenantOf(req);
-  const { cursor, limit, unread } = parse(query, req.query);
+export async function listNotifications(
+  recipients: Recipient[],
+  { cursor, limit, unread }: z.infer<typeof notificationQuery>,
+) {
   const after = decodeCursor(cursor);
   const rows = await prisma.notification.findMany({
     where: {
-      organizationId: tenant.orgId,
-      recipientMembershipId: tenant.membershipId,
+      ...addressedTo(recipients),
       ...(unread === 'true' ? { readAt: null } : {}),
       ...(after
         ? {
@@ -47,33 +54,50 @@ notificationRoutes.get('/', async (req, res) => {
     readAt: row.readAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),
   }));
-  res.json({ data, page: result.page });
+  return { data, page: result.page };
+}
+
+export function unreadCount(recipients: Recipient[]) {
+  return prisma.notification.count({ where: { ...addressedTo(recipients), readAt: null } });
+}
+
+export function markAllRead(recipients: Recipient[]) {
+  return prisma.notification.updateMany({
+    where: { ...addressedTo(recipients), readAt: null },
+    data: { readAt: new Date() },
+  });
+}
+
+export async function markRead(recipients: Recipient[], id: string) {
+  const { count } = await prisma.notification.updateMany({
+    where: { ...addressedTo(recipients), id },
+    data: { readAt: new Date() },
+  });
+  if (count === 0) throw notFound('Notification');
+}
+
+/** Always scoped to the caller's own membership in the active organization. */
+export const notificationRoutes = Router();
+
+function own(req: Request): Recipient[] {
+  const tenant = tenantOf(req);
+  return [{ id: tenant.membershipId, organizationId: tenant.orgId }];
+}
+
+notificationRoutes.get('/', async (req, res) => {
+  res.json(await listNotifications(own(req), parse(notificationQuery, req.query)));
 });
 
 notificationRoutes.get('/unread-count', async (req, res) => {
-  const tenant = tenantOf(req);
-  const count = await prisma.notification.count({
-    where: { organizationId: tenant.orgId, recipientMembershipId: tenant.membershipId, readAt: null },
-  });
-  res.json({ data: { count } });
+  res.json({ data: { count: await unreadCount(own(req)) } });
 });
 
 notificationRoutes.post('/read-all', async (req, res) => {
-  const tenant = tenantOf(req);
-  await prisma.notification.updateMany({
-    where: { organizationId: tenant.orgId, recipientMembershipId: tenant.membershipId, readAt: null },
-    data: { readAt: new Date() },
-  });
+  await markAllRead(own(req));
   res.status(204).end();
 });
 
 notificationRoutes.post('/:id/read', async (req, res) => {
-  const tenant = tenantOf(req);
-  const id = parseId(req.params.id, 'Notification');
-  const { count } = await prisma.notification.updateMany({
-    where: { id, organizationId: tenant.orgId, recipientMembershipId: tenant.membershipId },
-    data: { readAt: new Date() },
-  });
-  if (count === 0) throw notFound('Notification');
+  await markRead(own(req), parseId(req.params.id, 'Notification'));
   res.status(204).end();
 });

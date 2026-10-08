@@ -50,6 +50,9 @@ export const platformOrgSearch = z.object({
   status: z.enum(['ACTIVE', 'SUSPENDED', 'CLOSED']).optional().catch(undefined),
 });
 
+/** The organization of a field case file, so work from any client opens without switching first. */
+const fieldIncidentSearch = z.object({ org: z.string().uuid().optional().catch(undefined) });
+
 const tokenSearch = z.object({ token: z.string().max(300).optional().catch(undefined) });
 const loginSearch = z.object({ redirect: z.string().max(300).optional().catch(undefined), email: text });
 
@@ -195,6 +198,7 @@ const myIncidentsRoute = createRoute({
 const fieldIncidentRoute = createRoute({
   getParentRoute: () => fieldLayout,
   path: '/incidents/$reference',
+  validateSearch: fieldIncidentSearch,
   component: lazyRouteComponent(() => import('../features/field/field-incident-page'), 'FieldIncidentPage'),
 });
 const myWorkRoute = createRoute({

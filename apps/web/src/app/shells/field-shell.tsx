@@ -3,14 +3,16 @@ import { Bell, ClipboardList, History, ListChecks, Plus, UserRound } from 'lucid
 import type { ReactNode } from 'react';
 import { useT, type TKey } from '../../i18n';
 import { NotificationBell } from '../../features/notifications/notification-bell';
+import { Logo } from '../../components/ui/layout';
 import { useSession } from '../session';
-import { OrgSwitcher, useShellGate } from './shared';
+import { OrgMark, useShellGate } from './shared';
 
 type Tab = { to: string; label: TKey; icon: ReactNode; exact?: boolean };
 
 /**
- * Phone-first shell for employees and intervenants: organization and
- * notifications at the top, four tabs fixed at the bottom, one column.
+ * Phone-first shell for employees and intervenants: notifications at the top, four tabs fixed at the bottom,
+ * one column. No organization switcher: lists span every organization the person belongs to, and a case file
+ * opens in its own organization. Someone who also supervises elsewhere changes surface from Profile.
  */
 export function FieldShell() {
   const gate = useShellGate('field');
@@ -20,7 +22,8 @@ export function FieldShell() {
 
 function FieldLayout() {
   const { t } = useT();
-  const { membership } = useSession();
+  const { me, membership } = useSession();
+  const single = (me?.memberships.length ?? 0) <= 1;
   const intervenant = membership?.role === 'INTERVENANT';
 
   const tabs: Tab[] = intervenant
@@ -42,7 +45,14 @@ function FieldLayout() {
       <header className="sticky top-0 z-30 border-b border-line bg-bg/90 backdrop-blur supports-[backdrop-filter]:bg-bg/75">
         <div className="mx-auto flex h-14 w-full max-w-[680px] items-center gap-2 px-3 pt-[env(safe-area-inset-top)]">
           <div className="min-w-0 flex-1">
-            <OrgSwitcher compact />
+            {single && membership ? (
+              <p className="flex min-w-0 items-center gap-2.5 px-1.5">
+                <OrgMark name={membership.organization.displayName} />
+                <span className="truncate text-sm font-semibold text-ink">{membership.organization.displayName}</span>
+              </p>
+            ) : (
+              <Logo className="px-1.5" />
+            )}
           </div>
           <NotificationBell to="/field/notifications" />
         </div>

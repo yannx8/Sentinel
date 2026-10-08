@@ -85,6 +85,7 @@ export const field = {
   history: {
     title: 'History',
     description: 'Incidents you worked on in {organization}.',
+    descriptionAll: 'Incidents you worked on, for every client.',
     emptyTitle: 'No history yet',
     emptyBody: 'Incidents you work on appear here, including closed ones.',
   },
@@ -97,6 +98,7 @@ export const field = {
     emptyBody: 'New work appears here as soon as a supervisor assigns you.',
     availability: 'Availability',
     availabilityIn: 'Availability in {organization}',
+    availabilityAll: 'Availability for all your clients',
     availabilityHint: 'Supervisors see this when they choose who to assign.',
     availabilitySet: 'Availability set to {value}',
   },

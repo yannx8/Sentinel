@@ -1,6 +1,5 @@
 import type { IncidentListItem } from '@sentinel/shared';
-import { Navigate, useNavigate } from '@tanstack/react-router';
-import type { MouseEvent } from 'react';
+import { Navigate } from '@tanstack/react-router';
 import { useMembership, useSession } from '../../app/session';
 import { EmptyState } from '../../components/ui/feedback';
 import { PageHeader } from '../../components/ui/layout';
@@ -29,23 +28,14 @@ function groupWork(items: IncidentListItem[]): Group[] {
 /** Intervenants: live assignments across every organization they work for. */
 export function MyWorkPage() {
   const { t } = useT();
-  const { me, switchOrganization } = useSession();
+  const { me } = useSession();
   const membership = useMembership();
-  const navigate = useNavigate();
   const query = useMyWork();
 
   if (membership.role !== 'INTERVENANT') return <Navigate to="/field/incidents" replace />;
 
   const many = (me?.memberships.length ?? 0) > 1;
   const groups = groupWork(query.data ?? []).filter((group) => group.items.length > 0);
-
-  /** Work from another organization opens after switching to it, so every request carries the right tenant. */
-  const open = (incident: IncidentListItem) => (event: MouseEvent<HTMLAnchorElement>) => {
-    if (incident.organization.id === membership.organization.id) return;
-    event.preventDefault();
-    switchOrganization(incident.organization.id);
-    void navigate({ to: '/field/incidents/$reference', params: { reference: incident.reference } });
-  };
 
   return (
     <div>
@@ -68,7 +58,7 @@ export function MyWorkPage() {
                     incident={incident}
                     lead="priority"
                     organization={many ? incident.organization.displayName : undefined}
-                    onOpen={open(incident)}
+                    orgId={incident.organization.id}
                   />
                 ))}
               </ListGroup>

@@ -1,6 +1,7 @@
-import { Link, useParams } from '@tanstack/react-router';
-import { useId } from 'react';
-import { useMembership } from '../../app/session';
+import { Link, useParams, useSearch } from '@tanstack/react-router';
+import { useEffect, useId } from 'react';
+import { useMembership, useSession } from '../../app/session';
+import { OrgMark } from '../../app/shells/shared';
 import { Thread } from '../../components/domain/thread';
 import { Button, buttonClass } from '../../components/ui/button';
 import { EmptyState, Skeleton } from '../../components/ui/feedback';
@@ -25,9 +26,27 @@ function ThreadSkeleton() {
   );
 }
 
-/** One incident on a phone: the case file, its Thread, a comment box and one action at the bottom. */
+/**
+ * Opens the case file in the incident's own organization (?org=) without the person choosing it:
+ * the switch is silent, and nothing loads until every request carries the right organization.
+ */
 export function FieldIncidentPage() {
+  const { org } = useSearch({ from: '/field/incidents/$reference' });
+  const { me, switchOrganization } = useSession();
+  const membership = useMembership();
+  const pending =
+    !!org && org !== membership.organization.id && !!me?.memberships.some((m) => m.organization.id === org);
+  useEffect(() => {
+    if (pending && org) switchOrganization(org);
+  }, [pending, org, switchOrganization]);
+  if (pending) return <IncidentSkeleton />;
+  return <CaseFile />;
+}
+
+/** One incident on a phone: the case file, its Thread, a comment box and one action at the bottom. */
+function CaseFile() {
   const { t } = useT();
+  const { me } = useSession();
   const threadId = useId();
   const { reference } = useParams({ from: '/field/incidents/$reference' });
   const membership = useMembership();
@@ -70,6 +89,12 @@ export function FieldIncidentPage() {
     <div className="grid gap-6">
       <div>
         <BackLink to={back.to} label={back.label} />
+        {(me?.memberships.length ?? 0) > 1 && (
+          <p className="mt-3 flex items-center gap-2 text-sm font-medium text-ink-2">
+            <OrgMark name={membership.organization.displayName} className="size-5 text-2xs" />
+            {membership.organization.displayName}
+          </p>
+        )}
       </div>
       <IncidentOverview incident={data} />
       <section aria-labelledby={threadId}>

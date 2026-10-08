@@ -88,6 +88,7 @@ export const field: Translation<typeof en> = {
   history: {
     title: 'Historique',
     description: 'Les incidents sur lesquels vous êtes intervenu chez {organization}.',
+    descriptionAll: 'Les incidents sur lesquels vous êtes intervenu, tous clients confondus.',
     emptyTitle: 'Aucun historique pour le moment',
     emptyBody: 'Les incidents sur lesquels vous intervenez apparaissent ici, y compris ceux clôturés.',
   },
@@ -100,6 +101,7 @@ export const field: Translation<typeof en> = {
     emptyBody: "Les nouvelles interventions apparaissent ici dès qu'un superviseur vous les assigne.",
     availability: 'Disponibilité',
     availabilityIn: 'Disponibilité chez {organization}',
+    availabilityAll: 'Disponibilité pour tous vos clients',
     availabilityHint: "Les superviseurs la voient lorsqu'ils choisissent qui assigner.",
     availabilitySet: 'Disponibilité définie sur {value}',
   },

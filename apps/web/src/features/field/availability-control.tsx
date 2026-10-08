@@ -1,25 +1,22 @@
 import { availabilities, type Availability } from '@sentinel/shared';
 import { useId } from 'react';
-import { useMembership, useSession } from '../../app/session';
+import { useSession } from '../../app/session';
 import { Skeleton } from '../../components/ui/feedback';
 import { Segmented } from '../../components/ui/segmented';
 import { useT } from '../../i18n';
 import { largeSegments } from './parts';
 import { useMembershipSelf, useSetAvailability } from './queries';
 
-/** Availability in the active organization. Large segments so it works with gloves. */
+/** One availability for every organization the intervenant serves. Large segments so it works with gloves. */
 export function AvailabilityControl() {
   const { t } = useT();
   const id = useId();
   const { me } = useSession();
-  const membership = useMembership();
   const query = useMembershipSelf();
   const change = useSetAvailability();
   const value = query.data?.availability ?? null;
-  const many = (me?.memberships.length ?? 0) > 1;
-  const label = many
-    ? t('field.work.availabilityIn', { organization: membership.organization.displayName })
-    : t('field.work.availability');
+  const many = (me?.memberships.filter((m) => m.role === 'INTERVENANT').length ?? 0) > 1;
+  const label = many ? t('field.work.availabilityAll') : t('field.work.availability');
 
   if (query.isError) return null;
 

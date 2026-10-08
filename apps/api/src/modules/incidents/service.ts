@@ -333,10 +333,11 @@ function afterCursor(sort: Sort, cursor: string | undefined): Prisma.IncidentWhe
   return { OR: [{ updatedAt: { lt: at } }, { updatedAt: at, id: { lt: id } }] };
 }
 
-export async function listIncidents(tenant: Tenant, query: ListIncidentsQuery) {
+/** `scope` comes from the incident policy: one membership's scope, or the union of the caller's own. */
+export async function listIncidents(scope: Prisma.IncidentWhereInput, query: ListIncidentsQuery) {
   const rows = await prisma.incident.findMany({
     where: {
-      AND: [incidentScope(tenant), viewWhere(query.view), ...filterWhere(query), afterCursor(query.sort, query.cursor)],
+      AND: [scope, viewWhere(query.view), ...filterWhere(query), afterCursor(query.sort, query.cursor)],
     },
     orderBy: sortOrder[query.sort],
     take: query.limit + 1,

@@ -13,7 +13,9 @@ export const incidentKeys = {
   detail: (key: string) => ['incident', key] as const,
   thread: (key: string) => ['incident', key, 'thread'] as const,
   candidates: (key: string) => ['incident', key, 'candidates'] as const,
-  myWork: ['my-work'] as const,
+  /** Under 'me': person-scoped, so it survives an organization switch. */
+  myWork: ['me', 'work'] as const,
+  myHistory: ['me', 'incidents'] as const,
 };
 
 export function useIncident(key: string | undefined) {
@@ -68,6 +70,7 @@ export function useIncidentAction() {
       void queryClient.invalidateQueries({ queryKey: incidentKeys.thread(incident.reference) });
       void queryClient.invalidateQueries({ queryKey: incidentKeys.all });
       void queryClient.invalidateQueries({ queryKey: incidentKeys.myWork });
+      void queryClient.invalidateQueries({ queryKey: incidentKeys.myHistory });
       void queryClient.invalidateQueries({ queryKey: ['reassignments'] });
       if (input.success) toast.success(input.success);
     },

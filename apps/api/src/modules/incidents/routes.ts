@@ -16,6 +16,7 @@ import { notFound } from '../../http/errors';
 import { idempotent } from '../../http/idempotency';
 import { parse } from '../../http/validate';
 import { bulkIncidents } from './bulk';
+import { incidentScope } from './scope';
 import {
   addComment,
   assignIncident,
@@ -54,7 +55,7 @@ function keyOf(req: Request): string {
 export const incidentRoutes = Router();
 
 incidentRoutes.get('/', async (req, res) => {
-  const { data, page } = await listIncidents(tenantOf(req), parse(listIncidentsQuery, req.query));
+  const { data, page } = await listIncidents(incidentScope(tenantOf(req)), parse(listIncidentsQuery, req.query));
   res.json({ data, page });
 });
 

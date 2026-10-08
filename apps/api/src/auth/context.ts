@@ -105,6 +105,15 @@ export async function requireTenant(req: Request, _res: Response, next: NextFunc
   next();
 }
 
+/** ACTIVE memberships in ACTIVE organizations: the whole scope of the cross-organization /me reads. */
+export function activeMemberships(userId: string) {
+  return prisma.membership.findMany({
+    where: { userId, status: 'ACTIVE', organization: { status: 'ACTIVE' } },
+    select: { id: true, organizationId: true, role: true },
+    orderBy: { joinedAt: 'asc' },
+  });
+}
+
 async function soleMembership(userId: string) {
   const memberships = await prisma.membership.findMany({
     where: { userId, status: 'ACTIVE' },
