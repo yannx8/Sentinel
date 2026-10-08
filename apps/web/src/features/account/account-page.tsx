@@ -11,7 +11,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { meQueryKey, useSession } from '../../app/session';
+import { meQueryKey, useSession, useSignOut } from '../../app/session';
 import { useTheme, type ThemePreference } from '../../app/theme';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
@@ -253,9 +253,9 @@ function OrganizationsSection() {
 
 export function AccountPage() {
   const { t } = useT();
-  const { me, membership, signOut } = useSession();
+  const { me, membership } = useSession();
+  const signOutHere = useSignOut();
   const [theme, setTheme] = useTheme();
-  const navigate = useNavigate();
   const intervenant = membership?.role === 'INTERVENANT' && !me?.platformAdmin;
   const inConsole = membership?.role === 'SUPERVISOR' || !!me?.platformAdmin;
 
@@ -282,15 +282,7 @@ export function AccountPage() {
       <PasswordSection />
       <SessionsSection />
       {!inConsole && (
-        <Button
-          size="lg"
-          block
-          className="mt-4"
-          onClick={async () => {
-            await signOut();
-            void navigate({ to: '/login' });
-          }}
-        >
+        <Button size="lg" block className="mt-4" onClick={() => void signOutHere()}>
           {t('account.signOut')}
         </Button>
       )}

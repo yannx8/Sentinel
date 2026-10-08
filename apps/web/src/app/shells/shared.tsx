@@ -22,7 +22,7 @@ import { Logo } from '../../components/ui/layout';
 import { useT } from '../../i18n';
 import { api } from '../../lib/api';
 import { cn } from '../../lib/cn';
-import { homePath, meQueryKey, useSession } from '../session';
+import { homePath, meQueryKey, useSession, useSignOut } from '../session';
 import { useTheme, type ThemePreference } from '../theme';
 import { RouteLoading } from './root';
 
@@ -136,7 +136,8 @@ export function UserMenu({
   compact?: boolean;
 }) {
   const { t, locale } = useT();
-  const { me, signOut } = useSession();
+  const { me } = useSession();
+  const signOutHere = useSignOut();
   const [theme, setTheme] = useTheme();
   const navigate = useNavigate();
   const changeLocale = useChangeLocale();
@@ -192,13 +193,7 @@ export function UserMenu({
           </MenuSubContent>
         </MenuSub>
         <MenuSeparator />
-        <MenuItem
-          icon={<LogOut />}
-          onSelect={async () => {
-            await signOut();
-            void navigate({ to: '/login' });
-          }}
-        >
+        <MenuItem icon={<LogOut />} onSelect={() => void signOutHere()}>
           {t('shell.signOut')}
         </MenuItem>
       </MenuContent>
@@ -277,16 +272,9 @@ export function SuspendedScreen({ membership }: { membership: MembershipSummary 
 
 function UserMenuSignOut() {
   const { t } = useT();
-  const { signOut } = useSession();
-  const navigate = useNavigate();
+  const signOutHere = useSignOut();
   return (
-    <Button
-      variant="ghost"
-      onClick={async () => {
-        await signOut();
-        void navigate({ to: '/login' });
-      }}
-    >
+    <Button variant="ghost" onClick={() => void signOutHere()}>
       {t('shell.signOut')}
     </Button>
   );

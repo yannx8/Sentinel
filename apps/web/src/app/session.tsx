@@ -1,5 +1,6 @@
 import type { Locale, Me, MembershipSummary } from '@sentinel/shared';
 import { useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
+import { useNavigate } from '@tanstack/react-router';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { I18nProvider, detectLocale, useT } from '../i18n';
 import { installValidationMessages } from '../lib/forms';
@@ -40,9 +41,11 @@ type SessionValue = {
 
 const SessionContext = createContext<SessionValue | null>(null);
 
-function pickMembership(me: Me | null): MembershipSummary | null {
+/** Tells the other tabs that the signed-in person changed. */
+const sessionChannel = typeof BroadcastChannel === 'undefined' ? null : new BroadcastChannel('sentinel.session');
+
+function pickMembership(me: Me | null, saved: string | null): MembershipSummary | null {
   if (!me || me.memberships.length === 0) return null;
-  const saved = storedOrg();
   return me.memberships.find((m) => m.organization.id === saved) ?? me.memberships[0] ?? null;
 }
 
@@ -51,12 +54,22 @@ function resetTenantCache(queryClient: QueryClient) {
   queryClient.removeQueries({ predicate: (query) => query.queryKey[0] !== meQueryKey[0] });
 }
 
+/** Clears everything cached for the previous person, keeping only the session query itself (still observed). */
+function resetPersonCache(queryClient: QueryClient) {
+  queryClient.removeQueries({
+    predicate: (query) => !(query.queryKey[0] === meQueryKey[0] && query.queryKey.length === 1),
+  });
+  queryClient.getMutationCache().clear();
+}
+
 export function SessionProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const meQuery = useQuery({ queryKey: meQueryKey, queryFn: fetchMe, staleTime: 5 * 60_000 });
   const me = meQuery.data ?? null;
   const [guestLocale, setGuestLocaleState] = useState<Locale>(detectLocale);
-  const membership = pickMembership(me);
+  // State, not just storage: changing it is what re-renders every consumer of the session.
+  const [activeOrg, setActiveOrg] = useState<string | null>(storedOrg);
+  const membership = pickMembership(me, activeOrg);
 
   // Set synchronously so the first tenant request already carries the header.
   setActiveOrgHeader(membership?.organization.id ?? null);
@@ -72,6 +85,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     [queryClient],
   );
 
+  useEffect(() => {
+    if (!sessionChannel) return;
+    // Another tab signed in or out: this one must not keep acting as the previous person.
+    const reload = () => window.location.reload();
+    sessionChannel.addEventListener('message', reload);
+    return () => sessionChannel.removeEventListener('message', reload);
+  }, []);
+
   const switchOrganization = useCallback(
     (orgId: string) => {
       try {
@@ -81,7 +102,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       }
       setActiveOrgHeader(orgId);
       resetTenantCache(queryClient);
-      queryClient.setQueryData(meQueryKey, (current: Me | null | undefined) => (current ? { ...current } : current));
+      // Setting a copy of the session data would not re-render: structural sharing keeps the old object.
+      setActiveOrg(orgId);
     },
     [queryClient],
   );
@@ -91,8 +113,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       // The initial "who am I" check may still be in flight. Without cancelling it, its late
       // "signed out" answer would overwrite the session we just created.
       void queryClient.cancelQueries({ queryKey: meQueryKey }, { revert: false });
-      resetTenantCache(queryClient);
+      resetPersonCache(queryClient);
+      setActiveOrg(storedOrg());
       queryClient.setQueryData(meQueryKey, next);
+      sessionChannel?.postMessage('changed');
       // Query observers are notified on the next macrotask.
       await new Promise((resolve) => setTimeout(resolve, 0));
     },
@@ -103,8 +127,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     try {
       await api.post('/auth/logout');
     } finally {
-      queryClient.clear();
+      // Not queryClient.clear(): it removes the ['me'] query this provider observes without telling it,
+      // so the previous person stays on screen until a reload.
+      resetPersonCache(queryClient);
       queryClient.setQueryData(meQueryKey, null);
+      sessionChannel?.postMessage('changed');
     }
   }, [queryClient]);
 
@@ -142,6 +169,16 @@ export function useSession(): SessionValue {
   const value = useContext(SessionContext);
   if (!value) throw new Error('useSession must be used inside SessionProvider');
   return value;
+}
+
+/** Sign-out from inside a shell: leave first, so the shell gate never adds ?redirect= to the previous person's page. */
+export function useSignOut() {
+  const { signOut } = useSession();
+  const navigate = useNavigate();
+  return useCallback(async () => {
+    await navigate({ to: '/login', replace: true });
+    await signOut();
+  }, [navigate, signOut]);
 }
 
 /** The active membership on a route that requires one. */
