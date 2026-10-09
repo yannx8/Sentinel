@@ -1,13 +1,16 @@
 /**
- * Photos are resized on the device before upload: long edge 1920 px, JPEG at
- * quality 0.85. Field networks are slow and the API refuses files over 5 MB.
+ * Photos are resized on the device before upload: long edge 1600 px, JPEG at
+ * quality 0.72, and lighter still when the browser asks to save data. Field
+ * networks are slow and the API refuses files over 5 MB.
  */
 
 export const PHOTO_ACCEPT = 'image/jpeg,image/png,image/webp';
 
-const MAX_EDGE = 1920;
-const QUALITY = 0.85;
-const FALLBACK_QUALITY = 0.7;
+const MAX_EDGE = 1600;
+const QUALITY = 0.72;
+const FALLBACK_QUALITY = 0.6;
+const SAVER_EDGE = 1280;
+const SAVER_QUALITY = 0.6;
 const PREVIEW_EDGE = 320;
 const MAX_BYTES = 5 * 1024 * 1024;
 
@@ -78,13 +81,18 @@ function toJpeg(canvas: HTMLCanvasElement, quality: number): Promise<Blob> {
   });
 }
 
+/** Data saver is a browser setting (Chrome on Android); other engines do not expose it. */
+const savingData = () =>
+  (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData === true;
+
 /** Resizes and re-encodes a picked photo. Any image the browser can decode becomes a JPEG. */
 export async function preparePhoto(file: File): Promise<PreparedPhoto> {
   if (file.type && !file.type.startsWith('image/')) throw new PhotoError('type');
   const decoded = await decode(file);
   try {
-    const canvas = draw(decoded, MAX_EDGE);
-    let blob = await toJpeg(canvas, QUALITY);
+    const saver = savingData();
+    const canvas = draw(decoded, saver ? SAVER_EDGE : MAX_EDGE);
+    let blob = await toJpeg(canvas, saver ? SAVER_QUALITY : QUALITY);
     if (blob.size > MAX_BYTES) blob = await toJpeg(canvas, FALLBACK_QUALITY);
     if (blob.size > MAX_BYTES) throw new PhotoError('size');
     const preview = draw(decoded, PREVIEW_EDGE).toDataURL('image/jpeg', 0.75);
