@@ -6,6 +6,7 @@ import { dashboard } from './dashboard';
 import { field } from './field';
 import { incidents } from './incidents';
 import { notifications } from './notifications';
+import { offline } from './offline';
 import { platform } from './platform';
 import { pwa } from './pwa';
 import { setup } from './setup';
@@ -23,6 +24,7 @@ export const en = {
   setup,
   audit,
   notifications,
+  offline,
   field,
   platform,
   pwa,

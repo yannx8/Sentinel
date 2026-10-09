@@ -4,16 +4,18 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Navigate, useSearch } from '@tanstack/react-router';
 import { useRef, useState, type FormEvent } from 'react';
 import { useForm } from 'react-hook-form';
-import { useMembership } from '../../app/session';
+import { useMembership, useSession } from '../../app/session';
 import { Button } from '../../components/ui/button';
 import { Banner } from '../../components/ui/feedback';
 import { useT } from '../../i18n';
-import { api, newIdempotencyKey } from '../../lib/api';
+import { api, ApiError, newIdempotencyKey } from '../../lib/api';
 import { applyServerErrors, toastError } from '../../lib/forms';
 import { incidentKeys } from '../../lib/incidents';
+import { queueReport } from '../../lib/offline-sync';
 import type { GeoFix } from './location-control';
 import { BottomBar } from './parts';
 import type { PreparedPhoto } from './photos';
+import { ReportQueued } from './report-queued';
 import { ReportSent } from './report-sent';
 import { useActiveCategories, useActiveSites, useQrArea } from './queries';
 import { WhatSection, WhereSection, type ReportInput, type ReportOutput } from './report-steps';
@@ -30,6 +32,8 @@ export function ReportPage() {
 function ReportFlow({ onReportAnother }: { onReportAnother: () => void }) {
   const { t } = useT();
   const queryClient = useQueryClient();
+  const { me } = useSession();
+  const membership = useMembership();
   const qr = useSearch({ from: '/field/report' });
   const categories = useActiveCategories();
   const sites = useActiveSites();
@@ -37,6 +41,7 @@ function ReportFlow({ onReportAnother }: { onReportAnother: () => void }) {
   const [photos, setPhotos] = useState<PreparedPhoto[]>([]);
   const [fix, setFix] = useState<GeoFix | null>(null);
   const [sent, setSent] = useState<IncidentDetail | null>(null);
+  const [queued, setQueued] = useState(false);
   /** One key per submission, reused when the same report is retried after a failure. */
   const attempt = useRef<{ key: string; body: string } | null>(null);
 
@@ -68,6 +73,18 @@ function ReportFlow({ onReportAnother }: { onReportAnother: () => void }) {
       void queryClient.invalidateQueries({ queryKey: incidentKeys.all });
       setSent(incident);
     } catch (error) {
+      if (error instanceof ApiError && error.status === 0 && me) {
+        // No connection: keep the report on the phone and send it when the network returns.
+        await queueReport({
+          userId: me.user.id,
+          orgId: membership.organization.id,
+          body: values,
+          idempotencyKey: attempt.current.key,
+          photos: photos.map((photo) => photo.file),
+        });
+        setQueued(true);
+        return;
+      }
       if (!applyServerErrors(form, error)) toastError(error, t);
     }
   });
@@ -80,6 +97,7 @@ function ReportFlow({ onReportAnother }: { onReportAnother: () => void }) {
     void send(event);
   };
 
+  if (queued) return <ReportQueued onReportAnother={onReportAnother} />;
   if (sent) return <ReportSent incident={sent} photos={photos} onReportAnother={onReportAnother} />;
 
   return (

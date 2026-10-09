@@ -5,6 +5,7 @@ import { createRoot } from 'react-dom/client';
 import { router } from './app/router';
 import { SessionProvider } from './app/session';
 import { ApiError } from './lib/api';
+import { OfflineSync, SignOutGuard } from './lib/offline-sync';
 import { PwaUpdates } from './lib/pwa';
 import './styles/app.css';
 
@@ -32,6 +33,8 @@ createRoot(root).render(
       <SessionProvider>
         <RouterProvider router={router} />
         <PwaUpdates />
+        <OfflineSync />
+        <SignOutGuard />
       </SessionProvider>
     </QueryClientProvider>
   </StrictMode>,

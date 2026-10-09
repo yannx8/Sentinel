@@ -2,6 +2,7 @@ import { Link, Outlet } from '@tanstack/react-router';
 import { Bell, ClipboardList, History, ListChecks, Plus, UserRound } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useT, type TKey } from '../../i18n';
+import { PendingChip } from '../../features/field/pending-chip';
 import { NotificationBell } from '../../features/notifications/notification-bell';
 import { Logo } from '../../components/ui/layout';
 import { useSession } from '../session';
@@ -54,6 +55,7 @@ function FieldLayout() {
               <Logo className="px-1.5" />
             )}
           </div>
+          <PendingChip />
           <NotificationBell to="/field/notifications" />
         </div>
       </header>

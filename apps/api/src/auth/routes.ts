@@ -63,6 +63,8 @@ authRoutes.post('/login', authLimiter, async (req, res) => {
 authRoutes.post('/logout', async (req, res) => {
   if (req.auth) await prisma.session.delete({ where: { id: req.auth.session.id } }).catch(() => undefined);
   clearSessionCookie(res);
+  // Nothing of this person stays on a shared phone: caches, IndexedDB and local storage.
+  res.set('Clear-Site-Data', '"cache", "storage"');
   res.status(204).end();
 });
 

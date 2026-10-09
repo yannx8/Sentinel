@@ -5,6 +5,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { I18nProvider, detectLocale, useT } from '../i18n';
 import { installValidationMessages } from '../lib/forms';
 import { api, ApiError, onGlobalApiError, setActiveOrgHeader } from '../lib/api';
+import { guardSignOut } from '../lib/offline-sync';
 
 const ORG_KEY = 'sentinel.org';
 export const meQueryKey = ['me'] as const;
@@ -175,10 +176,14 @@ export function useSession(): SessionValue {
 export function useSignOut() {
   const { signOut } = useSession();
   const navigate = useNavigate();
-  return useCallback(async () => {
-    await navigate({ to: '/login', replace: true });
-    await signOut();
-  }, [navigate, signOut]);
+  return useCallback(
+    () =>
+      guardSignOut(async () => {
+        await navigate({ to: '/login', replace: true });
+        await signOut();
+      }),
+    [navigate, signOut],
+  );
 }
 
 /** The active membership on a route that requires one. */

@@ -1,0 +1,17 @@
+export const offline = {
+  queuedTitle: 'Saved on your phone',
+  queuedBody: 'You are offline. This report will be sent as soon as you are back online.',
+  chipOne: '{count} waiting',
+  chipOther: '{count} waiting',
+  listTitle: 'Reports waiting to be sent',
+  listBody: 'They go out on their own when the connection returns.',
+  waiting: 'Waiting for a connection',
+  sendingPhotos: '{reference} created, sending photos',
+  failed: 'Not sent',
+  retry: 'Try again',
+  discard: 'Delete',
+  sentToast: 'Report {reference} sent',
+  signOutTitle: 'Sign out and lose waiting reports?',
+  signOutBody: '{count} report(s) have not been sent yet. If you sign out now, they are deleted.',
+  signOutConfirm: 'Sign out and delete',
+};
