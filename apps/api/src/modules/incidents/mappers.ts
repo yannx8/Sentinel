@@ -102,7 +102,8 @@ export function toListItem(row: IncidentListRow): IncidentListItem {
       contactPhone: row.site.contactPhone,
     },
     category: { id: row.category.id, name: row.category.name },
-    reporter: personRef(row.reporter),
+    reporter: row.reporter ? personRef(row.reporter) : { membershipId: '', name: row.guestName ?? '' },
+    channel: row.channel,
     assignee: live ? { ...personRef(live.intervenant), assignmentId: live.id, status: live.status } : null,
     flags: {
       declined: row.status === 'NEW' && row.declinedAt !== null,
@@ -162,8 +163,9 @@ function toAttachment(attachment: IncidentDetailRow['attachments'][number]): Att
 }
 
 function reporterPhoneFor(row: IncidentDetailRow, tenant: Tenant): string | null {
-  if (tenant.role === 'SUPERVISOR') return row.reporter.user.phone;
-  if (tenant.role === 'INTERVENANT' && tenant.org.showReporterPhone) return row.reporter.user.phone;
+  const phone = row.reporter ? row.reporter.user.phone : row.guestPhone;
+  if (tenant.role === 'SUPERVISOR') return phone;
+  if (tenant.role === 'INTERVENANT' && tenant.org.showReporterPhone) return phone;
   return null;
 }
 

@@ -54,7 +54,7 @@ export function CaseDetails({ incident }: { incident: IncidentDetail }) {
             })}
           </Row>
         )}
-        <Row label={t('incidents.caseFile.reporter')}>{incident.reporter.name}</Row>
+        <Row label={t('incidents.caseFile.reporter')}>{incident.reporter.name || t('incidents.visitor')}</Row>
         {incident.reporterPhone && (
           <Row label={t('incidents.caseFile.phone')}>
             <a className="text-accent hover:underline" href={`tel:${incident.reporterPhone}`}>

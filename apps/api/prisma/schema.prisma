@@ -108,10 +108,16 @@ enum CommentVisibility {
   INTERNAL
 }
 
+enum IncidentChannel {
+  APP
+  QR_GUEST
+}
+
 enum DismissReason {
   DUPLICATE
   NOT_AN_INCIDENT
   NO_ACTION_NEEDED
+  SPAM
 }
 
 enum ReassignmentReason {
@@ -494,8 +500,14 @@ model Incident {
   siteId                String         @db.Uuid
   // Set from a QR code; the service checks it belongs to the site and organization.
   areaId                String?        @db.Uuid
-  reporterMembershipId  String         @db.Uuid
-  createdByMembershipId String         @db.Uuid
+  // Null for a visitor's report (channel QR_GUEST).
+  reporterMembershipId  String?        @db.Uuid
+  channel               IncidentChannel @default(APP)
+  guestName             String?
+  guestPhone            String?
+  guestConsentAt        DateTime?
+  trackingTokenHash     String?        @unique
+  createdByMembershipId String?        @db.Uuid
   // Original report, immutable after submission (I5).
   title                 String
   description           String         @default("")
@@ -525,8 +537,8 @@ model Incident {
   area             SiteArea?        @relation(fields: [areaId], references: [id], onDelete: SetNull)
   organization     Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   site             Site             @relation(fields: [siteId, organizationId], references: [id, organizationId], onDelete: NoAction, onUpdate: NoAction)
-  reporter         Membership       @relation("Reporter", fields: [reporterMembershipId, organizationId], references: [id, organizationId], onDelete: NoAction, onUpdate: NoAction)
-  createdBy        Membership       @relation("CreatedBy", fields: [createdByMembershipId, organizationId], references: [id, organizationId], onDelete: NoAction, onUpdate: NoAction)
+  reporter         Membership?      @relation("Reporter", fields: [reporterMembershipId, organizationId], references: [id, organizationId], onDelete: NoAction, onUpdate: NoAction)
+  createdBy        Membership?      @relation("CreatedBy", fields: [createdByMembershipId, organizationId], references: [id, organizationId], onDelete: NoAction, onUpdate: NoAction)
   category         IncidentCategory @relation("Category", fields: [categoryId, organizationId], references: [id, organizationId], onDelete: NoAction, onUpdate: NoAction)
   reportedCategory IncidentCategory @relation("ReportedCategory", fields: [reportedCategoryId, organizationId], references: [id, organizationId], onDelete: NoAction, onUpdate: NoAction)
 

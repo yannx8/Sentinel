@@ -59,6 +59,8 @@ export const setup = {
       longitude: 'Longitude',
       usePosition: 'Use my position',
       landmark: 'Landmark',
+      guestReporting: 'Allow visitor reports',
+      guestReportingHint: 'Anyone who scans a code of this site can report without an account.',
       deactivate: 'Deactivate site',
       reactivate: 'Reactivate site',
     },

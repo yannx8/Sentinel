@@ -1,9 +1,10 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { siteSchema, type SiteDTO } from '@sentinel/shared';
 import { useId, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import type { z } from 'zod';
 import { Button } from '../../components/ui/button';
+import { Checkbox } from '../../components/ui/checkbox';
 import { ConfirmDialog, Dialog, DialogContent } from '../../components/ui/dialog';
 import { Banner } from '../../components/ui/feedback';
 import { Field } from '../../components/ui/field';
@@ -31,6 +32,7 @@ function bodyOf(site: SiteDTO | null): SiteBody {
     latitude: site?.latitude ?? null,
     longitude: site?.longitude ?? null,
     landmark: site?.landmark ?? '',
+    guestReporting: site?.guestReporting ?? false,
   };
 }
 
@@ -48,6 +50,7 @@ function toBody(values: SiteOutput): SiteBody {
     latitude: values.latitude ?? null,
     longitude: values.longitude ?? null,
     landmark: values.landmark ?? '',
+    guestReporting: values.guestReporting ?? false,
   };
 }
 
@@ -210,6 +213,19 @@ function SiteDialogContent({ site, onClose }: { site: SiteDTO | null; onClose: (
         <Field label={t('setup.sites.form.landmark')} optional error={errors.landmark?.message}>
           <Input autoComplete="off" maxLength={200} {...form.register('landmark')} />
         </Field>
+        <Controller
+          control={form.control}
+          name="guestReporting"
+          render={({ field }) => (
+            <label className="flex items-start gap-3 text-sm text-ink-2">
+              <Checkbox checked={!!field.value} onCheckedChange={field.onChange} className="mt-0.5" />
+              <span>
+                <span className="block font-medium text-ink">{t('setup.sites.form.guestReporting')}</span>
+                {t('setup.sites.form.guestReportingHint')}
+              </span>
+            </label>
+          )}
+        />
       </form>
 
       {site && <SiteAreas siteId={site.id} />}

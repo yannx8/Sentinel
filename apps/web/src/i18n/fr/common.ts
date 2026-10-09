@@ -107,6 +107,7 @@ export const common: Translation<typeof en> = {
     DUPLICATE: "Doublon d'un autre incident",
     NOT_AN_INCIDENT: "Ce n'est pas un incident",
     NO_ACTION_NEEDED: 'Aucune action nécessaire',
+    SPAM: 'Indésirable',
   },
   reassignmentReason: {
     CANNOT_ACCESS: "Impossible d'accéder au site",

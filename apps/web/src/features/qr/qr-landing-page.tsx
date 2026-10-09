@@ -9,6 +9,7 @@ import { Skeleton } from '../../components/ui/feedback';
 import { useT } from '../../i18n';
 import { api } from '../../lib/api';
 import { AuthStatus } from '../auth/parts';
+import { GuestReportForm } from './guest-report-form';
 
 /**
  * A printed QR code lands here. A signed-in member of the site's organization goes straight to the
@@ -50,6 +51,21 @@ export function QrLandingPage() {
       <AuthStatus icon={<Link2Off />} title={t('field.qr.notMemberTitle', { organization: data.organizationName })}>
         <p>{t('field.qr.notMemberBody')}</p>
       </AuthStatus>
+    );
+  }
+
+  if (!me && data.guestReporting) {
+    return (
+      <div className="grid justify-items-center gap-3">
+        <GuestReportForm token={token} site={data} />
+        <Link
+          to="/login"
+          search={{ redirect: `/r/${token}`, email: undefined }}
+          className="pb-6 text-sm font-medium text-accent hover:underline"
+        >
+          {t('field.qr.signInInstead', { organization: data.organizationName })}
+        </Link>
+      </div>
     );
   }
 

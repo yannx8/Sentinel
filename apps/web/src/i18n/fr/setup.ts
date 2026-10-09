@@ -63,6 +63,8 @@ export const setup: Translation<typeof en> = {
       longitude: 'Longitude',
       usePosition: 'Utiliser ma position',
       landmark: 'Point de repère',
+      guestReporting: 'Autoriser les signalements de visiteurs',
+      guestReportingHint: 'Toute personne qui scanne un code de ce site peut signaler sans compte.',
       deactivate: 'Désactiver le site',
       reactivate: 'Réactiver le site',
     },

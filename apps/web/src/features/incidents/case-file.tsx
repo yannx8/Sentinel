@@ -227,7 +227,9 @@ export function CaseFile({
             <PriorityLabel priority={data.priority} />
             {!data.triaged && <span className="text-xs text-ink-3">({t('incidents.suggested')})</span>}
           </span>
-          <span className="text-sm text-ink-3">{t('incidents.caseFile.reportedBy', { name: data.reporter.name })}</span>
+          <span className="text-sm text-ink-3">
+            {t('incidents.caseFile.reportedBy', { name: data.reporter.name || t('incidents.visitor') })}
+          </span>
           <FlagBadges item={data} />
         </div>
         {data.status === 'CLOSED' ? (

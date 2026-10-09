@@ -246,6 +246,18 @@ export const createIncidentSchema = z.object({
   onBehalfOfMembershipId: uuidSchema.optional(),
 });
 
+/** A visitor's report through a QR code. `website` is the honeypot: people leave it empty. */
+export const guestReportSchema = z.object({
+  categoryId: uuidSchema,
+  description: z.string().trim().max(4000).default(''),
+  locationDetail: optionalText(200),
+  guestName: optionalText(80),
+  guestPhone: phone,
+  /** Required when a phone number is given. */
+  consent: z.boolean().default(false),
+  website: z.string().max(200).optional(),
+});
+
 const csvList = <T extends readonly [string, ...string[]]>(values: T) =>
   z
     .string()

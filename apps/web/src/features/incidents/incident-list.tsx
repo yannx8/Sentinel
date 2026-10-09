@@ -12,10 +12,11 @@ import type { Density } from '../../lib/density';
 
 const rowPadding: Record<Density, string> = { compact: 'py-1.5', default: 'py-2.5', comfortable: 'py-3.5' };
 
-export function FlagBadges({ item }: { item: Pick<IncidentListItem, 'flags' | 'triaged' | 'status'> }) {
+export function FlagBadges({ item }: { item: Pick<IncidentListItem, 'flags' | 'triaged' | 'status' | 'channel'> }) {
   const { t } = useT();
   return (
     <>
+      {item.channel === 'QR_GUEST' && <Badge tone="outline">{t('incidents.visitor')}</Badge>}
       {item.flags.declined && <Badge tone="critical">{t('incidents.flags.declined')}</Badge>}
       {item.flags.reassignmentRequested && <Badge tone="warning">{t('incidents.flags.reassignmentRequested')}</Badge>}
       {item.flags.sentBack && <Badge tone="warning">{t('incidents.flags.sentBack')}</Badge>}

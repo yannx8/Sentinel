@@ -107,8 +107,8 @@ areaLookupRoutes.get('/:id', async (req, res) => {
 /** Mounted at /v1/public/sites. An unknown, inactive or suspended token answers 404, like a cross-tenant id. */
 export const publicSiteRoutes = Router();
 
-publicSiteRoutes.get('/:token', publicLimiter, async (req, res) => {
-  const token = req.params.token as string;
+/** The live site (and area) a QR token names. Unknown, inactive or suspended answers 404. */
+export async function resolveToken(token: string) {
   const area = await prisma.siteArea.findUnique({
     where: { publicToken: token },
     include: { site: { include: { organization: true } } },
@@ -117,6 +117,18 @@ publicSiteRoutes.get('/:token', publicLimiter, async (req, res) => {
     area?.site ?? (await prisma.site.findUnique({ where: { publicToken: token }, include: { organization: true } }));
   const live = site?.isActive && site.organization.status === 'ACTIVE' && (area ? area.isActive : true);
   if (!site || !live) throw notFound('Site');
+  return { site, area };
+}
+
+publicSiteRoutes.get('/:token', publicLimiter, async (req, res) => {
+  const { site, area } = await resolveToken(req.params.token as string);
+  const categories = site.guestReporting
+    ? await prisma.incidentCategory.findMany({
+        where: { organizationId: site.organizationId, isActive: true },
+        select: { id: true, name: true },
+        orderBy: { name: 'asc' },
+      })
+    : [];
   const data: PublicSiteDTO = {
     organizationId: site.organizationId,
     organizationName: site.organization.displayName,
@@ -125,6 +137,7 @@ publicSiteRoutes.get('/:token', publicLimiter, async (req, res) => {
     areaId: area?.id ?? null,
     areaName: area?.name ?? null,
     guestReporting: site.guestReporting,
+    categories,
   };
   res.json({ data });
 });

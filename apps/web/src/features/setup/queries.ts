@@ -43,6 +43,7 @@ export type SiteBody = {
   latitude: number | null;
   longitude: number | null;
   landmark: string;
+  guestReporting: boolean;
 };
 export type SitePatch = Partial<SiteBody> & { isActive?: boolean };
 

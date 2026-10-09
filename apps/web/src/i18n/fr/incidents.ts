@@ -43,6 +43,7 @@ export const incidents: Translation<typeof en> = {
   },
   select: 'Sélectionnez un incident pour le lire ici.',
   closeCaseFile: 'Fermer la fiche',
+  visitor: 'Visiteur',
   caseFile: {
     activity: 'Activité',
     details: 'Détails',

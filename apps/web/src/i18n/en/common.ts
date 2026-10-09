@@ -104,6 +104,7 @@ export const common = {
     DUPLICATE: 'Duplicate of another incident',
     NOT_AN_INCIDENT: 'Not an incident',
     NO_ACTION_NEEDED: 'No action needed',
+    SPAM: 'Spam',
   },
   reassignmentReason: {
     CANNOT_ACCESS: 'Cannot access the site',

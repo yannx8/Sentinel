@@ -86,7 +86,7 @@ const REQUEST_NOT_PENDING = 'This reassignment request is no longer pending.';
 
 /* Shared helpers */
 
-function invalidField(field: string, message: string) {
+export function invalidField(field: string, message: string) {
   return new AppError('VALIDATION_FAILED', message, { fields: { [field]: [message] } });
 }
 
@@ -131,7 +131,7 @@ async function findLiveAssignment(db: Db, tenant: Tenant, incidentId: string) {
   return assignment ? liveOf([assignment]) : null;
 }
 
-async function activeCategory(db: Db, tenant: Tenant, categoryId: string) {
+export async function activeCategory(db: Db, tenant: Pick<Tenant, 'orgId'>, categoryId: string) {
   const category = await db.incidentCategory.findFirst({
     where: { id: categoryId, organizationId: tenant.orgId },
     select: { id: true, name: true, defaultPriority: true, isActive: true },
@@ -387,6 +387,18 @@ function yearIn(timeZone: string, at: Date): number {
   return year ? Number(year.value) : at.getUTCFullYear();
 }
 
+/** Per organization and year, in the organization's time zone (F-INC-02). The upsert locks the counter row. */
+export async function nextReference(tx: Tx, orgId: string, timezone: string): Promise<string> {
+  const year = yearIn(timezone, new Date());
+  const [counter] = await tx.$queryRaw<{ value: number }[]>`
+    INSERT INTO "OrganizationCounter" ("organizationId", "name", "value")
+    VALUES (${orgId}::uuid, ${`incident:${year}`}, 1)
+    ON CONFLICT ("organizationId", "name") DO UPDATE SET "value" = "OrganizationCounter"."value" + 1
+    RETURNING "value"`;
+  if (!counter) throw new Error('The incident counter returned no row');
+  return formatReference(year, counter.value);
+}
+
 export async function createIncident(tenant: Tenant, input: CreateIncidentInput): Promise<IncidentDetail> {
   if (tenant.role === 'INTERVENANT') throw forbidden('Intervenants cannot report incidents.');
   if (input.onBehalfOfMembershipId && tenant.role !== 'SUPERVISOR') {
@@ -418,19 +430,12 @@ export async function createIncident(tenant: Tenant, input: CreateIncidentInput)
     const category = await activeCategory(tx, tenant, input.categoryId);
     const reportedPriority = input.reportedPriority ?? category.defaultPriority;
 
-    // Per organization and year, in the organization's time zone (F-INC-02). The upsert locks the counter row.
-    const year = yearIn(tenant.org.timezone, new Date());
-    const [counter] = await tx.$queryRaw<{ value: number }[]>`
-      INSERT INTO "OrganizationCounter" ("organizationId", "name", "value")
-      VALUES (${tenant.orgId}::uuid, ${`incident:${year}`}, 1)
-      ON CONFLICT ("organizationId", "name") DO UPDATE SET "value" = "OrganizationCounter"."value" + 1
-      RETURNING "value"`;
-    if (!counter) throw new Error('The incident counter returned no row');
+    const reference = await nextReference(tx, tenant.orgId, tenant.org.timezone);
 
     const incident = await tx.incident.create({
       data: {
         organizationId: tenant.orgId,
-        reference: formatReference(year, counter.value),
+        reference,
         siteId: input.siteId,
         areaId: input.areaId ?? null,
         reporterMembershipId: onBehalfOf?.id ?? tenant.membershipId,

@@ -8,6 +8,7 @@ import type {
   AuditEventType,
   Availability,
   DismissReason,
+  IncidentChannel,
   IncidentStatus,
   Industry,
   LiveAssignmentStatus,
@@ -87,7 +88,9 @@ export type IncidentListItem = {
     contactPhone: string | null;
   };
   category: { id: string; name: string };
+  /** A visitor's report has an empty membershipId and the name they gave, if any. */
   reporter: PersonRef;
+  channel: IncidentChannel;
   assignee: (PersonRef & { assignmentId: string; status: LiveAssignmentStatus }) | null;
   /** Reasons a supervisor should look now. */
   flags: { declined: boolean; reassignmentRequested: boolean; sentBack: boolean };
@@ -239,6 +242,18 @@ export type PublicSiteDTO = {
   areaId: string | null;
   areaName: string | null;
   guestReporting: boolean;
+  /** Only when guests may report: what a visitor can choose from. */
+  categories: { id: string; name: string }[];
+};
+
+/** What a visitor sees on the tracking page. Nothing internal. */
+export type PublicTrackDTO = {
+  reference: string;
+  status: IncidentStatus;
+  siteName: string;
+  createdAt: string;
+  updatedAt: string;
+  events: { type: 'ASSIGNED' | 'ASSIGNMENT_ACCEPTED' | 'RESOLVED' | 'CLOSED'; createdAt: string }[];
 };
 
 export type SpecialtyDTO = { id: string; name: string; intervenants: number; categories: number };

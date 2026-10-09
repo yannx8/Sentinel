@@ -67,7 +67,8 @@ export type IncidentViewer = {
 
 export type IncidentFacts = {
   status: IncidentStatus;
-  reporterMembershipId: string;
+  /** Null for a visitor's report. */
+  reporterMembershipId: string | null;
   liveAssignment: { intervenantMembershipId: string; status: LiveAssignmentStatus } | null;
 };
 

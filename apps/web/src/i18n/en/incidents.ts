@@ -34,6 +34,7 @@ export const incidents = {
   },
   select: 'Select an incident to read it here.',
   closeCaseFile: 'Close case file',
+  visitor: 'Visitor',
   caseFile: {
     activity: 'Activity',
     details: 'Details',

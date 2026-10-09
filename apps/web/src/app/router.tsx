@@ -118,6 +118,11 @@ const qrRoute = createRoute({
   path: '/r/$token',
   component: lazyRouteComponent(() => import('../features/qr/qr-landing-page'), 'QrLandingPage'),
 });
+const trackRoute = createRoute({
+  getParentRoute: () => publicLayout,
+  path: '/t/$token',
+  component: lazyRouteComponent(() => import('../features/qr/track-page'), 'TrackPage'),
+});
 const noAccessRoute = createRoute({
   getParentRoute: () => publicLayout,
   path: '/no-access',
@@ -285,6 +290,7 @@ const routeTree = rootRoute.addChildren([
     verifyRoute,
     inviteRoute,
     qrRoute,
+    trackRoute,
     mfaRoute,
     noAccessRoute,
   ]),
