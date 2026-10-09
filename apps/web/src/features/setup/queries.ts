@@ -1,7 +1,9 @@
 import type {
+  AreaDTO,
   CategoryDTO,
   OrganizationSettings,
   Priority,
+  SiteAreasDTO,
   SiteDTO,
   SpecialtyDTO,
   UpdateOrganizationInput,
@@ -226,4 +228,33 @@ export function useSaveSettings() {
       refresh(queryClient, [meQueryKey, ['incident'], dashboardKeys.all]);
     },
   });
+}
+
+/* Areas and QR codes */
+
+export function useSiteAreas(siteId: string) {
+  return useQuery({
+    queryKey: ['site-areas', siteId],
+    queryFn: ({ signal }) => api.get<SiteAreasDTO>(`/sites/${siteId}/areas`, { signal }),
+  });
+}
+
+export function useAreaMutations(siteId: string) {
+  const queryClient = useQueryClient();
+  const { t } = useT();
+  const options = {
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['site-areas', siteId] }),
+    onError: (error: unknown) => toastError(error, t),
+  };
+  return {
+    add: useMutation({
+      mutationFn: (name: string) => api.post<AreaDTO>(`/sites/${siteId}/areas`, { name }),
+      ...options,
+    }),
+    update: useMutation({
+      mutationFn: ({ id, patch }: { id: string; patch: { name?: string; isActive?: boolean } }) =>
+        api.patch<AreaDTO>(`/sites/${siteId}/areas/${id}`, patch),
+      ...options,
+    }),
+  };
 }

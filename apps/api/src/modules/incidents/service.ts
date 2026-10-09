@@ -408,6 +408,13 @@ export async function createIncident(tenant: Tenant, input: CreateIncidentInput)
       select: { isActive: true },
     });
     if (!site?.isActive) throw invalidField('siteId', 'This site no longer accepts reports. Choose another site.');
+    if (input.areaId) {
+      const area = await tx.siteArea.findFirst({
+        where: { id: input.areaId, siteId: input.siteId, organizationId: tenant.orgId, isActive: true },
+        select: { id: true },
+      });
+      if (!area) throw invalidField('areaId', 'This area no longer exists. Choose the site instead.');
+    }
     const category = await activeCategory(tx, tenant, input.categoryId);
     const reportedPriority = input.reportedPriority ?? category.defaultPriority;
 
@@ -425,6 +432,7 @@ export async function createIncident(tenant: Tenant, input: CreateIncidentInput)
         organizationId: tenant.orgId,
         reference: formatReference(year, counter.value),
         siteId: input.siteId,
+        areaId: input.areaId ?? null,
         reporterMembershipId: onBehalfOf?.id ?? tenant.membershipId,
         createdByMembershipId: tenant.membershipId,
         title: input.title,

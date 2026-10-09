@@ -52,6 +52,15 @@ export const field: Translation<typeof en> = {
     photosFailedOther: "{count} photos n'ont pas pu être jointes.",
     loadError: "Cette liste n'a pas pu se charger. Vérifiez votre connexion et réessayez.",
   },
+  qr: {
+    invalidTitle: "Ce code n'est pas valide",
+    invalidBody: 'Il a peut-être été remplacé ou désactivé. Demandez un nouveau code au responsable du site.',
+    notMemberTitle: 'Vous ne faites pas partie de {organization}',
+    notMemberBody: 'Connectez-vous avec le compte que vous utilisez pour cette organisation.',
+    signInTitle: 'Signaler un incident à {site}',
+    signInBody: 'Connectez-vous à {organization} pour le signaler.',
+    signIn: 'Se connecter',
+  },
   siteActions: {
     onSite: 'Je suis sur place',
     arrivedNote: 'Arrivé sur place.',

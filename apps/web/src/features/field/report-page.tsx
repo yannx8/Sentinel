@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createIncidentSchema, type IncidentDetail } from '@sentinel/shared';
 import { useQueryClient } from '@tanstack/react-query';
-import { Navigate } from '@tanstack/react-router';
+import { Navigate, useSearch } from '@tanstack/react-router';
 import { useRef, useState, type FormEvent } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMembership } from '../../app/session';
@@ -29,6 +29,7 @@ export function ReportPage() {
 function ReportFlow({ onReportAnother }: { onReportAnother: () => void }) {
   const { t } = useT();
   const queryClient = useQueryClient();
+  const qr = useSearch({ from: '/field/report' });
   const categories = useActiveCategories();
   const [photos, setPhotos] = useState<PreparedPhoto[]>([]);
   const [fix, setFix] = useState<GeoFix | null>(null);
@@ -39,7 +40,14 @@ function ReportFlow({ onReportAnother }: { onReportAnother: () => void }) {
   const form = useForm<ReportInput, unknown, ReportOutput>({
     resolver: zodResolver(createIncidentSchema),
     mode: 'onTouched',
-    defaultValues: { title: '', description: '', categoryId: '', siteId: '', locationDetail: '' },
+    defaultValues: {
+      title: '',
+      description: '',
+      categoryId: '',
+      siteId: qr.site ?? '',
+      areaId: qr.area,
+      locationDetail: '',
+    },
   });
 
   const changeFix = (next: GeoFix | null) => {

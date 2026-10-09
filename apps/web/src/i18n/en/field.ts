@@ -49,6 +49,15 @@ export const field = {
     photosFailedOther: '{count} photos could not be attached.',
     loadError: 'This list could not load. Check your connection and try again.',
   },
+  qr: {
+    invalidTitle: 'This code is not valid',
+    invalidBody: 'It may have been replaced or turned off. Ask the person in charge of the site for a new one.',
+    notMemberTitle: 'You are not a member of {organization}',
+    notMemberBody: 'Sign in with the account you use for this organization.',
+    signInTitle: 'Report an incident at {site}',
+    signInBody: 'Sign in to {organization} to report it.',
+    signIn: 'Sign in',
+  },
   siteActions: {
     onSite: "I'm on site",
     arrivedNote: 'Arrived on site.',

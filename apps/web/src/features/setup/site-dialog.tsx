@@ -14,6 +14,7 @@ import { newIdempotencyKey } from '../../lib/api';
 import { cn } from '../../lib/cn';
 import { toastError } from '../../lib/forms';
 import { showSaveError } from './parts';
+import { SiteAreas } from './site-areas';
 import { changedFields, useCreateSite, useUpdateSite, type SiteBody } from './queries';
 
 type SiteInput = z.input<typeof siteSchema>;
@@ -210,6 +211,8 @@ function SiteDialogContent({ site, onClose }: { site: SiteDTO | null; onClose: (
           <Input autoComplete="off" maxLength={200} {...form.register('landmark')} />
         </Field>
       </form>
+
+      {site && <SiteAreas siteId={site.id} />}
 
       {site && (
         <ConfirmDialog

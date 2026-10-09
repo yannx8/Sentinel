@@ -220,10 +220,25 @@ export type SiteDTO = {
   latitude: number | null;
   longitude: number | null;
   landmark: string | null;
+  guestReporting: boolean;
   isActive: boolean;
   openIncidents: number;
   intervenants: number;
   createdAt: string;
+};
+
+export type AreaDTO = { id: string; name: string; isActive: boolean; token: string };
+/** Supervisor only: the QR tokens of a site and its areas. */
+export type SiteAreasDTO = { siteToken: string; areas: AreaDTO[] };
+/** What a QR token reveals before anyone signs in. */
+export type PublicSiteDTO = {
+  organizationId: string;
+  organizationName: string;
+  siteId: string;
+  siteName: string;
+  areaId: string | null;
+  areaName: string | null;
+  guestReporting: boolean;
 };
 
 export type SpecialtyDTO = { id: string; name: string; intervenants: number; categories: number };

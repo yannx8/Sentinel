@@ -151,8 +151,12 @@ export const siteSchema = z.object({
   latitude: z.number().min(-90).max(90).nullish(),
   longitude: z.number().min(-180).max(180).nullish(),
   landmark: optionalText(200),
+  guestReporting: z.boolean().optional(),
 });
 export const updateSiteSchema = siteSchema.partial().extend({ isActive: z.boolean().optional() });
+
+export const areaSchema = z.object({ name: text(2, 80) });
+export const updateAreaSchema = areaSchema.partial().extend({ isActive: z.boolean().optional() });
 
 export const categorySchema = z.object({
   name: text(2, 60),
@@ -231,6 +235,8 @@ export const createIncidentSchema = z.object({
   title: text(3, 120),
   description: z.string().trim().max(4000).default(''),
   siteId: uuidSchema,
+  /** From a QR code. */
+  areaId: uuidSchema.optional(),
   categoryId: uuidSchema,
   locationDetail: optionalText(200),
   latitude: z.number().min(-90).max(90).optional(),

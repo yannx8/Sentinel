@@ -10,6 +10,7 @@ import { errorHandler, notFoundHandler } from './http/error-handler';
 import { apiLimiter } from './http/rate-limit';
 import { meRoutes } from './modules/me';
 import { registrationRoutes } from './modules/registration';
+import { publicSiteRoutes } from './modules/areas';
 import { publicInvitationRoutes } from './modules/people/public-invitations';
 import { invitationRoutes, memberRoutes } from './modules/people/routes';
 import { incidentRoutes } from './modules/incidents/routes';
@@ -77,6 +78,7 @@ export function createApp() {
   v1.use('/auth', authRoutes);
   v1.use('/public/organizations', registrationRoutes);
   v1.use('/public/invitations', publicInvitationRoutes);
+  v1.use('/public/sites', publicSiteRoutes);
   v1.use('/me', requireUser, meRoutes);
   v1.use('/platform', requireUser, requirePlatformAdmin, platformRoutes);
   // The attachment id names its organization, so this route resolves the tenant itself.

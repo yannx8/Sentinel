@@ -395,6 +395,10 @@ model Site {
   latitude       Float?
   longitude      Float?
   landmark       String?
+  // Opt-in for visitors reporting through a QR code (D7).
+  guestReporting Boolean  @default(false)
+  // QR token of the whole site; created when the QR sheet is first opened.
+  publicToken    String?  @unique
   isActive       Boolean  @default(true)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
@@ -403,9 +407,27 @@ model Site {
   accesses     SiteAccess[]
   incidents    Incident[]
   employees    EmployeeProfile[]
+  areas        SiteArea[]
 
   @@unique([id, organizationId])
   @@unique([organizationId, code])
+}
+
+// A place inside a site with its own QR code.
+model SiteArea {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  siteId         String   @db.Uuid
+  name           String
+  publicToken    String   @unique
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+
+  site      Site       @relation(fields: [siteId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  incidents Incident[]
+
+  @@unique([id, organizationId])
+  @@index([siteId])
 }
 
 // An intervenant may be assigned only on sites they have access to (I10).
@@ -468,6 +490,8 @@ model Incident {
   organizationId        String         @db.Uuid
   reference             String
   siteId                String         @db.Uuid
+  // Set from a QR code; the service checks it belongs to the site and organization.
+  areaId                String?        @db.Uuid
   reporterMembershipId  String         @db.Uuid
   createdByMembershipId String         @db.Uuid
   // Original report, immutable after submission (I5).
@@ -496,6 +520,7 @@ model Incident {
   closedAt              DateTime?
   updatedAt             DateTime       @updatedAt
 
+  area             SiteArea?        @relation(fields: [areaId], references: [id], onDelete: SetNull)
   organization     Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   site             Site             @relation(fields: [siteId, organizationId], references: [id, organizationId], onDelete: NoAction, onUpdate: NoAction)
   reporter         Membership       @relation("Reporter", fields: [reporterMembershipId, organizationId], references: [id, organizationId], onDelete: NoAction, onUpdate: NoAction)

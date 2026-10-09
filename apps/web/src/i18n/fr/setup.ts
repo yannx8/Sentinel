@@ -10,6 +10,20 @@ export const setup: Translation<typeof en> = {
     description:
       "Les lieux où surviennent les incidents. Un intervenant ne peut être assigné qu'aux sites auxquels il a accès.",
     add: 'Ajouter un site',
+    areas: {
+      title: 'Zones et codes QR',
+      hint: 'Imprimez un code par lieu. Le scanner renseigne le site et la zone.',
+      printSheet: 'Imprimer la planche de codes QR',
+      add: 'Ajouter',
+      nameLabel: 'Nom de la zone',
+      namePlaceholder: 'Hall, quai de chargement',
+      deactivate: 'Désactiver',
+      reactivate: 'Réactiver',
+    },
+    qr: {
+      title: 'Codes QR de {site}',
+      print: 'Imprimer',
+    },
     filter: 'Filtrer les sites',
     filterPlaceholder: 'Filtrer par nom, code ou ville',
     noMatch: 'Aucun site ne correspond à ce filtre.',

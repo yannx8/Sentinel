@@ -53,6 +53,12 @@ export const platformOrgSearch = z.object({
 /** The organization of a field case file, so work from any client opens without switching first. */
 const fieldIncidentSearch = z.object({ org: z.string().uuid().optional().catch(undefined) });
 
+/** A QR code opens the report form with the site and area it names. */
+const reportSearch = z.object({
+  site: z.string().uuid().optional().catch(undefined),
+  area: z.string().uuid().optional().catch(undefined),
+});
+
 const tokenSearch = z.object({ token: z.string().max(300).optional().catch(undefined) });
 const loginSearch = z.object({ redirect: z.string().max(300).optional().catch(undefined), email: text });
 
@@ -107,10 +113,23 @@ const mfaRoute = createRoute({
   path: '/mfa',
   component: lazyRouteComponent(() => import('../features/auth/mfa-page'), 'MfaPage'),
 });
+const qrRoute = createRoute({
+  getParentRoute: () => publicLayout,
+  path: '/r/$token',
+  component: lazyRouteComponent(() => import('../features/qr/qr-landing-page'), 'QrLandingPage'),
+});
 const noAccessRoute = createRoute({
   getParentRoute: () => publicLayout,
   path: '/no-access',
   component: lazyRouteComponent(() => import('../features/auth/no-access-page'), 'NoAccessPage'),
+});
+
+/* Printable pages, outside any shell */
+
+const printQrRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/print/qr/$siteId',
+  component: lazyRouteComponent(() => import('../features/setup/qr-sheet-page'), 'QrSheetPage'),
 });
 
 /* Supervisor console */
@@ -188,6 +207,7 @@ const fieldIndex = createRoute({
 const reportRoute = createRoute({
   getParentRoute: () => fieldLayout,
   path: '/report',
+  validateSearch: reportSearch,
   component: lazyRouteComponent(() => import('../features/field/report-page'), 'ReportPage'),
 });
 const myIncidentsRoute = createRoute({
@@ -256,6 +276,7 @@ const platformAccountRoute = createRoute({
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
+  printQrRoute,
   publicLayout.addChildren([
     loginRoute,
     forgotRoute,
@@ -263,6 +284,7 @@ const routeTree = rootRoute.addChildren([
     registerRoute,
     verifyRoute,
     inviteRoute,
+    qrRoute,
     mfaRoute,
     noAccessRoute,
   ]),
