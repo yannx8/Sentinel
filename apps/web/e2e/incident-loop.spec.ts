@@ -21,9 +21,7 @@ test('J3: report, assign, accept, resolve, close', async ({ page }) => {
     await page.getByLabel('Title').fill(title);
     await page.getByLabel('Description').fill('Water under the sink, started this morning.');
     await page.getByRole('radio', { name: 'Water leak' }).check({ force: true });
-    await page.getByRole('button', { name: 'Continue' }).click();
     await page.getByRole('radio', { name: /Lyon headquarters/ }).check({ force: true });
-    await page.getByRole('button', { name: 'Continue' }).click();
     await page.getByRole('button', { name: 'Send report' }).click();
     await expect(page.getByText('Incident reported')).toBeVisible();
     reference = (

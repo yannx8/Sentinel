@@ -4,6 +4,7 @@ import type { Translation } from '../types';
 export const field: Translation<typeof en> = {
   stepOf: 'Étape {current} sur {total}',
   report: {
+    heading: 'Signaler un incident',
     steps: {
       what: 'Que se passe-t-il ?',
       where: 'Où est-ce ?',

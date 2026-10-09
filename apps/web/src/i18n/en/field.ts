@@ -1,6 +1,7 @@
 export const field = {
   stepOf: 'Step {current} of {total}',
   report: {
+    heading: 'Report an incident',
     steps: {
       what: 'What happened?',
       where: 'Where is it?',

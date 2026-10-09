@@ -24,6 +24,13 @@ async function assign(reference: string, version: number, intervenantMembershipI
   });
 }
 
+describe('incident report', () => {
+  it('accepts a report without a description', async () => {
+    const created = await reportIncident(s.reporter, s.site.id, s.category.id, { description: undefined });
+    expect((await detail(s.supervisor, created.reference)).description).toBe('');
+  });
+});
+
 describe('incident loop', () => {
   it('runs report, assign, accept, progress, resolve and close end to end', async () => {
     const created = await reportIncident(s.reporter, s.site.id, s.category.id);

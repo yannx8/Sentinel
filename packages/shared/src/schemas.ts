@@ -225,7 +225,7 @@ export const importEmployeesSchema = z.object({
 
 export const createIncidentSchema = z.object({
   title: text(3, 120),
-  description: text(10, 4000),
+  description: z.string().trim().max(4000).default(''),
   siteId: uuidSchema,
   categoryId: uuidSchema,
   locationDetail: optionalText(200),

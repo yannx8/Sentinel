@@ -469,7 +469,7 @@ model Incident {
   createdByMembershipId String         @db.Uuid
   // Original report, immutable after submission (I5).
   title                 String
-  description           String
+  description           String         @default("")
   reportedCategoryId    String         @db.Uuid
   reportedPriority      Priority
   locationDetail        String?
