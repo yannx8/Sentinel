@@ -78,6 +78,9 @@ function ReportFlow({ onReportAnother }: { onReportAnother: () => void }) {
         await queueReport({
           userId: me.user.id,
           orgId: membership.organization.id,
+          kind: 'report',
+          path: '/incidents',
+          label: String(values.title),
           body: values,
           idempotencyKey: attempt.current.key,
           photos: photos.map((photo) => photo.file),

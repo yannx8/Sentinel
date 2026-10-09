@@ -5,8 +5,7 @@ import { useSession } from '../app/session';
 import { ConfirmDialog } from '../components/ui/dialog';
 import { toast } from '../components/ui/toast';
 import { useT } from '../i18n';
-import { api, ApiError } from './api';
-import { incidentKeys } from './incidents';
+import { api, ApiError, getActiveOrg } from './api';
 import { createQueue, indexedDbStore, type NewItem, type Outcome, type QueueItem } from './offline-queue';
 
 const queue = createQueue(typeof indexedDB === 'undefined' ? emptyStore() : indexedDbStore());
@@ -38,6 +37,16 @@ export function useQueueItems() {
 function isTransient(error: unknown) {
   if (!(error instanceof ApiError)) return true;
   return error.status === 0 || error.status >= 500 || [401, 408, 429].includes(error.status);
+}
+
+async function sendItem(item: QueueItem, save: (patch: Partial<QueueItem>) => Promise<void>): Promise<Outcome> {
+  if (item.kind === 'report') return sendReport(item, save);
+  try {
+    await api.post(item.path, item.body, { idempotencyKey: item.idempotencyKey, orgId: item.orgId });
+    return 'done';
+  } catch (error) {
+    return isTransient(error) ? 'offline' : { failed: error instanceof Error ? error.message : '' };
+  }
 }
 
 async function sendReport(item: QueueItem, save: (patch: Partial<QueueItem>) => Promise<void>): Promise<Outcome> {
@@ -76,7 +85,7 @@ async function flush() {
   if (!userId || draining) return;
   draining = true;
   try {
-    const result = await queue.drain(userId, sendReport);
+    const result = await queue.drain(userId, sendItem);
     result.sent.forEach(onSent);
   } finally {
     draining = false;
@@ -89,6 +98,23 @@ export async function queueReport(input: NewItem) {
   await queue.add(input);
   await refresh(input.userId);
   void flush();
+}
+
+/** Keeps an action (accept, comment, resolve...) for sending later. False when nobody is signed in to own it. */
+export async function queueAction(input: {
+  path: string;
+  body: Record<string, unknown>;
+  idempotencyKey: string;
+  label: string;
+}) {
+  const userId = current.userId;
+  const orgId = getActiveOrg();
+  if (!userId || !orgId) return false;
+  // Actions on the same incident or assignment share a group, which keeps their order.
+  await queue.add({ ...input, userId, orgId, kind: 'action', group: input.path.split('/')[2] });
+  await refresh(userId);
+  void flush();
+  return true;
 }
 
 export const retryQueued = async (id: string) => {
@@ -112,8 +138,13 @@ export function OfflineSync() {
 
   useEffect(() => {
     onSent = (item) => {
-      toast.success(t('offline.sentToast', { reference: item.reference ?? '' }));
-      void queryClient.invalidateQueries({ queryKey: incidentKeys.all });
+      toast.success(
+        item.kind === 'report'
+          ? t('offline.sentToast', { reference: item.reference ?? '' })
+          : t('offline.actionSentToast', { label: item.label }),
+      );
+      void queryClient.invalidateQueries({ queryKey: ['incidents'] });
+      void queryClient.invalidateQueries({ queryKey: ['incident'] });
     };
   }, [t, queryClient]);
 

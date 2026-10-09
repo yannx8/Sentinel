@@ -1,17 +1,28 @@
 /**
- * Reports written without a connection wait here until they can be sent (V2 plan 2.4). Each item keeps the
+ * Reports and actions written without a connection wait here until they can be sent (V2 plan 2.4). Each item keeps the
  * Idempotency-Key it will be sent with, so a replay that follows a lost answer returns the same incident.
  * The store is a small interface so the ordering rules run in tests without a browser.
  */
 
 export type QueueState = 'waiting' | 'failed';
 
+export type QueueKind = 'report' | 'action';
+
+/** Stored in `error` when an earlier step of the same group failed; the screen words it in the user's language. */
+export const DEPENDENT_ERROR = 'DEPENDENT';
+
 export type QueueItem = {
   id: string;
   userId: string;
   orgId: string;
   createdAt: number;
-  /** The POST /incidents body. */
+  kind: QueueKind;
+  /** Where the body is posted: /incidents for a report, the action path otherwise. */
+  path: string;
+  /** What the person sees in the list, such as "Accept". */
+  label: string;
+  /** Items of one group go out in order, and a failure stops the rest of the group. */
+  group: string;
   body: Record<string, unknown>;
   idempotencyKey: string;
   photos: File[];
@@ -31,7 +42,8 @@ export type QueueStore = {
 /** What happened to one item: done, the network is down (keep it and stop), or the server refused it. */
 export type Outcome = 'done' | 'offline' | { failed: string };
 
-export type NewItem = Pick<QueueItem, 'userId' | 'orgId' | 'body' | 'idempotencyKey' | 'photos'>;
+export type NewItem = Pick<QueueItem, 'userId' | 'orgId' | 'kind' | 'path' | 'label' | 'body' | 'idempotencyKey'> &
+  Partial<Pick<QueueItem, 'group' | 'photos'>>;
 
 export function createQueue(store: QueueStore, clock: () => number = Date.now) {
   const ordered = async (userId: string) =>
@@ -41,9 +53,12 @@ export function createQueue(store: QueueStore, clock: () => number = Date.now) {
     list: ordered,
 
     async add(input: NewItem): Promise<QueueItem> {
+      const id = crypto.randomUUID();
       const item: QueueItem = {
         ...input,
-        id: crypto.randomUUID(),
+        id,
+        group: input.group ?? id,
+        photos: input.photos ?? [],
         createdAt: clock(),
         photosSent: 0,
         reference: null,
@@ -55,8 +70,15 @@ export function createQueue(store: QueueStore, clock: () => number = Date.now) {
     },
 
     async retry(userId: string, id: string) {
-      const item = (await store.list(userId)).find((candidate) => candidate.id === id);
-      if (item) await store.put({ ...item, state: 'waiting', error: null });
+      const all = await store.list(userId);
+      const item = all.find((candidate) => candidate.id === id);
+      if (!item) return;
+      // The steps that failed only because this one did go back to waiting with it.
+      for (const other of all) {
+        if (other.id === id || (other.group === item.group && other.error === DEPENDENT_ERROR)) {
+          await store.put({ ...other, state: 'waiting', error: null });
+        }
+      }
     },
 
     discard: (id: string) => store.remove(id),
@@ -70,12 +92,19 @@ export function createQueue(store: QueueStore, clock: () => number = Date.now) {
       send: (item: QueueItem, save: (patch: Partial<QueueItem>) => Promise<void>) => Promise<Outcome>,
     ) {
       const result = { sent: [] as QueueItem[], failed: 0, offline: false };
+      const blocked = new Set<string>();
       for (const item of await ordered(userId)) {
+        if (item.state === 'failed') blocked.add(item.group);
         if (item.state !== 'waiting') continue;
         const save = async (patch: Partial<QueueItem>) => {
           Object.assign(item, patch);
           await store.put(item);
         };
+        if (blocked.has(item.group)) {
+          await save({ state: 'failed', error: DEPENDENT_ERROR });
+          result.failed += 1;
+          continue;
+        }
         const outcome = await send(item, save);
         if (outcome === 'done') {
           await store.remove(item.id);
@@ -85,6 +114,7 @@ export function createQueue(store: QueueStore, clock: () => number = Date.now) {
           break;
         } else {
           await save({ state: 'failed', error: outcome.failed });
+          blocked.add(item.group);
           result.failed += 1;
         }
       }

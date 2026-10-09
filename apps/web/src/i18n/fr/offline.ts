@@ -13,6 +13,10 @@ export const offline: Translation<typeof en> = {
   failed: 'Non envoyé',
   retry: 'Réessayer',
   discard: 'Supprimer',
+  actionQueued: 'Enregistré sur votre téléphone. Il sera envoyé dès que vous serez de nouveau en ligne.',
+  actionSentToast: '{label} : envoyé',
+  comment: 'Commentaire sur {reference}',
+  dependentFailed: "une étape précédente de cet incident n'a pas abouti",
   sentToast: 'Signalement {reference} envoyé',
   signOutTitle: 'Se déconnecter et perdre les signalements en attente ?',
   signOutBody:

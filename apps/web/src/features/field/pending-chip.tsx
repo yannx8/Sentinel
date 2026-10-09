@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Button } from '../../components/ui/button';
 import { Dialog, DialogContent } from '../../components/ui/dialog';
 import { useT } from '../../i18n';
+import { DEPENDENT_ERROR } from '../../lib/offline-queue';
 import { discardQueued, retryQueued, useQueueItems } from '../../lib/offline-sync';
 
 /** Header chip: how many reports wait for a connection, and what became of each. */
@@ -22,10 +23,12 @@ export function PendingChip() {
           <ul className="grid gap-3">
             {items.map((item) => (
               <li key={item.id} className="rounded-lg border border-line p-3">
-                <p className="text-md font-medium text-ink">{String(item.body.title ?? '')}</p>
+                <p className="text-md font-medium text-ink">
+                  {item.kind === 'report' ? String(item.body.title ?? '') : item.label}
+                </p>
                 <p className="mt-0.5 text-sm text-ink-3">
                   {item.state === 'failed'
-                    ? `${t('offline.failed')}: ${item.error ?? ''}`
+                    ? `${t('offline.failed')}: ${item.error === DEPENDENT_ERROR ? t('offline.dependentFailed') : (item.error ?? '')}`
                     : item.reference
                       ? t('offline.sendingPhotos', { reference: item.reference })
                       : t('offline.waiting')}

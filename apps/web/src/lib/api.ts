@@ -27,6 +27,8 @@ let activeOrgId: string | null = null;
 const listeners = new Set<(error: ApiError) => void>();
 
 /** Every tenant request carries the active organization (X-Org-Id). */
+export const getActiveOrg = () => activeOrgId;
+
 export function setActiveOrgHeader(orgId: string | null) {
   activeOrgId = orgId;
 }

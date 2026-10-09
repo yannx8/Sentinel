@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createQueue, type QueueItem, type QueueStore } from './offline-queue';
+import { createQueue, DEPENDENT_ERROR, type QueueItem, type QueueStore } from './offline-queue';
 
 function memoryStore(): QueueStore {
   const items = new Map<string, QueueItem>();
@@ -12,12 +12,15 @@ function memoryStore(): QueueStore {
 
 let tick = 0;
 const queue = () => createQueue(memoryStore(), () => ++tick);
-const input = (userId: string, title: string) => ({
+const input = (userId: string, title: string, group?: string) => ({
   userId,
   orgId: 'org',
+  kind: 'report' as const,
+  path: '/incidents',
+  label: title,
+  group,
   body: { title },
   idempotencyKey: `key-${title}`,
-  photos: [],
 });
 const titleOf = (item: QueueItem) => item.body.title;
 
@@ -60,6 +63,22 @@ describe('offline queue', () => {
     await q.retry('u1', bad!.id);
     await q.drain('u1', async () => 'done');
     expect(await q.list('u1')).toEqual([]);
+  });
+
+  it('sends a group in order and fails the rest of it when one step is refused', async () => {
+    const q = queue();
+    await q.add(input('u1', 'accept', 'inc-1'));
+    await q.add(input('u1', 'resolve', 'inc-1'));
+    await q.add(input('u1', 'other', 'inc-2'));
+    const result = await q.drain('u1', async (item) =>
+      titleOf(item) === 'accept' ? { failed: 'Already taken.' } : 'done',
+    );
+    expect(result.sent.map(titleOf)).toEqual(['other']);
+    const left = await q.list('u1');
+    expect(left.map((item) => [titleOf(item), item.state, item.error])).toEqual([
+      ['accept', 'failed', 'Already taken.'],
+      ['resolve', 'failed', DEPENDENT_ERROR],
+    ]);
   });
 
   it('never shows or sends one person the reports of another', async () => {
