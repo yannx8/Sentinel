@@ -16,6 +16,10 @@ const schema = z.object({
   SMTP_USER: z.string().optional(),
   SMTP_PASSWORD: z.string().optional(),
   SMTP_FROM: z.string().default('Sentinel <no-reply@sentinel.local>'),
+  // Web Push. All three set turns it on; `npx web-push generate-vapid-keys` makes the pair.
+  VAPID_PUBLIC_KEY: z.string().optional(),
+  VAPID_PRIVATE_KEY: z.string().optional(),
+  VAPID_SUBJECT: z.string().default('mailto:no-reply@sentinel.local'),
   STORAGE_PATH: z.string().default('./uploads'),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).optional(),
 });

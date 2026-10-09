@@ -5,8 +5,12 @@ import {
   updateProfileSchema,
   type Me,
   type SessionDTO,
+  pushSubscribeSchema,
+  pushUnsubscribeSchema,
 } from '@sentinel/shared';
 import { Router } from 'express';
+import { env } from '../env';
+import { pushConfigured } from '../lib/push';
 import { activeMemberships, authOf, resolveTenant } from '../auth/context';
 import { prisma } from '../lib/prisma';
 import { notFound } from '../http/errors';
@@ -159,4 +163,36 @@ meRoutes.patch('/availability', async (req, res) => {
 meRoutes.get('/events', async (req, res) => {
   const mine = new Set((await activeMemberships(authOf(req).user.id)).map((m) => m.id));
   openStream(res, authOf(req).user.id, (event) => event.recipients.some((id) => mine.has(id)));
+});
+
+/* Web Push: this device's subscription belongs to the signed-in person. */
+
+meRoutes.get('/push/key', (_req, res) => {
+  res.json({ data: { publicKey: pushConfigured ? env.VAPID_PUBLIC_KEY : null } });
+});
+
+meRoutes.post('/push/subscriptions', async (req, res) => {
+  const { user } = authOf(req);
+  if (!pushConfigured) throw notFound('Push');
+  const input = parse(pushSubscribeSchema, req.body);
+  // A phone passed to someone else moves the subscription to its new owner.
+  await prisma.pushSubscription.upsert({
+    where: { endpoint: input.endpoint },
+    create: {
+      userId: user.id,
+      endpoint: input.endpoint,
+      p256dh: input.keys.p256dh,
+      auth: input.keys.auth,
+      userAgent: req.get('user-agent') ?? null,
+    },
+    update: { userId: user.id, p256dh: input.keys.p256dh, auth: input.keys.auth },
+  });
+  res.status(204).end();
+});
+
+meRoutes.delete('/push/subscriptions', async (req, res) => {
+  const { user } = authOf(req);
+  const input = parse(pushUnsubscribeSchema, req.body);
+  await prisma.pushSubscription.deleteMany({ where: { endpoint: input.endpoint, userId: user.id } });
+  res.status(204).end();
 });

@@ -27,14 +27,11 @@ export default defineConfig({
           { src: 'maskable-icon-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
-        navigateFallback: '/index.html',
-        navigateFallbackDenylist: [/^\/api\//, /^\/print\//],
-        cleanupOutdatedCaches: true,
-        // API responses are not cached yet: the cache key is the URL, which ignores who is signed in and the
-        // organization header. They come back with the per-user offline store (2.4).
-      },
+      // A custom worker: the generated one cannot handle push events.
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
+      injectManifest: { globPatterns: ['**/*.{js,css,html,svg,png,woff2}'], rollupFormat: 'iife' },
     }),
   ],
   server: {

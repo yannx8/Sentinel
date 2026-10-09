@@ -2,6 +2,7 @@ import { PgBoss } from 'pg-boss';
 import { pool } from '../lib/db';
 import { logger } from '../lib/logger';
 import type { Tx } from '../lib/prisma';
+import { deliverPush, type PushJob } from '../lib/push';
 import { purgeExpiredRegistrations } from '../modules/platform';
 
 /** pg-boss on the shared pool; it creates its own `pgboss` schema, so Prisma migrations never see it. */
@@ -13,7 +14,7 @@ const QUEUES = {
   'purge.registrations': {},
   'sweep.attachments': {},
   // Stubs for later phases: queues exist so producers can enqueue, workers arrive with their feature.
-  'notify.push': {},
+  'notify.push': { retryLimit: 3, retryDelay: 30, retryBackoff: true },
   'notify.whatsapp': {},
   'sla.tick': {},
   'org.export': {},
@@ -36,6 +37,9 @@ export async function startJobs({ work = true } = {}) {
     await purgeExpiredRegistrations();
   });
   await boss.schedule('purge.registrations', '0 * * * *');
+  await boss.work<PushJob>('notify.push', async (jobs) => {
+    for (const job of jobs) await deliverPush(job.data);
+  });
 }
 
 export const stopJobs = () => boss.stop({ graceful: true });

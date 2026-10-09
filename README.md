@@ -92,6 +92,7 @@ Read by `apps/api/src/env.ts`:
 | `SESSION_COOKIE_SAMESITE`                                           | `lax`                   | `none` only for cross-site setups, over HTTPS |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM` | unset                   | Outgoing email                                |
 | `STORAGE_PATH`                                                      | `./uploads`             | Where photos are stored                       |
+| `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`            | unset                   | Web Push (`npx web-push generate-vapid-keys`) |
 | `LOG_LEVEL`                                                         | `info`                  | pino log level                                |
 
 The web app reads `VITE_API_URL` (default `/api`, proxied to the API by Vite in development and by nginx in Docker).
