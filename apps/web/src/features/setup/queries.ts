@@ -38,6 +38,9 @@ export type SiteBody = {
   city: string;
   contactName: string;
   contactPhone: string;
+  latitude: number | null;
+  longitude: number | null;
+  landmark: string;
 };
 export type SitePatch = Partial<SiteBody> & { isActive?: boolean };
 

@@ -11,6 +11,7 @@ import { useIncident, useThread } from '../../lib/incidents';
 import { IncidentActionBar } from './action-bar';
 import { CommentBox } from './comment-box';
 import { IncidentOverview, IncidentSkeleton } from './incident-overview';
+import { SiteActions } from './site-actions';
 import { BackLink, LoadError } from './parts';
 
 function ThreadSkeleton() {
@@ -97,6 +98,7 @@ function CaseFile() {
         )}
       </div>
       <IncidentOverview incident={data} />
+      {intervenant && <SiteActions incident={data} />}
       <section aria-labelledby={threadId}>
         <h2 id={threadId} className="mb-3 text-sm font-semibold text-ink">
           {t('thread.title')}

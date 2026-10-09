@@ -102,7 +102,18 @@ type SiteRow = Prisma.SiteGetPayload<{ include: typeof siteCounts }>;
 
 const siteOrder = [{ name: 'asc' }, { code: 'asc' }] satisfies Prisma.SiteOrderByWithRelationInput[];
 
-const siteFields = ['code', 'name', 'address', 'city', 'contactName', 'contactPhone', 'isActive'] as const;
+const siteFields = [
+  'code',
+  'name',
+  'address',
+  'city',
+  'contactName',
+  'contactPhone',
+  'latitude',
+  'longitude',
+  'landmark',
+  'isActive',
+] as const;
 
 function toSiteDTO(
   site: Site,
@@ -116,6 +127,9 @@ function toSiteDTO(
     city: site.city,
     contactName: site.contactName,
     contactPhone: site.contactPhone,
+    latitude: site.latitude,
+    longitude: site.longitude,
+    landmark: site.landmark,
     isActive: site.isActive,
     openIncidents: counts.openIncidents,
     intervenants: counts.intervenants,
@@ -175,6 +189,9 @@ export async function createSite(tenant: Tenant, input: SiteInput): Promise<Site
             city: input.city ?? null,
             contactName: input.contactName ?? null,
             contactPhone: input.contactPhone ?? null,
+            latitude: input.latitude ?? null,
+            longitude: input.longitude ?? null,
+            landmark: input.landmark ?? null,
           },
         });
         await recordOrgEvent(tx, tenant, 'SITE_CREATED', { siteId: site.id, name: site.name, code: site.code });
@@ -205,6 +222,9 @@ export async function updateSite(tenant: Tenant, siteId: string, input: SiteUpda
           city: nextText(input, 'city', current.city),
           contactName: nextText(input, 'contactName', current.contactName),
           contactPhone: nextText(input, 'contactPhone', current.contactPhone),
+          latitude: 'latitude' in input ? (input.latitude ?? null) : current.latitude,
+          longitude: 'longitude' in input ? (input.longitude ?? null) : current.longitude,
+          landmark: nextText(input, 'landmark', current.landmark),
           isActive: input.isActive ?? current.isActive,
         };
         const fields = changedFields(siteFields, current, next);

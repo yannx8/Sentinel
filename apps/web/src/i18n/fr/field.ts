@@ -52,6 +52,13 @@ export const field: Translation<typeof en> = {
     photosFailedOther: "{count} photos n'ont pas pu être jointes.",
     loadError: "Cette liste n'a pas pu se charger. Vérifiez votre connexion et réessayez.",
   },
+  siteActions: {
+    onSite: 'Je suis sur place',
+    arrivedNote: 'Arrivé sur place.',
+    arrivedDone: 'Arrivée enregistrée',
+    directions: 'Itinéraire',
+    call: 'Appeler le site',
+  },
   location: {
     label: 'Votre position',
     use: 'Utiliser ma position',

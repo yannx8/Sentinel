@@ -49,6 +49,13 @@ export const field = {
     photosFailedOther: '{count} photos could not be attached.',
     loadError: 'This list could not load. Check your connection and try again.',
   },
+  siteActions: {
+    onSite: "I'm on site",
+    arrivedNote: 'Arrived on site.',
+    arrivedDone: 'Arrival recorded',
+    directions: 'Directions',
+    call: 'Call site',
+  },
   location: {
     label: 'Your position',
     use: 'Use my location',

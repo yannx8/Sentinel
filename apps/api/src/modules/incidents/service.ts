@@ -1003,6 +1003,15 @@ export async function requestReassignment(
   return loadDetail(tenant, incidentId);
 }
 
+/** Great-circle distance in metres between two positions (haversine). */
+function distanceMeters(lat1: number, lng1: number, lat2: number, lng2: number) {
+  const rad = Math.PI / 180;
+  const a =
+    Math.sin(((lat2 - lat1) * rad) / 2) ** 2 +
+    Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.sin(((lng2 - lng1) * rad) / 2) ** 2;
+  return Math.round(2 * 6_371_000 * Math.asin(Math.sqrt(a)));
+}
+
 export async function postProgress(
   tenant: Tenant,
   assignmentId: string,
@@ -1021,6 +1030,18 @@ export async function postProgress(
     });
     if (count === 0) throw invalidTransition(notInProgress);
 
+    const fix = input.latitude !== undefined && input.longitude !== undefined ? input : null;
+    const pin = fix
+      ? await tx.site.findFirst({
+          where: { id: incident.siteId, organizationId: tenant.orgId },
+          select: { latitude: true, longitude: true },
+        })
+      : null;
+    const distanceM =
+      fix && pin?.latitude != null && pin.longitude != null
+        ? distanceMeters(fix.latitude!, fix.longitude!, pin.latitude, pin.longitude)
+        : null;
+
     const progress = await tx.progressUpdate.create({
       data: {
         organizationId: tenant.orgId,
@@ -1029,11 +1050,16 @@ export async function postProgress(
         authorMembershipId: tenant.membershipId,
         type: input.progressType,
         note: input.note,
+        latitude: fix?.latitude ?? null,
+        longitude: fix?.longitude ?? null,
+        accuracyM: input.accuracy === undefined ? null : Math.round(input.accuracy),
+        distanceM,
       },
     });
     await recordIncidentEvent(tx, tenant, incident.id, 'PROGRESS_POSTED', {
       progressType: input.progressType,
       note: input.note,
+      ...(distanceM === null ? {} : { distanceM }),
     });
     await notify(tx, {
       ...noticeFrom(tenant, incident.id),

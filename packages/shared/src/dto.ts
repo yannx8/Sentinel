@@ -78,7 +78,14 @@ export type IncidentListItem = {
   /** Triaged priority, or the reported suggestion until triage. */
   priority: Priority;
   triaged: boolean;
-  site: { id: string; code: string; name: string };
+  site: {
+    id: string;
+    code: string;
+    name: string;
+    latitude: number | null;
+    longitude: number | null;
+    contactPhone: string | null;
+  };
   category: { id: string; name: string };
   reporter: PersonRef;
   assignee: (PersonRef & { assignmentId: string; status: LiveAssignmentStatus }) | null;
@@ -210,6 +217,9 @@ export type SiteDTO = {
   city: string | null;
   contactName: string | null;
   contactPhone: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  landmark: string | null;
   isActive: boolean;
   openIncidents: number;
   intervenants: number;

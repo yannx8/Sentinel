@@ -147,6 +147,10 @@ export const siteSchema = z.object({
   city: optionalText(80),
   contactName: optionalText(80),
   contactPhone: phone,
+  /** The pin. Null clears it on update. */
+  latitude: z.number().min(-90).max(90).nullish(),
+  longitude: z.number().min(-180).max(180).nullish(),
+  landmark: optionalText(200),
 });
 export const updateSiteSchema = siteSchema.partial().extend({ isActive: z.boolean().optional() });
 
@@ -329,7 +333,14 @@ export const commentSchema = z.object({ body: text(1, 4000), visibility: z.enum(
 
 export const declineSchema = z.object({ reason: text(5, 500) });
 export const requestReassignmentSchema = z.object({ reasonCode: z.enum(reassignmentReasons), note: optionalText(500) });
-export const progressSchema = z.object({ progressType: z.enum(progressTypes), note: text(1, 2000) });
+export const progressSchema = z.object({
+  progressType: z.enum(progressTypes),
+  note: text(1, 2000),
+  /** The intervenant's position when arriving (ON_SITE). */
+  latitude: z.number().min(-90).max(90).optional(),
+  longitude: z.number().min(-180).max(180).optional(),
+  accuracy: z.number().min(0).max(100_000).optional(),
+});
 export const resolveSchema = z.object({ note: text(10, 4000) });
 export const rejectReassignmentSchema = z.object({ note: optionalText(500) });
 

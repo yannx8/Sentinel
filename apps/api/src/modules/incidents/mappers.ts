@@ -32,7 +32,7 @@ export function personRef(membership: PersonRow): PersonRef {
 
 export const incidentListInclude = {
   organization: { select: { id: true, displayName: true } },
-  site: { select: { id: true, code: true, name: true } },
+  site: { select: { id: true, code: true, name: true, latitude: true, longitude: true, contactPhone: true } },
   category: { select: { id: true, name: true } },
   reporter: { select: personSelect },
   // At most one row: one live assignment per incident (I4).
@@ -47,7 +47,7 @@ export type IncidentListRow = Prisma.IncidentGetPayload<{ include: typeof incide
 
 export const incidentDetailInclude = {
   organization: { select: { id: true, displayName: true } },
-  site: { select: { id: true, code: true, name: true } },
+  site: { select: { id: true, code: true, name: true, latitude: true, longitude: true, contactPhone: true } },
   category: { select: { id: true, name: true } },
   reportedCategory: { select: { id: true, name: true } },
   reporter: { select: { id: true, user: { select: { firstName: true, lastName: true, phone: true } } } },
@@ -93,7 +93,14 @@ export function toListItem(row: IncidentListRow): IncidentListItem {
     status: row.status,
     priority: row.priority,
     triaged: row.triagedAt !== null,
-    site: { id: row.site.id, code: row.site.code, name: row.site.name },
+    site: {
+      id: row.site.id,
+      code: row.site.code,
+      name: row.site.name,
+      latitude: row.site.latitude,
+      longitude: row.site.longitude,
+      contactPhone: row.site.contactPhone,
+    },
     category: { id: row.category.id, name: row.category.name },
     reporter: personRef(row.reporter),
     assignee: live ? { ...personRef(live.intervenant), assignmentId: live.id, status: live.status } : null,

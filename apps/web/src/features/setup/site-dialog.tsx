@@ -27,8 +27,13 @@ function bodyOf(site: SiteDTO | null): SiteBody {
     city: site?.city ?? '',
     contactName: site?.contactName ?? '',
     contactPhone: site?.contactPhone ?? '',
+    latitude: site?.latitude ?? null,
+    longitude: site?.longitude ?? null,
+    landmark: site?.landmark ?? '',
   };
 }
+
+const toCoordinate = (value: unknown) => (value === '' || value == null ? null : Number(value));
 
 /** Parsed values back to the wire shape: a cleared optional field is sent as '' so the API clears it. */
 function toBody(values: SiteOutput): SiteBody {
@@ -39,6 +44,9 @@ function toBody(values: SiteOutput): SiteBody {
     city: values.city ?? '',
     contactName: values.contactName ?? '',
     contactPhone: values.contactPhone ?? '',
+    latitude: values.latitude ?? null,
+    longitude: values.longitude ?? null,
+    landmark: values.landmark ?? '',
   };
 }
 
@@ -168,6 +176,39 @@ function SiteDialogContent({ site, onClose }: { site: SiteDTO | null; onClose: (
             <Input type="tel" inputMode="tel" autoComplete="off" maxLength={32} {...form.register('contactPhone')} />
           </Field>
         </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label={t('setup.sites.form.latitude')} optional error={errors.latitude?.message}>
+            <Input
+              inputMode="decimal"
+              autoComplete="off"
+              {...form.register('latitude', { setValueAs: toCoordinate })}
+            />
+          </Field>
+          <Field label={t('setup.sites.form.longitude')} optional error={errors.longitude?.message}>
+            <Input
+              inputMode="decimal"
+              autoComplete="off"
+              {...form.register('longitude', { setValueAs: toCoordinate })}
+            />
+          </Field>
+        </div>
+        {'geolocation' in navigator && (
+          <Button
+            className="justify-self-start"
+            onClick={() =>
+              navigator.geolocation.getCurrentPosition(({ coords }) => {
+                const options = { shouldDirty: true };
+                form.setValue('latitude', Math.round(coords.latitude * 1e6) / 1e6, options);
+                form.setValue('longitude', Math.round(coords.longitude * 1e6) / 1e6, options);
+              })
+            }
+          >
+            {t('setup.sites.form.usePosition')}
+          </Button>
+        )}
+        <Field label={t('setup.sites.form.landmark')} optional error={errors.landmark?.message}>
+          <Input autoComplete="off" maxLength={200} {...form.register('landmark')} />
+        </Field>
       </form>
 
       {site && (

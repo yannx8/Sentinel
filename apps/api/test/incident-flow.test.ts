@@ -31,6 +31,30 @@ describe('incident report', () => {
   });
 });
 
+describe('arrival', () => {
+  it('stamps the distance from the site pin', async () => {
+    await prisma.site.update({ where: { id: s.site.id }, data: { latitude: 48.8566, longitude: 2.3522 } });
+    const created = await reportIncident(s.reporter, s.site.id, s.category.id);
+    const assigned = await assign(created.reference, created.version);
+    const assignmentId = assigned.body.data.liveAssignment.id as string;
+    await s.tech.post(`/assignments/${assignmentId}/accept`);
+
+    // About 111 m north of the pin.
+    const res = await s.tech.post(`/assignments/${assignmentId}/progress`, {
+      progressType: 'ON_SITE',
+      note: 'On site',
+      latitude: 48.8576,
+      longitude: 2.3522,
+      accuracy: 12,
+    });
+    expect(res.status).toBe(200);
+    const row = await prisma.progressUpdate.findFirstOrThrow({ where: { assignmentId } });
+    expect(row.accuracyM).toBe(12);
+    expect(row.distanceM).toBeGreaterThan(105);
+    expect(row.distanceM).toBeLessThan(118);
+  });
+});
+
 describe('incident loop', () => {
   it('runs report, assign, accept, progress, resolve and close end to end', async () => {
     const created = await reportIncident(s.reporter, s.site.id, s.category.id);
