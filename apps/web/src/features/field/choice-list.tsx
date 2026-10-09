@@ -31,6 +31,7 @@ export function ChoiceList({
   inputRef,
   error,
   searchLabel,
+  chips,
 }: {
   name: string;
   label: string;
@@ -42,6 +43,8 @@ export function ChoiceList({
   error?: string;
   /** Shown as a search field when the list is long. */
   searchLabel?: string;
+  /** Wrapping pills instead of full rows, for short labels. */
+  chips?: boolean;
 }) {
   const { t } = useT();
   const id = useId();
@@ -71,8 +74,8 @@ export function ChoiceList({
       )}
       <div
         className={cn(
-          'divide-y divide-line overflow-hidden rounded-lg border bg-surface',
-          error ? 'border-critical' : 'border-line',
+          chips ? 'flex flex-wrap gap-2' : 'divide-y divide-line overflow-hidden rounded-lg border bg-surface',
+          !chips && (error ? 'border-critical' : 'border-line'),
         )}
       >
         {visible.map((option, index) => {
@@ -81,9 +84,18 @@ export function ChoiceList({
             <label
               key={option.value}
               className={cn(
-                'relative flex min-h-14 cursor-pointer items-center gap-3 px-4 py-3 transition-colors',
+                'relative flex cursor-pointer items-center gap-3 px-4 transition-colors',
                 'has-[:focus-visible]:outline-2 has-[:focus-visible]:-outline-offset-2 has-[:focus-visible]:outline-accent',
-                selected ? 'bg-accent-subtle' : 'hover:bg-subtle active:bg-muted',
+                chips
+                  ? cn(
+                      'min-h-11 rounded-full border py-2',
+                      selected
+                        ? 'border-accent bg-accent-subtle'
+                        : error
+                          ? 'border-critical'
+                          : 'border-line bg-surface',
+                    )
+                  : cn('min-h-14 py-3', selected ? 'bg-accent-subtle' : 'hover:bg-subtle active:bg-muted'),
               )}
             >
               <input
@@ -104,15 +116,17 @@ export function ChoiceList({
                 </span>
                 {option.description && <span className="mt-0.5 block text-sm text-ink-3">{option.description}</span>}
               </span>
-              <span
-                aria-hidden
-                className={cn(
-                  'flex size-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
-                  selected ? 'border-accent bg-accent text-surface' : 'border-line-strong bg-surface',
-                )}
-              >
-                {selected && <Check className="size-3" strokeWidth={3.5} />}
-              </span>
+              {!chips && (
+                <span
+                  aria-hidden
+                  className={cn(
+                    'flex size-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
+                    selected ? 'border-accent bg-accent text-surface' : 'border-line-strong bg-surface',
+                  )}
+                >
+                  {selected && <Check className="size-3" strokeWidth={3.5} />}
+                </span>
+              )}
             </label>
           );
         })}

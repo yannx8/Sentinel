@@ -99,6 +99,7 @@ export function WhatSection({
               onBlur={field.onBlur}
               inputRef={field.ref}
               searchLabel={t('field.report.searchCategories')}
+              chips
               error={
                 fieldState.error
                   ? fieldState.error.type === 'server'
