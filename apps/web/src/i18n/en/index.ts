@@ -7,6 +7,7 @@ import { field } from './field';
 import { incidents } from './incidents';
 import { notifications } from './notifications';
 import { platform } from './platform';
+import { pwa } from './pwa';
 import { setup } from './setup';
 import { shell } from './shell';
 import { team } from './team';
@@ -24,6 +25,7 @@ export const en = {
   notifications,
   field,
   platform,
+  pwa,
   account,
   thread,
 };

@@ -16,6 +16,7 @@ import { useTheme, type ThemePreference } from '../../app/theme';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
 import { Field, FieldGroup } from '../../components/ui/field';
+import { InstallApp } from './install-app';
 import { Input } from '../../components/ui/input';
 import { Page, PageHeader } from '../../components/ui/layout';
 import { Segmented } from '../../components/ui/segmented';
@@ -278,6 +279,7 @@ export function AccountPage() {
           <AvailabilityControl />
         </FieldGroup>
       )}
+      <InstallApp />
       <OrganizationsSection />
       <PasswordSection />
       <SessionsSection />

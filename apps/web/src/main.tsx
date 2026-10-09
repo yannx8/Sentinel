@@ -5,6 +5,7 @@ import { createRoot } from 'react-dom/client';
 import { router } from './app/router';
 import { SessionProvider } from './app/session';
 import { ApiError } from './lib/api';
+import { PwaUpdates } from './lib/pwa';
 import './styles/app.css';
 
 const queryClient = new QueryClient({
@@ -30,6 +31,7 @@ createRoot(root).render(
     <QueryClientProvider client={queryClient}>
       <SessionProvider>
         <RouterProvider router={router} />
+        <PwaUpdates />
       </SessionProvider>
     </QueryClientProvider>
   </StrictMode>,
