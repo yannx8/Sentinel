@@ -67,6 +67,8 @@ export const audit = {
     MEMBER_REVOKED: 'Member removed',
     SITE_CREATED: 'Site added',
     SITE_UPDATED: 'Site updated',
+    AREA_CREATED: 'Area added',
+    AREA_UPDATED: 'Area updated',
     CATEGORY_CREATED: 'Category added',
     CATEGORY_UPDATED: 'Category updated',
     SPECIALTY_CREATED: 'Specialty added',

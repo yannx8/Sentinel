@@ -1,4 +1,4 @@
-import type { Prisma } from '@prisma/client';
+import type { Prisma } from '../generated/prisma/client';
 import type { AuditEventType, ThreadEventType, ThreadPayloads } from '@sentinel/shared';
 import type { Tenant } from '../auth/context';
 import type { Tx } from './prisma';
@@ -6,7 +6,7 @@ import type { Tx } from './prisma';
 /** Appends an incident event. It is both the audit record and a Thread entry. */
 export function recordIncidentEvent<T extends ThreadEventType>(
   tx: Tx,
-  tenant: Tenant,
+  tenant: Pick<Tenant, 'orgId'> & Partial<Pick<Tenant, 'membershipId' | 'userId'>>,
   incidentId: string,
   type: T,
   payload: ThreadPayloads[T],
@@ -15,8 +15,8 @@ export function recordIncidentEvent<T extends ThreadEventType>(
     data: {
       organizationId: tenant.orgId,
       incidentId,
-      actorMembershipId: tenant.membershipId,
-      actorUserId: tenant.userId,
+      actorMembershipId: tenant.membershipId ?? null,
+      actorUserId: tenant.userId ?? null,
       type,
       payload: payload as Prisma.InputJsonObject,
     },

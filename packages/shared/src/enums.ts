@@ -66,7 +66,10 @@ export type ProgressType = (typeof progressTypes)[number];
 export const commentVisibilities = ['PUBLIC', 'INTERNAL'] as const;
 export type CommentVisibility = (typeof commentVisibilities)[number];
 
-export const dismissReasons = ['DUPLICATE', 'NOT_AN_INCIDENT', 'NO_ACTION_NEEDED'] as const;
+export const dismissReasons = ['DUPLICATE', 'NOT_AN_INCIDENT', 'NO_ACTION_NEEDED', 'SPAM'] as const;
+
+export const incidentChannels = ['APP', 'QR_GUEST'] as const;
+export type IncidentChannel = (typeof incidentChannels)[number];
 export type DismissReason = (typeof dismissReasons)[number];
 
 export const reassignmentReasons = ['CANNOT_ACCESS', 'WRONG_SPECIALTY', 'UNAVAILABLE', 'OTHER'] as const;
@@ -100,6 +103,8 @@ export const auditEventTypes = [
   'MEMBER_REVOKED',
   'SITE_CREATED',
   'SITE_UPDATED',
+  'AREA_CREATED',
+  'AREA_UPDATED',
   'CATEGORY_CREATED',
   'CATEGORY_UPDATED',
   'SPECIALTY_CREATED',

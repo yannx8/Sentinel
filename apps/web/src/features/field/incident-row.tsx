@@ -1,7 +1,6 @@
 import type { IncidentListItem } from '@sentinel/shared';
 import { Link } from '@tanstack/react-router';
 import { ChevronRight } from 'lucide-react';
-import type { MouseEvent } from 'react';
 import { PriorityLabel, StatusLabel } from '../../components/domain/glyphs';
 import { Avatar } from '../../components/ui/avatar';
 import { Badge } from '../../components/ui/badge';
@@ -17,14 +16,15 @@ export function IncidentRow({
   lead,
   organization,
   showAssignee,
-  onOpen,
+  orgId,
 }: {
   incident: IncidentListItem;
   lead: 'status' | 'priority';
   /** Organization name, shown when the person works for several. */
   organization?: string;
   showAssignee?: boolean;
-  onOpen?: (event: MouseEvent<HTMLAnchorElement>) => void;
+  /** The incident's organization: the case file opens there without the person switching. */
+  orgId?: string;
 }) {
   const { t, relative, date } = useT();
   const { assignee } = incident;
@@ -36,7 +36,8 @@ export function IncidentRow({
       <Link
         to="/field/incidents/$reference"
         params={{ reference: incident.reference }}
-        onClick={onOpen}
+        search={orgId ? { org: orgId } : {}}
+        data-testid="work-card"
         className="flex items-start gap-3 px-4 py-3.5 transition-colors hover:bg-subtle active:bg-muted"
       >
         <div className="min-w-0 flex-1">
@@ -62,7 +63,9 @@ export function IncidentRow({
             {organization && (
               <>
                 <Dot />
-                <span className="font-medium text-ink-2">{organization}</span>
+                <span data-testid="work-org" className="font-medium text-ink-2">
+                  {organization}
+                </span>
               </>
             )}
           </p>

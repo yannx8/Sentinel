@@ -1,5 +1,6 @@
 import {
   assignSchema,
+  bulkIncidentsSchema,
   closeSchema,
   commentSchema,
   createIncidentSchema,
@@ -14,6 +15,8 @@ import { requireRole, tenantOf } from '../../auth/context';
 import { notFound } from '../../http/errors';
 import { idempotent } from '../../http/idempotency';
 import { parse } from '../../http/validate';
+import { bulkIncidents } from './bulk';
+import { incidentScope } from './scope';
 import {
   addComment,
   assignIncident,
@@ -52,7 +55,7 @@ function keyOf(req: Request): string {
 export const incidentRoutes = Router();
 
 incidentRoutes.get('/', async (req, res) => {
-  const { data, page } = await listIncidents(tenantOf(req), parse(listIncidentsQuery, req.query));
+  const { data, page } = await listIncidents(incidentScope(tenantOf(req)), parse(listIncidentsQuery, req.query));
   res.json({ data, page });
 });
 
@@ -65,6 +68,12 @@ incidentRoutes.post('/', requireRole('REPORTER', 'SUPERVISOR'), async (req, res)
   const tenant = tenantOf(req);
   const input = parse(createIncidentSchema, req.body);
   await respondOnce(req, res, 'incidents.create', 201, () => createIncident(tenant, input));
+});
+
+incidentRoutes.post('/bulk', requireRole('SUPERVISOR'), async (req, res) => {
+  const tenant = tenantOf(req);
+  const input = parse(bulkIncidentsSchema, req.body);
+  await respondOnce(req, res, 'incidents.bulk', 200, () => bulkIncidents(tenant, input));
 });
 
 incidentRoutes.get('/:key', async (req, res) => {

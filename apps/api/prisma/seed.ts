@@ -10,7 +10,7 @@
  * to the current time.
  */
 import { randomUUID } from 'node:crypto';
-import type { Prisma } from '@prisma/client';
+import type { Prisma } from '../src/generated/prisma/client';
 import {
   formatReference,
   incidentActions,

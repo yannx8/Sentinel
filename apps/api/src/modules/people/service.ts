@@ -3,7 +3,7 @@
  * edits, access changes, ownership transfer and invitations. Every function
  * runs for a supervisor of `tenant` and reads or writes that organization only.
  */
-import { Prisma } from '@prisma/client';
+import { Prisma } from '../../generated/prisma/client';
 import { employeeProfileSchema } from '@sentinel/shared';
 import type {
   AuditEventType,

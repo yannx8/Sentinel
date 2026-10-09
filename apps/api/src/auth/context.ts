@@ -1,5 +1,5 @@
 import type { MembershipRole } from '@sentinel/shared';
-import type { User } from '@prisma/client';
+import type { User } from '../generated/prisma/client';
 import type { NextFunction, Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { AppError, forbidden } from '../http/errors';
@@ -103,6 +103,15 @@ export async function requireTenant(req: Request, _res: Response, next: NextFunc
   const fromQuery = req.path === '/events' && typeof req.query.org === 'string' ? req.query.org : null;
   req.tenant = await resolveTenant(user, req.get('x-org-id') ?? fromQuery);
   next();
+}
+
+/** ACTIVE memberships in ACTIVE organizations: the whole scope of the cross-organization /me reads. */
+export function activeMemberships(userId: string) {
+  return prisma.membership.findMany({
+    where: { userId, status: 'ACTIVE', organization: { status: 'ACTIVE' } },
+    select: { id: true, organizationId: true, role: true },
+    orderBy: { joinedAt: 'asc' },
+  });
 }
 
 async function soleMembership(userId: string) {

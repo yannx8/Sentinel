@@ -31,12 +31,14 @@ jobs:
           version: 10.15.0
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm db:generate
       - run: pnpm format:check
       - run: pnpm lint
+      # Prisma cannot see the raw-SQL trigram indexes and proposes dropping them on every migrate dev.
+      - run: '! grep -rEl "DROP INDEX .*_trgm" apps/api/prisma/migrations'
       - run: pnpm typecheck
       - run: pnpm --filter @sentinel/api exec prisma migrate deploy
       - run: pnpm test

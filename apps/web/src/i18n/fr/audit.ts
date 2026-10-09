@@ -71,6 +71,8 @@ export const audit: Translation<typeof en> = {
     MEMBER_REVOKED: 'Membre retiré',
     SITE_CREATED: 'Site ajouté',
     SITE_UPDATED: 'Site modifié',
+    AREA_CREATED: 'Zone ajoutée',
+    AREA_UPDATED: 'Zone modifiée',
     CATEGORY_CREATED: 'Catégorie ajoutée',
     CATEGORY_UPDATED: 'Catégorie modifiée',
     SPECIALTY_CREATED: 'Spécialité ajoutée',

@@ -1,8 +1,8 @@
 import type { Locale, Me, MembershipSummary } from '@sentinel/shared';
 import { useQueryClient } from '@tanstack/react-query';
-import { Navigate, useLocation, useNavigate } from '@tanstack/react-router';
+import { useNavigate, useRouterState } from '@tanstack/react-router';
 import { Check, ChevronsUpDown, Globe, LogOut, Monitor, Moon, Sun, UserRound } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { Avatar } from '../../components/ui/avatar';
 import { Button } from '../../components/ui/button';
 import {
@@ -22,7 +22,7 @@ import { Logo } from '../../components/ui/layout';
 import { useT } from '../../i18n';
 import { api } from '../../lib/api';
 import { cn } from '../../lib/cn';
-import { homePath, meQueryKey, useSession } from '../session';
+import { homePath, meQueryKey, useSession, useSignOut } from '../session';
 import { useTheme, type ThemePreference } from '../theme';
 import { RouteLoading } from './root';
 
@@ -136,7 +136,8 @@ export function UserMenu({
   compact?: boolean;
 }) {
   const { t, locale } = useT();
-  const { me, signOut } = useSession();
+  const { me } = useSession();
+  const signOutHere = useSignOut();
   const [theme, setTheme] = useTheme();
   const navigate = useNavigate();
   const changeLocale = useChangeLocale();
@@ -192,13 +193,7 @@ export function UserMenu({
           </MenuSubContent>
         </MenuSub>
         <MenuSeparator />
-        <MenuItem
-          icon={<LogOut />}
-          onSelect={async () => {
-            await signOut();
-            void navigate({ to: '/login' });
-          }}
-        >
+        <MenuItem icon={<LogOut />} onSelect={() => void signOutHere()}>
           {t('shell.signOut')}
         </MenuItem>
       </MenuContent>
@@ -277,16 +272,9 @@ export function SuspendedScreen({ membership }: { membership: MembershipSummary 
 
 function UserMenuSignOut() {
   const { t } = useT();
-  const { signOut } = useSession();
-  const navigate = useNavigate();
+  const signOutHere = useSignOut();
   return (
-    <Button
-      variant="ghost"
-      onClick={async () => {
-        await signOut();
-        void navigate({ to: '/login' });
-      }}
-    >
+    <Button variant="ghost" onClick={() => void signOutHere()}>
       {t('shell.signOut')}
     </Button>
   );
@@ -298,21 +286,37 @@ type Requirement = 'supervisor' | 'field' | 'platform';
  * Route guard used by each shell. Returns an element to render instead of the
  * shell (a redirect, a loading state or the suspension screen), or null to proceed.
  */
+/**
+ * Redirects once. The router's own Navigate navigates again on every re-render of its parent, which loops
+ * forever while a redirect is still loading.
+ */
+function GoTo({ to, redirect }: { to: string; redirect?: string }) {
+  const navigate = useNavigate();
+  const sent = useRef(false);
+  useEffect(() => {
+    if (sent.current) return;
+    sent.current = true;
+    void navigate({ to, search: redirect ? { redirect } : undefined, replace: true });
+  }, [navigate, to, redirect]);
+  return <RouteLoading />;
+}
+
 export function useShellGate(requirement: Requirement): ReactNode | null {
   const { me, membership, loading } = useSession();
-  const location = useLocation();
+  // The resolved location stays put while a redirect is loading; useLocation() would already point at /login and loop.
+  const from = useRouterState({ select: (state) => state.resolvedLocation?.href ?? state.location.href });
   if (loading) return <RouteLoading />;
-  if (!me) return <Navigate to="/login" search={{ redirect: location.href }} replace />;
+  if (!me) return <GoTo to="/login" redirect={from} />;
 
   if (requirement === 'platform') {
-    if (!me.platformAdmin) return <Navigate to={homePath(me, membership)} replace />;
-    if (!me.platformAdmin.mfaVerified) return <Navigate to="/mfa" replace />;
+    if (!me.platformAdmin) return <GoTo to={homePath(me, membership)} />;
+    if (!me.platformAdmin.mfaVerified) return <GoTo to="/mfa" />;
     return null;
   }
-  if (me.platformAdmin || !membership) return <Navigate to={homePath(me, membership)} replace />;
+  if (me.platformAdmin || !membership) return <GoTo to={homePath(me, membership)} />;
   if (membership.organization.status === 'SUSPENDED') return <SuspendedScreen membership={membership} />;
   const allowed = requirement === 'supervisor' ? membership.role === 'SUPERVISOR' : membership.role !== 'SUPERVISOR';
-  if (!allowed) return <Navigate to={homePath(me, membership)} replace />;
+  if (!allowed) return <GoTo to={homePath(me, membership)} />;
   return null;
 }
 

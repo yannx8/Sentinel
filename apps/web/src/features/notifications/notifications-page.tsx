@@ -8,19 +8,20 @@ import { Page, PageHeader } from '../../components/ui/layout';
 import { Segmented } from '../../components/ui/segmented';
 import { useT } from '../../i18n';
 import { api } from '../../lib/api';
-import { NotificationItem, notificationKeys, useMarkAllRead, useOpenNotification } from './parts';
+import { NotificationItem, useMarkAllRead, useNotificationScope, useOpenNotification } from './parts';
 
 export function NotificationsPage() {
   const { t } = useT();
-  const { membership } = useSession();
+  const { me, membership } = useSession();
+  const scope = useNotificationScope();
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
   const open = useOpenNotification();
   const markAll = useMarkAllRead();
   const query = useInfiniteQuery({
-    queryKey: notificationKeys.list(filter === 'unread'),
+    queryKey: scope.keys.list(filter === 'unread'),
     initialPageParam: undefined as string | undefined,
     queryFn: ({ pageParam }) =>
-      api.page<NotificationDTO>('/notifications', {
+      api.page<NotificationDTO>(scope.path, {
         query: { cursor: pageParam, limit: 30, unread: filter === 'unread' ? 'true' : undefined },
       }),
     getNextPageParam: (last) => last.page.nextCursor ?? undefined,
@@ -54,7 +55,12 @@ export function NotificationsPage() {
   ) : (
     <div className="divide-y divide-line overflow-hidden rounded-lg border border-line bg-surface">
       {items.map((item) => (
-        <NotificationItem key={item.id} item={item} onOpen={open} />
+        <NotificationItem
+          key={item.id}
+          item={item}
+          onOpen={open}
+          showOrganization={scope.person && (me?.memberships.length ?? 0) > 1}
+        />
       ))}
       {query.hasNextPage && (
         <div className="p-3 text-center">

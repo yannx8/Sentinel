@@ -145,11 +145,13 @@ export function useAuditSummary() {
           return code ? t('audit.details.site', { name, code }) : name;
         }
         case 'SITE_UPDATED':
+        case 'AREA_UPDATED':
         case 'CATEGORY_UPDATED': {
           const fields = Array.isArray(p.fields) ? p.fields.length : 0;
           return fields > 0 ? t('audit.details.named', { name, rest: tn('audit.details.fields', fields) }) : name;
         }
         case 'CATEGORY_CREATED':
+        case 'AREA_CREATED':
         case 'SPECIALTY_CREATED':
           return name;
         case 'ORG_UPDATED': {

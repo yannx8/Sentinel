@@ -6,39 +6,70 @@ import { cn } from '../../lib/cn';
 import { useT } from '../../i18n';
 import { api } from '../../lib/api';
 
-export const notificationKeys = {
-  unread: ['notifications', 'unread'] as const,
-  recent: ['notifications', 'recent'] as const,
-  list: (unreadOnly: boolean) => ['notifications', 'list', unreadOnly] as const,
-};
+/**
+ * Supervisors read the active organization's notifications. Employees and intervenants read every
+ * organization they belong to (/me), so nobody has to switch organization to see what is theirs.
+ * Person-scoped keys live under 'me', so they survive an organization switch.
+ */
+export function useNotificationScope() {
+  const { membership } = useSession();
+  const person = membership?.role !== 'SUPERVISOR';
+  const root = person ? (['me', 'notifications'] as const) : (['notifications'] as const);
+  return {
+    person,
+    path: person ? '/me/notifications' : '/notifications',
+    keys: {
+      all: root,
+      unread: [...root, 'unread'] as const,
+      recent: [...root, 'recent'] as const,
+      list: (unreadOnly: boolean) => [...root, 'list', unreadOnly] as const,
+    },
+  };
+}
 
 /** Where a notification leads, by role. */
 export function useOpenNotification() {
   const { membership } = useSession();
+  const scope = useNotificationScope();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const markRead = useMutation({
-    mutationFn: (id: string) => api.post(`/notifications/${id}/read`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications'] }),
+    mutationFn: (id: string) => api.post(`${scope.path}/${id}/read`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: scope.keys.all }),
   });
   return (item: NotificationDTO) => {
     if (!item.readAt) markRead.mutate(item.id);
     if (!item.incident) return;
     if (membership?.role === 'SUPERVISOR')
       void navigate({ to: '/app/incidents', search: { incident: item.incident.reference } });
-    else void navigate({ to: '/field/incidents/$reference', params: { reference: item.incident.reference } });
+    else
+      void navigate({
+        to: '/field/incidents/$reference',
+        params: { reference: item.incident.reference },
+        search: { org: item.organization.id },
+      });
   };
 }
 
 export function useMarkAllRead() {
   const queryClient = useQueryClient();
+  const scope = useNotificationScope();
   return useMutation({
-    mutationFn: () => api.post('/notifications/read-all'),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications'] }),
+    mutationFn: () => api.post(`${scope.path}/read-all`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: scope.keys.all }),
   });
 }
 
-export function NotificationItem({ item, onOpen }: { item: NotificationDTO; onOpen: (item: NotificationDTO) => void }) {
+export function NotificationItem({
+  item,
+  onOpen,
+  showOrganization,
+}: {
+  item: NotificationDTO;
+  onOpen: (item: NotificationDTO) => void;
+  /** For people who work for several organizations. */
+  showOrganization?: boolean;
+}) {
   const { t, relative } = useT();
   const sentence = t(`notifications.types.${item.type}`, { actor: item.actorName ?? t('thread.someone') });
   return (
@@ -59,6 +90,9 @@ export function NotificationItem({ item, onOpen }: { item: NotificationDTO; onOp
           )}
         </span>
         {item.incident && <span className="mt-0.5 block truncate text-sm text-ink-3">{item.incident.title}</span>}
+        {showOrganization && (
+          <span className="mt-0.5 block truncate text-xs font-medium text-ink-2">{item.organization.displayName}</span>
+        )}
       </span>
       <time dateTime={item.createdAt} className="shrink-0 text-xs text-ink-3">
         {relative(item.createdAt)}

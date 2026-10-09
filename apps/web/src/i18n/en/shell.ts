@@ -49,6 +49,8 @@ export const shell = {
     open: 'Open the selected incident',
     close: 'Close the case file',
     assign: 'Assign the open incident',
+    closeIncident: 'Close the open incident',
+    sendBack: 'Send the open incident back',
     help: 'Show this list',
   },
   suspended: {

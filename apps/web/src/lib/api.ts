@@ -27,6 +27,8 @@ let activeOrgId: string | null = null;
 const listeners = new Set<(error: ApiError) => void>();
 
 /** Every tenant request carries the active organization (X-Org-Id). */
+export const getActiveOrg = () => activeOrgId;
+
 export function setActiveOrgHeader(orgId: string | null) {
   activeOrgId = orgId;
 }
@@ -121,7 +123,7 @@ export const api = {
   async patch<T>(path: string, body: unknown, options?: Omit<Options, 'method' | 'body'>): Promise<T> {
     return (await request<{ data: T }>(path, { ...options, method: 'PATCH', body })).data;
   },
-  async delete(path: string, options?: Omit<Options, 'method' | 'body'>): Promise<void> {
+  async delete(path: string, options?: Omit<Options, 'method'>): Promise<void> {
     await request<void>(path, { ...options, method: 'DELETE' });
   },
 };

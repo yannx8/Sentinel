@@ -109,6 +109,8 @@ function ShortcutsDialog({ open, onOpenChange }: { open: boolean; onOpenChange: 
     [['Enter'], 'shell.shortcuts.open'],
     [['Esc'], 'shell.shortcuts.close'],
     [['A'], 'shell.shortcuts.assign'],
+    [['C'], 'shell.shortcuts.closeIncident'],
+    [['S'], 'shell.shortcuts.sendBack'],
     [['?'], 'shell.shortcuts.help'],
   ];
   return (
@@ -243,7 +245,7 @@ function ConsoleLayout() {
         <main
           id="main"
           className={cn(
-            'min-h-0 flex-1 overflow-y-auto bg-surface',
+            'relative min-h-0 flex-1 overflow-y-auto overscroll-contain bg-surface',
             'lg:my-2 lg:mr-2 lg:rounded-lg lg:border lg:border-line lg:shadow-control',
           )}
         >

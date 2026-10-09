@@ -1,4 +1,4 @@
-import type { Prisma } from '@prisma/client';
+import type { Prisma } from '../generated/prisma/client';
 import type { Request } from 'express';
 import { sha256 } from '../lib/crypto';
 import { prisma } from '../lib/prisma';

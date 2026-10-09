@@ -51,6 +51,8 @@ export const shell: Translation<typeof en> = {
     previous: 'Incident précédent',
     open: "Ouvrir l'incident sélectionné",
     close: 'Fermer la fiche',
+    closeIncident: 'Clôturer l’incident ouvert',
+    sendBack: 'Renvoyer l’incident ouvert',
     assign: "Assigner l'incident ouvert",
     help: 'Afficher cette liste',
   },

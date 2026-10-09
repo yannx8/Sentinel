@@ -14,6 +14,7 @@ import { useT } from '../../i18n';
 import { api } from '../../lib/api';
 import { cn } from '../../lib/cn';
 import { useCandidates, useIncidentAction } from '../../lib/incidents';
+import { useActed } from './acted';
 
 export function useCategories() {
   return useQuery({
@@ -23,7 +24,7 @@ export function useCategories() {
   });
 }
 
-function Candidate({
+export function Candidate({
   candidate,
   selected,
   onSelect,
@@ -108,6 +109,7 @@ export function AssignDialog({
   const candidates = useCandidates(incident.reference, open);
   const categories = useCategories();
   const action = useIncidentAction();
+  const acted = useActed();
   const [priority, setPriority] = useState<Priority>(incident.priority);
   const [categoryId, setCategoryId] = useState(incident.category.id);
   const [selected, setSelected] = useState<string | null>(null);
@@ -130,6 +132,12 @@ export function AssignDialog({
   const choice = list.find((c) => c.membershipId === selected);
   const reassign = incident.status !== 'NEW';
   const onKey = (event: KeyboardEvent<HTMLDivElement>) => {
+    // Enter on the chosen candidate assigns, so the whole decision can stay on the keyboard.
+    if (event.key === 'Enter' && choice && (event.target as HTMLElement).getAttribute('aria-checked') === 'true') {
+      event.preventDefault();
+      submit();
+      return;
+    }
     if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
     event.preventDefault();
     const eligible = list.filter((c) => c.eligible);
@@ -157,7 +165,12 @@ export function AssignDialog({
         },
         success: t('incidents.assign.assigned', { name: choice.name }),
       },
-      { onSuccess: () => onOpenChange(false) },
+      {
+        onSuccess: () => {
+          onOpenChange(false);
+          acted('assign');
+        },
+      },
     );
   };
 
@@ -200,9 +213,11 @@ export function AssignDialog({
             </Field>
           </div>
           <div>
-            <p className="mb-2 text-sm font-medium text-ink" id="candidates-label">
+            <p className="flex items-baseline justify-between gap-3 text-sm font-medium text-ink" id="candidates-label">
               {t('incidents.assign.candidates')}
+              <span className="hidden text-xs font-normal text-ink-3 sm:inline">{t('incidents.assign.keyHint')}</span>
             </p>
+            <div className="mb-2" />
             {candidates.isPending ? (
               <div className="grid gap-2">
                 {Array.from({ length: 3 }, (_, i) => (

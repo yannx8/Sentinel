@@ -3,7 +3,7 @@
  * specialties. Supervisors manage them. Employees and intervenants read the
  * active entries they report on or work at.
  */
-import type { Prisma, Site } from '@prisma/client';
+import type { Prisma, Site } from '../generated/prisma/client';
 import {
   categorySchema,
   siteSchema,
@@ -24,6 +24,7 @@ import { prisma, type Tx } from '../lib/prisma';
 import { AppError, conflict, notFound } from '../http/errors';
 import { idempotent } from '../http/idempotency';
 import { parse, parseId } from '../http/validate';
+import { areaRoutes } from './areas';
 import { isUniqueViolation } from './people/service';
 
 type SiteUpdate = z.output<typeof updateSiteSchema>;
@@ -102,7 +103,19 @@ type SiteRow = Prisma.SiteGetPayload<{ include: typeof siteCounts }>;
 
 const siteOrder = [{ name: 'asc' }, { code: 'asc' }] satisfies Prisma.SiteOrderByWithRelationInput[];
 
-const siteFields = ['code', 'name', 'address', 'city', 'contactName', 'contactPhone', 'isActive'] as const;
+const siteFields = [
+  'code',
+  'name',
+  'address',
+  'city',
+  'contactName',
+  'contactPhone',
+  'latitude',
+  'longitude',
+  'landmark',
+  'guestReporting',
+  'isActive',
+] as const;
 
 function toSiteDTO(
   site: Site,
@@ -116,6 +129,10 @@ function toSiteDTO(
     city: site.city,
     contactName: site.contactName,
     contactPhone: site.contactPhone,
+    latitude: site.latitude,
+    longitude: site.longitude,
+    landmark: site.landmark,
+    guestReporting: site.guestReporting,
     isActive: site.isActive,
     openIncidents: counts.openIncidents,
     intervenants: counts.intervenants,
@@ -175,6 +192,10 @@ export async function createSite(tenant: Tenant, input: SiteInput): Promise<Site
             city: input.city ?? null,
             contactName: input.contactName ?? null,
             contactPhone: input.contactPhone ?? null,
+            latitude: input.latitude ?? null,
+            longitude: input.longitude ?? null,
+            landmark: input.landmark ?? null,
+            guestReporting: input.guestReporting ?? false,
           },
         });
         await recordOrgEvent(tx, tenant, 'SITE_CREATED', { siteId: site.id, name: site.name, code: site.code });
@@ -205,6 +226,10 @@ export async function updateSite(tenant: Tenant, siteId: string, input: SiteUpda
           city: nextText(input, 'city', current.city),
           contactName: nextText(input, 'contactName', current.contactName),
           contactPhone: nextText(input, 'contactPhone', current.contactPhone),
+          latitude: 'latitude' in input ? (input.latitude ?? null) : current.latitude,
+          longitude: 'longitude' in input ? (input.longitude ?? null) : current.longitude,
+          landmark: nextText(input, 'landmark', current.landmark),
+          guestReporting: input.guestReporting ?? current.guestReporting,
           isActive: input.isActive ?? current.isActive,
         };
         const fields = changedFields(siteFields, current, next);
@@ -408,6 +433,7 @@ export async function createSpecialty(tenant: Tenant, input: SpecialtyInput): Pr
 
 /** Mounted at /v1/sites. */
 export const siteRoutes = Router();
+siteRoutes.use('/:id/areas', requireRole('SUPERVISOR'), areaRoutes);
 
 siteRoutes.get('/', async (req, res) => {
   res.json({ data: await listSites(tenantOf(req)) });

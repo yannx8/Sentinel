@@ -1,5 +1,5 @@
 import type { createIncidentSchema } from '@sentinel/shared';
-import { useEffect, type Dispatch, type ReactNode, type SetStateAction } from 'react';
+import { useEffect, type Dispatch, type SetStateAction } from 'react';
 import { Controller, useWatch, type UseFormReturn } from 'react-hook-form';
 import type { z } from 'zod';
 import { Button } from '../../components/ui/button';
@@ -54,8 +54,8 @@ function ListProblem({ message, onRetry }: { message: string; onRetry?: () => vo
   );
 }
 
-/** Step 1: title, description, category and optional photos. */
-export function StepWhat({
+/** Photo first, then category, then optional words. */
+export function WhatSection({
   form,
   photos,
   onPhotosChange,
@@ -72,29 +72,13 @@ export function StepWhat({
 
   return (
     <div className="grid gap-6">
-      <Field label={t('field.report.titleLabel')} error={errors.title?.message}>
-        <Input
-          inputSize="lg"
-          maxLength={120}
-          autoComplete="off"
-          enterKeyHint="next"
-          placeholder={t('field.report.titlePlaceholder')}
-          {...form.register('title')}
-        />
-      </Field>
-      <Field
-        label={t('field.report.descriptionLabel')}
-        error={errors.description?.message}
-        aside={t('common.characters', { count: number(description.length), max: number(DESCRIPTION_MAX) })}
-      >
-        <Textarea
-          rows={5}
-          maxLength={DESCRIPTION_MAX}
-          className="text-md"
-          placeholder={t('field.report.descriptionPlaceholder')}
-          {...form.register('description')}
-        />
-      </Field>
+      <PhotoPicker
+        label={t('field.report.photosLabel')}
+        hint={t('field.report.photosHint')}
+        photos={photos}
+        onPhotosChange={onPhotosChange}
+        max={3}
+      />
       <Controller
         control={form.control}
         name="categoryId"
@@ -115,6 +99,7 @@ export function StepWhat({
               onBlur={field.onBlur}
               inputRef={field.ref}
               searchLabel={t('field.report.searchCategories')}
+              chips
               error={
                 fieldState.error
                   ? fieldState.error.type === 'server'
@@ -126,19 +111,36 @@ export function StepWhat({
           )
         }
       />
-      <PhotoPicker
-        label={t('field.report.photosLabel')}
-        hint={t('field.report.photosHint')}
-        photos={photos}
-        onPhotosChange={onPhotosChange}
-        max={3}
-      />
+      <Field label={t('field.report.titleLabel')} optional error={errors.title?.message}>
+        <Input
+          inputSize="lg"
+          maxLength={120}
+          autoComplete="off"
+          enterKeyHint="next"
+          placeholder={t('field.report.titlePlaceholder')}
+          {...form.register('title')}
+        />
+      </Field>
+      <Field
+        label={t('field.report.descriptionLabel')}
+        optional
+        error={errors.description?.message}
+        aside={t('common.characters', { count: number(description.length), max: number(DESCRIPTION_MAX) })}
+      >
+        <Textarea
+          rows={5}
+          maxLength={DESCRIPTION_MAX}
+          className="text-md"
+          placeholder={t('field.report.descriptionPlaceholder')}
+          {...form.register('description')}
+        />
+      </Field>
     </div>
   );
 }
 
-/** Step 2: site, written location and optional position. */
-export function StepWhere({
+/** Site, written location and optional position. */
+export function WhereSection({
   form,
   fix,
   onFixChange,
@@ -229,103 +231,6 @@ export function StepWhere({
         />
       </Field>
       <LocationControl fix={fix} onChange={onFixChange} />
-    </div>
-  );
-}
-
-function ReviewSection({
-  title,
-  editLabel,
-  onEdit,
-  children,
-}: {
-  title: string;
-  editLabel: string;
-  onEdit: () => void;
-  children: ReactNode;
-}) {
-  const { t } = useT();
-  return (
-    <section>
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="text-sm font-semibold text-ink">{title}</h2>
-        <Button variant="ghost" size="lg" className="-mr-2 h-11" aria-label={editLabel} onClick={onEdit}>
-          {t('field.report.edit')}
-        </Button>
-      </div>
-      <dl className="mt-1 divide-y divide-line border-y border-line">{children}</dl>
-    </section>
-  );
-}
-
-function ReviewRow({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div className="py-3">
-      <dt className="text-sm text-ink-3">{label}</dt>
-      <dd className="mt-0.5 text-md break-words text-ink">{children}</dd>
-    </div>
-  );
-}
-
-/** Step 3: everything on one screen, each part one tap away from editing. */
-export function StepReview({
-  values,
-  photos,
-  fix,
-  onEdit,
-}: {
-  values: ReportInput;
-  photos: PreparedPhoto[];
-  fix: GeoFix | null;
-  onEdit: (step: number) => void;
-}) {
-  const { t, number } = useT();
-  const categories = useActiveCategories();
-  const sites = useActiveSites();
-  const category = categories.data?.find((item) => item.id === values.categoryId);
-  const site = sites.data?.find((item) => item.id === values.siteId);
-  const notGiven = <span className="text-ink-3">{t('field.report.notGiven')}</span>;
-
-  return (
-    <div className="grid gap-8">
-      <ReviewSection
-        title={t('field.report.reviewWhat')}
-        editLabel={t('field.report.editWhat')}
-        onEdit={() => onEdit(0)}
-      >
-        <ReviewRow label={t('field.report.titleLabel')}>{values.title}</ReviewRow>
-        <ReviewRow label={t('field.report.descriptionLabel')}>
-          <span className="line-clamp-6 whitespace-pre-line">{values.description}</span>
-        </ReviewRow>
-        <ReviewRow label={t('field.report.categoryLabel')}>{category?.name ?? notGiven}</ReviewRow>
-        <ReviewRow label={t('field.report.photosLabel')}>
-          {photos.length > 0 ? (
-            <span className="mt-1 flex gap-2">
-              {photos.map((photo, index) => (
-                <img
-                  key={photo.id}
-                  src={photo.preview}
-                  alt={t('field.photos.alt', { index: index + 1 })}
-                  className="size-16 rounded-md border border-line object-cover"
-                />
-              ))}
-            </span>
-          ) : (
-            <span className="text-ink-3">{t('field.report.noPhotos')}</span>
-          )}
-        </ReviewRow>
-      </ReviewSection>
-      <ReviewSection
-        title={t('field.report.reviewWhere')}
-        editLabel={t('field.report.editWhere')}
-        onEdit={() => onEdit(1)}
-      >
-        <ReviewRow label={t('field.report.siteLabel')}>{site?.name ?? notGiven}</ReviewRow>
-        <ReviewRow label={t('field.report.locationDetailLabel')}>{values.locationDetail?.trim() || notGiven}</ReviewRow>
-        <ReviewRow label={t('field.report.positionLabel')}>
-          {fix ? t('field.report.positionValue', { meters: number(fix.accuracy) }) : notGiven}
-        </ReviewRow>
-      </ReviewSection>
     </div>
   );
 }

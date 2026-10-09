@@ -98,7 +98,7 @@ export function IncidentOverview({ incident }: { incident: IncidentDetail }) {
         )}
         <Detail label={t('field.incident.category')}>{incident.category.name}</Detail>
         <Detail label={t('field.incident.reportedBy')}>
-          <span className="block">{own ? t('common.you') : incident.reporter.name}</span>
+          <span className="block">{own ? t('common.you') : incident.reporter.name || t('incidents.visitor')}</span>
           {incident.reporterPhone && (
             <a href={`tel:${incident.reporterPhone.replace(/[^\d+]/g, '')}`} className={inlineLink}>
               <Phone aria-hidden />

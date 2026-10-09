@@ -1,5 +1,7 @@
 import type { NotificationType } from '@sentinel/shared';
+import { enqueue } from '../jobs/boss';
 import { emitEvent } from './events';
+import { pushConfigured, subscriptionIdsFor } from './push';
 import type { Tx } from './prisma';
 
 type Notice = {
@@ -31,6 +33,16 @@ export async function notify(tx: Tx, notice: Notice) {
     skipDuplicates: true,
   });
   await emitEvent(tx, { orgId: notice.orgId, recipients, incidentId: notice.incidentId, type: notice.type });
+  if (!pushConfigured) return;
+  // In the same transaction, so a rolled-back change sends nothing.
+  for (const subscriptionId of await subscriptionIdsFor(tx, recipients)) {
+    await enqueue(tx, 'notify.push', {
+      subscriptionId,
+      type: notice.type,
+      incidentId: notice.incidentId,
+      orgId: notice.orgId,
+    });
+  }
 }
 
 export async function activeSupervisorIds(tx: Tx, orgId: string): Promise<string[]> {

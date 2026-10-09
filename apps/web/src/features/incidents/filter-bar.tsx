@@ -11,6 +11,8 @@ import { useNavigate } from '@tanstack/react-router';
 import { ArrowDownUp, ListFilter, Plus, Search, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { PriorityLabel } from '../../components/domain/glyphs';
+import { densities, type Density } from '../../lib/density';
+import { SavedViewsMenu } from './saved-views';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import {
@@ -52,10 +54,14 @@ function useCatalogs() {
 export function FilterBar({
   search,
   counts,
+  density,
+  onDensity,
   onCreate,
 }: {
   search: IncidentsSearch;
   counts?: Partial<Record<InboxView, number>>;
+  density: Density;
+  onDensity: (density: Density) => void;
   onCreate: () => void;
 }) {
   const { t } = useT();
@@ -148,6 +154,7 @@ export function FilterBar({
           placeholder={t('incidents.search')}
           aria-label={t('incidents.search')}
         />
+        <SavedViewsMenu search={search} />
         <Menu>
           <MenuTrigger asChild>
             <Button icon={<ListFilter className="size-3.5" />} aria-label={t('incidents.filters.filter')}>
@@ -223,6 +230,15 @@ export function FilterBar({
               {sorts.map((value) => (
                 <MenuRadioItem key={value} value={value}>
                   {t(`incidents.sort.${value}`)}
+                </MenuRadioItem>
+              ))}
+            </MenuRadioGroup>
+            <MenuSeparator />
+            <MenuLabel>{t('incidents.density.label')}</MenuLabel>
+            <MenuRadioGroup value={density} onValueChange={(value) => onDensity(value as Density)}>
+              {densities.map((value) => (
+                <MenuRadioItem key={value} value={value}>
+                  {t(`incidents.density.${value}`)}
                 </MenuRadioItem>
               ))}
             </MenuRadioGroup>

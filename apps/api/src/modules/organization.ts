@@ -2,7 +2,7 @@
  * Organization settings and the setup checklist (docs/PRD.md F-ORG-02, F-ORG-03),
  * and the caller's own membership with the intervenant availability toggle (F-PPL-07).
  */
-import type { Organization } from '@prisma/client';
+import type { Organization } from '../generated/prisma/client';
 import {
   availabilitySchema,
   updateOrganizationSchema,

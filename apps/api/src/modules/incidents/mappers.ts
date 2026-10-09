@@ -2,7 +2,7 @@
  * Prisma shapes and pure mappers from incident rows to the shared DTOs.
  * Viewer-dependent fields (phones, notes, actions) are decided here, in one place.
  */
-import type { Prisma } from '@prisma/client';
+import type { Prisma } from '../../generated/prisma/client';
 import {
   incidentActions,
   isLiveAssignment,
@@ -32,7 +32,7 @@ export function personRef(membership: PersonRow): PersonRef {
 
 export const incidentListInclude = {
   organization: { select: { id: true, displayName: true } },
-  site: { select: { id: true, code: true, name: true } },
+  site: { select: { id: true, code: true, name: true, latitude: true, longitude: true, contactPhone: true } },
   category: { select: { id: true, name: true } },
   reporter: { select: personSelect },
   // At most one row: one live assignment per incident (I4).
@@ -47,7 +47,7 @@ export type IncidentListRow = Prisma.IncidentGetPayload<{ include: typeof incide
 
 export const incidentDetailInclude = {
   organization: { select: { id: true, displayName: true } },
-  site: { select: { id: true, code: true, name: true } },
+  site: { select: { id: true, code: true, name: true, latitude: true, longitude: true, contactPhone: true } },
   category: { select: { id: true, name: true } },
   reportedCategory: { select: { id: true, name: true } },
   reporter: { select: { id: true, user: { select: { firstName: true, lastName: true, phone: true } } } },
@@ -93,9 +93,17 @@ export function toListItem(row: IncidentListRow): IncidentListItem {
     status: row.status,
     priority: row.priority,
     triaged: row.triagedAt !== null,
-    site: { id: row.site.id, code: row.site.code, name: row.site.name },
+    site: {
+      id: row.site.id,
+      code: row.site.code,
+      name: row.site.name,
+      latitude: row.site.latitude,
+      longitude: row.site.longitude,
+      contactPhone: row.site.contactPhone,
+    },
     category: { id: row.category.id, name: row.category.name },
-    reporter: personRef(row.reporter),
+    reporter: row.reporter ? personRef(row.reporter) : { membershipId: '', name: row.guestName ?? '' },
+    channel: row.channel,
     assignee: live ? { ...personRef(live.intervenant), assignmentId: live.id, status: live.status } : null,
     flags: {
       declined: row.status === 'NEW' && row.declinedAt !== null,
@@ -155,8 +163,9 @@ function toAttachment(attachment: IncidentDetailRow['attachments'][number]): Att
 }
 
 function reporterPhoneFor(row: IncidentDetailRow, tenant: Tenant): string | null {
-  if (tenant.role === 'SUPERVISOR') return row.reporter.user.phone;
-  if (tenant.role === 'INTERVENANT' && tenant.org.showReporterPhone) return row.reporter.user.phone;
+  const phone = row.reporter ? row.reporter.user.phone : row.guestPhone;
+  if (tenant.role === 'SUPERVISOR') return phone;
+  if (tenant.role === 'INTERVENANT' && tenant.org.showReporterPhone) return phone;
   return null;
 }
 

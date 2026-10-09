@@ -10,6 +10,8 @@ import { errorHandler, notFoundHandler } from './http/error-handler';
 import { apiLimiter } from './http/rate-limit';
 import { meRoutes } from './modules/me';
 import { registrationRoutes } from './modules/registration';
+import { areaLookupRoutes, publicSiteRoutes } from './modules/areas';
+import { publicReportRoutes, publicTrackRoutes } from './modules/public-reports';
 import { publicInvitationRoutes } from './modules/people/public-invitations';
 import { invitationRoutes, memberRoutes } from './modules/people/routes';
 import { incidentRoutes } from './modules/incidents/routes';
@@ -20,6 +22,7 @@ import { categoryRoutes, siteRoutes, specialtyRoutes } from './modules/catalog';
 import { notificationRoutes } from './modules/notifications';
 import { dashboardRoutes } from './modules/dashboard';
 import { auditRoutes } from './modules/audit';
+import { viewRoutes } from './modules/views';
 import { eventRoutes } from './modules/events';
 import { platformRoutes } from './modules/platform';
 
@@ -76,6 +79,8 @@ export function createApp() {
   v1.use('/auth', authRoutes);
   v1.use('/public/organizations', registrationRoutes);
   v1.use('/public/invitations', publicInvitationRoutes);
+  v1.use('/public/sites', publicSiteRoutes, publicReportRoutes);
+  v1.use('/public/track', publicTrackRoutes);
   v1.use('/me', requireUser, meRoutes);
   v1.use('/platform', requireUser, requirePlatformAdmin, platformRoutes);
   // The attachment id names its organization, so this route resolves the tenant itself.
@@ -92,11 +97,13 @@ export function createApp() {
   tenant.use('/organization', organizationRoutes);
   tenant.use('/membership', membershipRoutes);
   tenant.use('/sites', siteRoutes);
+  tenant.use('/areas', areaLookupRoutes);
   tenant.use('/categories', categoryRoutes);
   tenant.use('/specialties', specialtyRoutes);
   tenant.use('/notifications', notificationRoutes);
   tenant.use('/dashboard', dashboardRoutes);
   tenant.use('/audit', auditRoutes);
+  tenant.use('/views', viewRoutes);
   tenant.use('/events', eventRoutes);
   v1.use(tenant);
 

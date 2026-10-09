@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client';
+import { Prisma } from '../generated/prisma/client';
 import { liveAssignmentStatuses, priorities, type AgeingBucket, type DashboardDTO } from '@sentinel/shared';
 import { Router } from 'express';
 import { requireRole, tenantOf } from '../auth/context';

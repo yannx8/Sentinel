@@ -115,7 +115,7 @@ function clientFor(agent: ReturnType<typeof request.agent>, orgId: string | null
     post: (path: string, body: object = {}, headers: Record<string, string> = {}) =>
       withOrg(agent.post(`/v1${path}`).set(headers).send(body)),
     patch: (path: string, body: object) => withOrg(agent.patch(`/v1${path}`).send(body)),
-    delete: (path: string) => withOrg(agent.delete(`/v1${path}`)),
+    delete: (path: string, body?: object) => withOrg(agent.delete(`/v1${path}`).send(body)),
     as: (otherOrgId: string | null) => clientFor(agent, otherOrgId),
   };
 }

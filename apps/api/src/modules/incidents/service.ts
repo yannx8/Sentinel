@@ -5,7 +5,7 @@
  * version-checked change, so it takes the row lock and concurrent requests queue
  * behind it and fail with CONFLICT_CONCURRENT_UPDATE instead of racing.
  */
-import type { Incident, Prisma } from '@prisma/client';
+import type { Incident, Prisma } from '../../generated/prisma/client';
 import {
   formatReference,
   incidentActions,
@@ -86,7 +86,7 @@ const REQUEST_NOT_PENDING = 'This reassignment request is no longer pending.';
 
 /* Shared helpers */
 
-function invalidField(field: string, message: string) {
+export function invalidField(field: string, message: string) {
   return new AppError('VALIDATION_FAILED', message, { fields: { [field]: [message] } });
 }
 
@@ -131,7 +131,7 @@ async function findLiveAssignment(db: Db, tenant: Tenant, incidentId: string) {
   return assignment ? liveOf([assignment]) : null;
 }
 
-async function activeCategory(db: Db, tenant: Tenant, categoryId: string) {
+export async function activeCategory(db: Db, tenant: Pick<Tenant, 'orgId'>, categoryId: string) {
   const category = await db.incidentCategory.findFirst({
     where: { id: categoryId, organizationId: tenant.orgId },
     select: { id: true, name: true, defaultPriority: true, isActive: true },
@@ -333,10 +333,11 @@ function afterCursor(sort: Sort, cursor: string | undefined): Prisma.IncidentWhe
   return { OR: [{ updatedAt: { lt: at } }, { updatedAt: at, id: { lt: id } }] };
 }
 
-export async function listIncidents(tenant: Tenant, query: ListIncidentsQuery) {
+/** `scope` comes from the incident policy: one membership's scope, or the union of the caller's own. */
+export async function listIncidents(scope: Prisma.IncidentWhereInput, query: ListIncidentsQuery) {
   const rows = await prisma.incident.findMany({
     where: {
-      AND: [incidentScope(tenant), viewWhere(query.view), ...filterWhere(query), afterCursor(query.sort, query.cursor)],
+      AND: [scope, viewWhere(query.view), ...filterWhere(query), afterCursor(query.sort, query.cursor)],
     },
     orderBy: sortOrder[query.sort],
     take: query.limit + 1,
@@ -386,6 +387,18 @@ function yearIn(timeZone: string, at: Date): number {
   return year ? Number(year.value) : at.getUTCFullYear();
 }
 
+/** Per organization and year, in the organization's time zone (F-INC-02). The upsert locks the counter row. */
+export async function nextReference(tx: Tx, orgId: string, timezone: string): Promise<string> {
+  const year = yearIn(timezone, new Date());
+  const [counter] = await tx.$queryRaw<{ value: number }[]>`
+    INSERT INTO "OrganizationCounter" ("organizationId", "name", "value")
+    VALUES (${orgId}::uuid, ${`incident:${year}`}, 1)
+    ON CONFLICT ("organizationId", "name") DO UPDATE SET "value" = "OrganizationCounter"."value" + 1
+    RETURNING "value"`;
+  if (!counter) throw new Error('The incident counter returned no row');
+  return formatReference(year, counter.value);
+}
+
 export async function createIncident(tenant: Tenant, input: CreateIncidentInput): Promise<IncidentDetail> {
   if (tenant.role === 'INTERVENANT') throw forbidden('Intervenants cannot report incidents.');
   if (input.onBehalfOfMembershipId && tenant.role !== 'SUPERVISOR') {
@@ -407,23 +420,24 @@ export async function createIncident(tenant: Tenant, input: CreateIncidentInput)
       select: { isActive: true },
     });
     if (!site?.isActive) throw invalidField('siteId', 'This site no longer accepts reports. Choose another site.');
+    if (input.areaId) {
+      const area = await tx.siteArea.findFirst({
+        where: { id: input.areaId, siteId: input.siteId, organizationId: tenant.orgId, isActive: true },
+        select: { id: true },
+      });
+      if (!area) throw invalidField('areaId', 'This area no longer exists. Choose the site instead.');
+    }
     const category = await activeCategory(tx, tenant, input.categoryId);
     const reportedPriority = input.reportedPriority ?? category.defaultPriority;
 
-    // Per organization and year, in the organization's time zone (F-INC-02). The upsert locks the counter row.
-    const year = yearIn(tenant.org.timezone, new Date());
-    const [counter] = await tx.$queryRaw<{ value: number }[]>`
-      INSERT INTO "OrganizationCounter" ("organizationId", "name", "value")
-      VALUES (${tenant.orgId}::uuid, ${`incident:${year}`}, 1)
-      ON CONFLICT ("organizationId", "name") DO UPDATE SET "value" = "OrganizationCounter"."value" + 1
-      RETURNING "value"`;
-    if (!counter) throw new Error('The incident counter returned no row');
+    const reference = await nextReference(tx, tenant.orgId, tenant.org.timezone);
 
     const incident = await tx.incident.create({
       data: {
         organizationId: tenant.orgId,
-        reference: formatReference(year, counter.value),
+        reference,
         siteId: input.siteId,
+        areaId: input.areaId ?? null,
         reporterMembershipId: onBehalfOf?.id ?? tenant.membershipId,
         createdByMembershipId: tenant.membershipId,
         title: input.title,
@@ -1002,6 +1016,15 @@ export async function requestReassignment(
   return loadDetail(tenant, incidentId);
 }
 
+/** Great-circle distance in metres between two positions (haversine). */
+function distanceMeters(lat1: number, lng1: number, lat2: number, lng2: number) {
+  const rad = Math.PI / 180;
+  const a =
+    Math.sin(((lat2 - lat1) * rad) / 2) ** 2 +
+    Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.sin(((lng2 - lng1) * rad) / 2) ** 2;
+  return Math.round(2 * 6_371_000 * Math.asin(Math.sqrt(a)));
+}
+
 export async function postProgress(
   tenant: Tenant,
   assignmentId: string,
@@ -1020,6 +1043,18 @@ export async function postProgress(
     });
     if (count === 0) throw invalidTransition(notInProgress);
 
+    const fix = input.latitude !== undefined && input.longitude !== undefined ? input : null;
+    const pin = fix
+      ? await tx.site.findFirst({
+          where: { id: incident.siteId, organizationId: tenant.orgId },
+          select: { latitude: true, longitude: true },
+        })
+      : null;
+    const distanceM =
+      fix && pin?.latitude != null && pin.longitude != null
+        ? distanceMeters(fix.latitude!, fix.longitude!, pin.latitude, pin.longitude)
+        : null;
+
     const progress = await tx.progressUpdate.create({
       data: {
         organizationId: tenant.orgId,
@@ -1028,11 +1063,16 @@ export async function postProgress(
         authorMembershipId: tenant.membershipId,
         type: input.progressType,
         note: input.note,
+        latitude: fix?.latitude ?? null,
+        longitude: fix?.longitude ?? null,
+        accuracyM: input.accuracy === undefined ? null : Math.round(input.accuracy),
+        distanceM,
       },
     });
     await recordIncidentEvent(tx, tenant, incident.id, 'PROGRESS_POSTED', {
       progressType: input.progressType,
       note: input.note,
+      ...(distanceM === null ? {} : { distanceM }),
     });
     await notify(tx, {
       ...noticeFrom(tenant, incident.id),

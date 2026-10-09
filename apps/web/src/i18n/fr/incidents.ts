@@ -43,6 +43,7 @@ export const incidents: Translation<typeof en> = {
   },
   select: 'Sélectionnez un incident pour le lire ici.',
   closeCaseFile: 'Fermer la fiche',
+  visitor: 'Visiteur',
   caseFile: {
     activity: 'Activité',
     details: 'Détails',
@@ -109,6 +110,7 @@ export const incidents: Translation<typeof en> = {
     description: 'Choisissez qui doit traiter cet incident. Classement par adéquation.',
     priority: 'Priorité',
     category: 'Catégorie',
+    keyHint: 'Flèches pour choisir, Entrée pour assigner',
     candidates: 'Intervenants',
     note: "Note pour l'intervenant",
     noteHint: "Interne. Visible uniquement par les superviseurs et l'assigné.",
@@ -140,6 +142,12 @@ export const incidents: Translation<typeof en> = {
     done: '{reference} remis dans la file',
   },
   sendBack: {
+    quickLabel: 'Motifs fréquents',
+    quick: {
+      missingPhoto: 'La photo du travail terminé est manquante.',
+      notFixed: 'Le problème est toujours présent sur place.',
+      moreDetail: 'Merci de préciser ce qui a été fait et ce que vous avez constaté.',
+    },
     title: 'Renvoyer {reference}',
     description: "L'intervenant est notifié et reprend l'intervention.",
     reason: 'Que reste-t-il à faire ?',
@@ -177,6 +185,32 @@ export const incidents: Translation<typeof en> = {
     submit: "Créer l'incident",
     created: '{reference} créé',
   },
+  saved: {
+    title: 'Vues enregistrées',
+    empty: 'Aucune vue enregistrée. Définissez des filtres, puis enregistrez-les ici.',
+    namePlaceholder: 'Nommer cette vue',
+    save: 'Enregistrer la vue',
+    saved: 'Vue enregistrée',
+    delete: 'Supprimer la vue {name}',
+    deleted: 'Vue supprimée',
+    nothingToSave: 'Définissez un filtre ou choisissez un onglet d’abord.',
+    full: 'Vous pouvez garder jusqu’à 20 vues. Supprimez-en une d’abord.',
+  },
+  bulk: {
+    selected: '{count} sélectionné(s)',
+    selectRow: 'Sélectionner {reference}',
+    clear: 'Effacer la sélection',
+    priority: 'Définir la priorité',
+    assign: 'Assigner',
+    assignTitle: 'Assigner {count} incidents',
+    assignDescription:
+      'Les candidats sont affichés pour {reference}. Ceux qui ne peuvent pas prendre un incident sont signalés ensuite.',
+    assignSubmit: 'Tout assigner',
+    done: '{count} mis à jour',
+    partial: '{done} mis à jour, {failed} n’ont pas pu être modifiés',
+    failedLine: '{reference} : {message}',
+  },
+  density: { label: 'Densité des lignes', compact: 'Compacte', default: 'Par défaut', comfortable: 'Confortable' },
   reassignments: {
     title: 'Demandes de réaffectation',
     description:

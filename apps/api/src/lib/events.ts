@@ -1,5 +1,5 @@
 import { Client } from 'pg';
-import { env } from '../env';
+import { pgConnectionString } from './db';
 import { logger } from './logger';
 import type { Tx } from './prisma';
 
@@ -24,9 +24,8 @@ let retryTimer: NodeJS.Timeout | null = null;
 let retryDelay = 2_000;
 
 function connect() {
-  const url = new URL(env.DATABASE_URL);
-  url.searchParams.delete('schema'); // Prisma-only parameter
-  const next = new Client({ connectionString: url.toString() });
+  // A dedicated connection outside the pool: LISTEN must stay on one session.
+  const next = new Client({ connectionString: pgConnectionString() });
   client = next;
   const retry = () => {
     if (client !== next) return;

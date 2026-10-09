@@ -3,7 +3,7 @@
  * happen to each row. A real run re-checks every row under the invitation lock
  * and invites the valid ones exactly like single invitations.
  */
-import type { Prisma } from '@prisma/client';
+import type { Prisma } from '../../generated/prisma/client';
 import {
   employeeProfileSchema,
   inviteMemberSchema,

@@ -4,13 +4,13 @@
 // express live in prisma/sql/invariants.sql and are part of the baseline.
 
 generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
 }
 
+// The connection URL lives in prisma.config.ts (CLI) and src/lib/db.ts (runtime).
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 enum OrganizationStatus {
@@ -108,10 +108,16 @@ enum CommentVisibility {
   INTERNAL
 }
 
+enum IncidentChannel {
+  APP
+  QR_GUEST
+}
+
 enum DismissReason {
   DUPLICATE
   NOT_AN_INCIDENT
   NO_ACTION_NEEDED
+  SPAM
 }
 
 enum ReassignmentReason {
@@ -152,6 +158,8 @@ enum AuditEventType {
   MEMBER_REVOKED
   SITE_CREATED
   SITE_UPDATED
+  AREA_CREATED
+  AREA_UPDATED
   CATEGORY_CREATED
   CATEGORY_UPDATED
   SPECIALTY_CREATED
@@ -204,6 +212,22 @@ model User {
   tokens        UserToken[]
   memberships   Membership[]
   platformAdmin PlatformAdmin?
+  pushSubscriptions PushSubscription[]
+}
+
+// One browser or phone that agreed to receive push notifications.
+model PushSubscription {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model Session {
@@ -289,6 +313,7 @@ model Organization {
   invitations   Invitation[]
   auditEvents   AuditEvent[]
   notifications Notification[]
+  savedViews    SavedView[]
   counters      OrganizationCounter[]
   platformAudit PlatformAuditEvent[]
 }
@@ -323,6 +348,7 @@ model Membership {
   attachments       Attachment[]
   auditEvents       AuditEvent[]
   notifications     Notification[]
+  savedViews        SavedView[]
   invitationsSent   Invitation[]
 
   @@unique([id, organizationId])
@@ -390,6 +416,13 @@ model Site {
   city           String?
   contactName    String?
   contactPhone   String?
+  latitude       Float?
+  longitude      Float?
+  landmark       String?
+  // Opt-in for visitors reporting through a QR code (D7).
+  guestReporting Boolean  @default(false)
+  // QR token of the whole site; created when the QR sheet is first opened.
+  publicToken    String?  @unique
   isActive       Boolean  @default(true)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
@@ -398,9 +431,27 @@ model Site {
   accesses     SiteAccess[]
   incidents    Incident[]
   employees    EmployeeProfile[]
+  areas        SiteArea[]
 
   @@unique([id, organizationId])
   @@unique([organizationId, code])
+}
+
+// A place inside a site with its own QR code.
+model SiteArea {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  siteId         String   @db.Uuid
+  name           String
+  publicToken    String   @unique
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+
+  site      Site       @relation(fields: [siteId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  incidents Incident[]
+
+  @@unique([id, organizationId])
+  @@index([siteId])
 }
 
 // An intervenant may be assigned only on sites they have access to (I10).
@@ -463,11 +514,19 @@ model Incident {
   organizationId        String         @db.Uuid
   reference             String
   siteId                String         @db.Uuid
-  reporterMembershipId  String         @db.Uuid
-  createdByMembershipId String         @db.Uuid
+  // Set from a QR code; the service checks it belongs to the site and organization.
+  areaId                String?        @db.Uuid
+  // Null for a visitor's report (channel QR_GUEST).
+  reporterMembershipId  String?        @db.Uuid
+  channel               IncidentChannel @default(APP)
+  guestName             String?
+  guestPhone            String?
+  guestConsentAt        DateTime?
+  trackingTokenHash     String?        @unique
+  createdByMembershipId String?        @db.Uuid
   // Original report, immutable after submission (I5).
   title                 String
-  description           String
+  description           String         @default("")
   reportedCategoryId    String         @db.Uuid
   reportedPriority      Priority
   locationDetail        String?
@@ -491,10 +550,11 @@ model Incident {
   closedAt              DateTime?
   updatedAt             DateTime       @updatedAt
 
+  area             SiteArea?        @relation(fields: [areaId], references: [id], onDelete: SetNull)
   organization     Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   site             Site             @relation(fields: [siteId, organizationId], references: [id, organizationId], onDelete: NoAction, onUpdate: NoAction)
-  reporter         Membership       @relation("Reporter", fields: [reporterMembershipId, organizationId], references: [id, organizationId], onDelete: NoAction, onUpdate: NoAction)
-  createdBy        Membership       @relation("CreatedBy", fields: [createdByMembershipId, organizationId], references: [id, organizationId], onDelete: NoAction, onUpdate: NoAction)
+  reporter         Membership?      @relation("Reporter", fields: [reporterMembershipId, organizationId], references: [id, organizationId], onDelete: NoAction, onUpdate: NoAction)
+  createdBy        Membership?      @relation("CreatedBy", fields: [createdByMembershipId, organizationId], references: [id, organizationId], onDelete: NoAction, onUpdate: NoAction)
   category         IncidentCategory @relation("Category", fields: [categoryId, organizationId], references: [id, organizationId], onDelete: NoAction, onUpdate: NoAction)
   reportedCategory IncidentCategory @relation("ReportedCategory", fields: [reportedCategoryId, organizationId], references: [id, organizationId], onDelete: NoAction, onUpdate: NoAction)
 
@@ -550,6 +610,11 @@ model ProgressUpdate {
   authorMembershipId String       @db.Uuid
   type               ProgressType
   note               String
+  // Arrival fix, set with ON_SITE when the intervenant shared a position.
+  latitude           Float?
+  longitude          Float?
+  accuracyM          Int?
+  distanceM          Int?
   createdAt          DateTime     @default(now())
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -608,6 +673,21 @@ model AuditEvent {
 
   @@index([organizationId, incidentId, createdAt])
   @@index([organizationId, createdAt])
+}
+
+/// A supervisor's named inbox filter. params holds a subset of the inbox search params (validated in the API).
+model SavedView {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  membershipId   String   @db.Uuid
+  name           String
+  params         Json
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  membership   Membership   @relation(fields: [membershipId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([membershipId, name])
 }
 
 model Notification {

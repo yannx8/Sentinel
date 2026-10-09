@@ -10,6 +10,9 @@ import { api, ApiError } from '../../lib/api';
 import { isTyping, type IncidentCounts } from '../../app/shells/console-shell';
 import { incidentCountsKey } from '../../app/shells/console-shell';
 import type { IncidentsSearch } from '../../app/router';
+import { useDensity } from '../../lib/density';
+import { ActedContext } from './acted';
+import { BulkBar } from './bulk';
 import { CaseFile } from './case-file';
 import { CreateIncidentDialog } from './create-dialog';
 import { FilterBar } from './filter-bar';
@@ -24,6 +27,19 @@ export function IncidentsPage() {
   const wide = useMediaQuery('(min-width: 1280px)');
   const list = useIncidentList(search);
   const [creating, setCreating] = useState(false);
+  const [density, setDensity] = useDensity();
+  const [picked, setPicked] = useState<ReadonlySet<string>>(new Set());
+  const togglePicked = useCallback(
+    (reference: string, on: boolean) =>
+      setPicked((prev) => {
+        const next = new Set(prev);
+        if (on) next.add(reference);
+        else next.delete(reference);
+        return next;
+      }),
+    [],
+  );
+  const pickedItems = list.items.filter((item) => picked.has(item.reference));
   const containerRef = useRef<HTMLDivElement>(null);
   const counts = useQuery({
     queryKey: incidentCountsKey,
@@ -42,6 +58,18 @@ export function IncidentsPage() {
         replace: !!reference && !!selected,
       }),
     [navigate, selected],
+  );
+
+  // After assign, close, send back or dismiss, move on to the next incident (or close the sheet on small screens).
+  const advance = useCallback(
+    (action: string) => {
+      if (!['assign', 'close', 'send-back', 'dismiss'].includes(action)) return;
+      const index = list.items.findIndex((item) => item.reference === selected);
+      if (index < 0) return;
+      if (!wide) return select(undefined);
+      select((list.items[index + 1] ?? list.items[index - 1])?.reference);
+    },
+    [list.items, selected, select, wide],
   );
 
   useEffect(() => {
@@ -76,6 +104,12 @@ export function IncidentsPage() {
       else if (event.key === 'a' && selectedIncident.data?.actions.some((a) => a === 'assign' || a === 'reassign')) {
         event.preventDefault();
         document.querySelector<HTMLButtonElement>('[data-case-primary]')?.click();
+      } else if (event.key === 'c' && selectedIncident.data?.actions.includes('close')) {
+        event.preventDefault();
+        document.querySelector<HTMLButtonElement>('[data-case-close]')?.click();
+      } else if (event.key === 's' && selectedIncident.data?.actions.includes('send-back')) {
+        event.preventDefault();
+        document.querySelector<HTMLButtonElement>('[data-case-sendback]')?.click();
       }
     };
     window.addEventListener('keydown', onKey);
@@ -95,7 +129,14 @@ export function IncidentsPage() {
 
   const listPane = (
     <div className="flex h-full min-h-0 flex-col">
-      <FilterBar search={search} counts={viewCounts} onCreate={() => setCreating(true)} />
+      <FilterBar
+        search={search}
+        counts={viewCounts}
+        density={density}
+        onDensity={setDensity}
+        onCreate={() => setCreating(true)}
+      />
+      {pickedItems.length > 0 && <BulkBar items={pickedItems} onClear={() => setPicked(new Set())} />}
       <div ref={containerRef} className="min-h-0 flex-1 overflow-y-auto">
         {list.isPending ? (
           <ListSkeleton />
@@ -125,7 +166,14 @@ export function IncidentsPage() {
           />
         ) : (
           <>
-            <IncidentList items={list.items} selected={selected} onSelect={select} />
+            <IncidentList
+              items={list.items}
+              selected={selected}
+              picked={picked}
+              density={density}
+              onSelect={select}
+              onToggle={togglePicked}
+            />
             {list.hasNextPage && (
               <div className="p-3 text-center">
                 <Button variant="ghost" loading={list.isFetchingNextPage} onClick={() => void list.fetchNextPage()}>
@@ -140,33 +188,35 @@ export function IncidentsPage() {
   );
 
   return (
-    <div className="flex h-full min-h-0">
-      <section
-        aria-label={t('incidents.title')}
-        className="min-w-0 flex-1 xl:max-w-[560px] xl:border-r xl:border-line xl:flex-none xl:w-[44%]"
-      >
-        {listPane}
-      </section>
-      {wide ? (
-        <section aria-label={t('incidents.caseFile.activity')} className="min-w-0 flex-1 bg-surface">
-          {selected ? (
-            <CaseFile key={selected} reference={selected} onClose={() => select(undefined)} />
-          ) : (
-            <div className="flex h-full items-center justify-center px-6 text-center text-sm text-ink-3">
-              {t('incidents.select')}
-            </div>
-          )}
-        </section>
-      ) : (
-        <Sheet
-          open={!!selected}
-          onOpenChange={(open) => !open && select(undefined)}
-          title={t('incidents.caseFile.activity')}
+    <ActedContext.Provider value={advance}>
+      <div className="flex h-full min-h-0">
+        <section
+          aria-label={t('incidents.title')}
+          className="min-w-0 flex-1 xl:max-w-[560px] xl:border-r xl:border-line xl:flex-none xl:w-[44%]"
         >
-          {selected && <CaseFile key={selected} reference={selected} onClose={() => select(undefined)} />}
-        </Sheet>
-      )}
-      <CreateIncidentDialog open={creating} onOpenChange={setCreating} onCreated={(reference) => select(reference)} />
-    </div>
+          {listPane}
+        </section>
+        {wide ? (
+          <section aria-label={t('incidents.caseFile.activity')} className="min-w-0 flex-1 bg-surface">
+            {selected ? (
+              <CaseFile key={selected} reference={selected} onClose={() => select(undefined)} />
+            ) : (
+              <div className="flex h-full items-center justify-center px-6 text-center text-sm text-ink-3">
+                {t('incidents.select')}
+              </div>
+            )}
+          </section>
+        ) : (
+          <Sheet
+            open={!!selected}
+            onOpenChange={(open) => !open && select(undefined)}
+            title={t('incidents.caseFile.activity')}
+          >
+            {selected && <CaseFile key={selected} reference={selected} onClose={() => select(undefined)} />}
+          </Sheet>
+        )}
+        <CreateIncidentDialog open={creating} onOpenChange={setCreating} onCreated={(reference) => select(reference)} />
+      </div>
+    </ActedContext.Provider>
   );
 }

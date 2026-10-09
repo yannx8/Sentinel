@@ -4,6 +4,7 @@ import { toast } from '../components/ui/toast';
 import { useT } from '../i18n';
 import { api, ApiError, newIdempotencyKey } from './api';
 import { toastError } from './forms';
+import { queueAction } from './offline-sync';
 
 /** Query keys for incident data. Lists and counts share the 'incidents' prefix. */
 export const incidentKeys = {
@@ -13,7 +14,9 @@ export const incidentKeys = {
   detail: (key: string) => ['incident', key] as const,
   thread: (key: string) => ['incident', key, 'thread'] as const,
   candidates: (key: string) => ['incident', key, 'candidates'] as const,
-  myWork: ['my-work'] as const,
+  /** Under 'me': person-scoped, so it survives an organization switch. */
+  myWork: ['me', 'work'] as const,
+  myHistory: ['me', 'incidents'] as const,
 };
 
 export function useIncident(key: string | undefined) {
@@ -49,7 +52,12 @@ type ActionInput = {
   body?: Record<string, unknown>;
   /** Toast shown on success. Same verb as the button. */
   success?: string;
+  /** Name in the waiting list when offline; defaults to `success`. */
+  label?: string;
 };
+
+/** The action was kept on the phone because there is no connection. */
+const QUEUED = Symbol('queued');
 
 /**
  * Runs an incident transition: one idempotency key per attempt, the returned
@@ -61,13 +69,29 @@ export function useIncidentAction() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ path, body }: ActionInput) =>
-      api.post<IncidentDetail>(path, body ?? {}, { idempotencyKey: newIdempotencyKey() }),
+    mutationFn: async ({ path, body, success, label }: ActionInput) => {
+      const idempotencyKey = newIdempotencyKey();
+      try {
+        return await api.post<IncidentDetail>(path, body ?? {}, { idempotencyKey });
+      } catch (error) {
+        const kept =
+          error instanceof ApiError &&
+          error.status === 0 &&
+          (await queueAction({ path, body: body ?? {}, idempotencyKey, label: label ?? success ?? path }));
+        if (kept) return QUEUED;
+        throw error;
+      }
+    },
     onSuccess: (incident, input) => {
+      if (incident === QUEUED) {
+        toast.info(t('offline.actionQueued'));
+        return;
+      }
       queryClient.setQueryData(incidentKeys.detail(incident.reference), incident);
       void queryClient.invalidateQueries({ queryKey: incidentKeys.thread(incident.reference) });
       void queryClient.invalidateQueries({ queryKey: incidentKeys.all });
       void queryClient.invalidateQueries({ queryKey: incidentKeys.myWork });
+      void queryClient.invalidateQueries({ queryKey: incidentKeys.myHistory });
       void queryClient.invalidateQueries({ queryKey: ['reassignments'] });
       if (input.success) toast.success(input.success);
     },
@@ -89,9 +113,25 @@ export function useAddComment(key: string) {
   const { t } = useT();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: { body: string; visibility: 'PUBLIC' | 'INTERNAL' }) =>
-      api.post<ThreadEvent>(`/incidents/${encodeURIComponent(key)}/comments`, input),
+    mutationFn: async (input: { body: string; visibility: 'PUBLIC' | 'INTERNAL' }) => {
+      const path = `/incidents/${encodeURIComponent(key)}/comments`;
+      const idempotencyKey = newIdempotencyKey();
+      try {
+        return await api.post<ThreadEvent>(path, input, { idempotencyKey });
+      } catch (error) {
+        const kept =
+          error instanceof ApiError &&
+          error.status === 0 &&
+          (await queueAction({ path, body: input, idempotencyKey, label: t('offline.comment', { reference: key }) }));
+        if (kept) return QUEUED;
+        throw error;
+      }
+    },
     onSuccess: (event) => {
+      if (event === QUEUED) {
+        toast.info(t('offline.actionQueued'));
+        return;
+      }
       queryClient.setQueryData<ThreadEvent[]>(incidentKeys.thread(key), (events) =>
         events ? [...events, event] : [event],
       );

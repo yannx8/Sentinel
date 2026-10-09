@@ -1,5 +1,5 @@
 # Sentinel web app: static build served by nginx, which also proxies /api to the API.
-FROM node:22-alpine AS build
+FROM node:24-alpine AS build
 WORKDIR /repo
 COPY .certs/ /tmp/certs/
 RUN cat /etc/ssl/certs/ca-certificates.crt /tmp/certs/*.pem > /tmp/ca-bundle.crt 2>/dev/null || cp /etc/ssl/certs/ca-certificates.crt /tmp/ca-bundle.crt

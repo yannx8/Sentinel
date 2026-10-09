@@ -82,6 +82,18 @@ export function useFieldIncidents() {
   });
 }
 
+/** Intervenants: every incident they worked on, in every organization they serve, latest activity first. */
+export function useMyHistory() {
+  return useInfiniteQuery({
+    queryKey: incidentKeys.myHistory,
+    queryFn: ({ pageParam, signal }) =>
+      api.page<IncidentListItem>('/me/incidents', { query: { sort: 'updated', cursor: pageParam }, signal }),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (last) => (last.page.hasMore ? (last.page.nextCursor ?? undefined) : undefined),
+    refetchInterval: 60_000,
+  });
+}
+
 /** Live assignments across every organization the intervenant serves. */
 export function useMyWork() {
   return useQuery({
@@ -91,12 +103,15 @@ export function useMyWork() {
   });
 }
 
-/** Optimistic availability change, rolled back if the server refuses it. */
+/** Optimistic availability change for every organization at once, rolled back if the server refuses it. */
 export function useSetAvailability() {
   const { t } = useT();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (availability: Availability) => api.patch<MembershipSelf>('/membership/availability', { availability }),
+    mutationFn: async (availability: Availability) => {
+      await api.patch('/me/availability', { availability });
+      return api.get<MembershipSelf>('/membership');
+    },
     onMutate: async (availability) => {
       await queryClient.cancelQueries({ queryKey: fieldKeys.membership });
       const previous = queryClient.getQueryData<MembershipSelf>(fieldKeys.membership);
@@ -111,5 +126,15 @@ export function useSetAvailability() {
       if (context?.previous) queryClient.setQueryData(fieldKeys.membership, context.previous);
       toastError(error, t);
     },
+  });
+}
+
+/** The area a QR code named, for the line above the report form. */
+export function useQrArea(areaId: string | undefined) {
+  return useQuery({
+    queryKey: ['areas', areaId],
+    queryFn: ({ signal }) => api.get<{ id: string; name: string; siteId: string }>(`/areas/${areaId}`, { signal }),
+    enabled: !!areaId,
+    retry: false,
   });
 }

@@ -147,8 +147,16 @@ export const siteSchema = z.object({
   city: optionalText(80),
   contactName: optionalText(80),
   contactPhone: phone,
+  /** The pin. Null clears it on update. */
+  latitude: z.number().min(-90).max(90).nullish(),
+  longitude: z.number().min(-180).max(180).nullish(),
+  landmark: optionalText(200),
+  guestReporting: z.boolean().optional(),
 });
 export const updateSiteSchema = siteSchema.partial().extend({ isActive: z.boolean().optional() });
+
+export const areaSchema = z.object({ name: text(2, 80) });
+export const updateAreaSchema = areaSchema.partial().extend({ isActive: z.boolean().optional() });
 
 export const categorySchema = z.object({
   name: text(2, 60),
@@ -225,8 +233,10 @@ export const importEmployeesSchema = z.object({
 
 export const createIncidentSchema = z.object({
   title: text(3, 120),
-  description: text(10, 4000),
+  description: z.string().trim().max(4000).default(''),
   siteId: uuidSchema,
+  /** From a QR code. */
+  areaId: uuidSchema.optional(),
   categoryId: uuidSchema,
   locationDetail: optionalText(200),
   latitude: z.number().min(-90).max(90).optional(),
@@ -234,6 +244,24 @@ export const createIncidentSchema = z.object({
   reportedPriority: z.enum(priorities).optional(),
   /** Supervisors only: report on behalf of an employee. */
   onBehalfOfMembershipId: uuidSchema.optional(),
+});
+
+export const pushSubscribeSchema = z.object({
+  endpoint: z.url().max(1000),
+  keys: z.object({ p256dh: z.string().min(1).max(200), auth: z.string().min(1).max(100) }),
+});
+export const pushUnsubscribeSchema = z.object({ endpoint: z.url().max(1000) });
+
+/** A visitor's report through a QR code. `website` is the honeypot: people leave it empty. */
+export const guestReportSchema = z.object({
+  categoryId: uuidSchema,
+  description: z.string().trim().max(4000).default(''),
+  locationDetail: optionalText(200),
+  guestName: optionalText(80),
+  guestPhone: phone,
+  /** Required when a phone number is given. */
+  consent: z.boolean().default(false),
+  website: z.string().max(200).optional(),
 });
 
 const csvList = <T extends readonly [string, ...string[]]>(values: T) =>
@@ -279,6 +307,42 @@ export const assignSchema = z.object({
   note: optionalText(1000),
 });
 
+/** The inbox filters a supervisor can save, as they appear in the console URL. */
+export const savedViewParams = z
+  .object({
+    view: z.enum(inboxViews).optional(),
+    q: z.string().trim().max(100).optional(),
+    priority: z
+      .string()
+      .max(60)
+      .refine((v) => v.split(',').every((p) => (priorities as readonly string[]).includes(p)), 'Unknown priority')
+      .optional(),
+    site: uuidSchema.optional(),
+    category: uuidSchema.optional(),
+    assignee: uuidSchema.optional(),
+    sort: z.enum(['urgency', 'newest', 'oldest', 'updated']).optional(),
+  })
+  .strict();
+export const savedViewSchema = z.object({ name: text(1, 40), params: savedViewParams });
+
+const bulkItem = z.object({ reference: z.string().trim().min(1).max(40), expectedVersion: versionSchema });
+/** Per-incident results: each one is its own transaction and version check. */
+export const bulkIncidentsSchema = z.discriminatedUnion('action', [
+  z.object({
+    action: z.literal('priority'),
+    priority: z.enum(priorities),
+    items: z
+      .array(bulkItem.extend({ categoryId: uuidSchema }))
+      .min(1)
+      .max(25),
+  }),
+  z.object({
+    action: z.literal('assign'),
+    intervenantMembershipId: uuidSchema,
+    items: z.array(bulkItem).min(1).max(25),
+  }),
+]);
+
 export const unassignSchema = z.object({ expectedVersion: versionSchema, reason: optionalText(500) });
 export const closeSchema = z.object({ expectedVersion: versionSchema });
 export const sendBackSchema = z.object({ expectedVersion: versionSchema, reason: text(10, 500) });
@@ -293,7 +357,14 @@ export const commentSchema = z.object({ body: text(1, 4000), visibility: z.enum(
 
 export const declineSchema = z.object({ reason: text(5, 500) });
 export const requestReassignmentSchema = z.object({ reasonCode: z.enum(reassignmentReasons), note: optionalText(500) });
-export const progressSchema = z.object({ progressType: z.enum(progressTypes), note: text(1, 2000) });
+export const progressSchema = z.object({
+  progressType: z.enum(progressTypes),
+  note: text(1, 2000),
+  /** The intervenant's position when arriving (ON_SITE). */
+  latitude: z.number().min(-90).max(90).optional(),
+  longitude: z.number().min(-180).max(180).optional(),
+  accuracy: z.number().min(0).max(100_000).optional(),
+});
 export const resolveSchema = z.object({ note: text(10, 4000) });
 export const rejectReassignmentSchema = z.object({ note: optionalText(500) });
 
@@ -325,6 +396,8 @@ export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterOrganizationInput = z.infer<typeof registerOrganizationSchema>;
 export type InviteMemberInput = z.infer<typeof inviteMemberSchema>;
 export type CreateIncidentInput = z.infer<typeof createIncidentSchema>;
+export type SavedViewInput = z.infer<typeof savedViewSchema>;
+export type BulkIncidentsInput = z.infer<typeof bulkIncidentsSchema>;
 export type ListIncidentsQuery = z.infer<typeof listIncidentsQuery>;
 export type SiteInput = z.infer<typeof siteSchema>;
 export type CategoryInput = z.infer<typeof categorySchema>;
