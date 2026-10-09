@@ -1,25 +1,21 @@
 import { createApp } from './app';
+import { startJobs, stopJobs } from './jobs/boss';
 import { env } from './env';
 import { pool } from './lib/db';
 import { logger } from './lib/logger';
 import { prisma } from './lib/prisma';
-import { purgeExpiredRegistrations } from './modules/platform';
 
 const server = createApp().listen(env.PORT, () => {
   logger.info(`Sentinel API listening on :${env.PORT}`);
 });
 
-const purge = () => purgeExpiredRegistrations().catch((err) => logger.error({ err }, 'Registration purge failed'));
-void purge();
-// ponytail: in-process timer, fine for one API instance; use a lock or external cron if we scale out
-const purgeTimer = setInterval(purge, 60 * 60 * 1000);
-purgeTimer.unref();
+startJobs().catch((err) => logger.error({ err }, 'Job queue failed to start'));
 
 function shutdown(signal: string) {
   logger.info(`${signal} received, closing`);
   server.close(() => {
-    void prisma
-      .$disconnect()
+    void stopJobs()
+      .then(() => prisma.$disconnect())
       .then(() => pool.end())
       .finally(() => process.exit(0));
   });
