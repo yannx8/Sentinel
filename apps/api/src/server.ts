@@ -1,5 +1,6 @@
 import { createApp } from './app';
 import { env } from './env';
+import { pool } from './lib/db';
 import { logger } from './lib/logger';
 import { prisma } from './lib/prisma';
 import { purgeExpiredRegistrations } from './modules/platform';
@@ -17,7 +18,10 @@ purgeTimer.unref();
 function shutdown(signal: string) {
   logger.info(`${signal} received, closing`);
   server.close(() => {
-    void prisma.$disconnect().finally(() => process.exit(0));
+    void prisma
+      .$disconnect()
+      .then(() => pool.end())
+      .finally(() => process.exit(0));
   });
   setTimeout(() => process.exit(1), 10_000).unref();
 }

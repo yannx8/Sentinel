@@ -4,7 +4,7 @@
  * contact and counts, never incident content or other member data. Every write
  * appends a PlatformAuditEvent in the same transaction (I12).
  */
-import type { Organization, Prisma } from '@prisma/client';
+import type { Organization, Prisma } from '../generated/prisma/client';
 import {
   cursorQuery,
   openIncidentStatuses,

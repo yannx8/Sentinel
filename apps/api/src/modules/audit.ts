@@ -1,4 +1,4 @@
-import type { Prisma } from '@prisma/client';
+import type { Prisma } from '../generated/prisma/client';
 import { auditEventTypes, auditQuery, toCsv, type AuditEntryDTO, type AuditEventType } from '@sentinel/shared';
 import { Router } from 'express';
 import { requireRole, tenantOf } from '../auth/context';

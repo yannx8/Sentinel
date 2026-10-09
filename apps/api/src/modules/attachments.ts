@@ -5,7 +5,7 @@
  * visible exactly when its ATTACHMENT_ADDED Thread entry is (5.3).
  */
 import { randomUUID } from 'node:crypto';
-import type { Incident, Prisma, User } from '@prisma/client';
+import type { Incident, Prisma, User } from '../generated/prisma/client';
 import {
   attachmentKinds,
   isThreadEventVisible,

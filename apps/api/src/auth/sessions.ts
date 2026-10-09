@@ -1,4 +1,4 @@
-import type { Session, User } from '@prisma/client';
+import type { Session, User } from '../generated/prisma/client';
 import type { Request } from 'express';
 import { hashToken, newToken } from '../lib/crypto';
 import { prisma } from '../lib/prisma';

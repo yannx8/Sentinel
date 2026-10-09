@@ -4,13 +4,13 @@
 // express live in prisma/sql/invariants.sql and are part of the baseline.
 
 generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
 }
 
+// The connection URL lives in prisma.config.ts (CLI) and src/lib/db.ts (runtime).
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 enum OrganizationStatus {

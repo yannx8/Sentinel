@@ -3,7 +3,7 @@
  * specialties. Supervisors manage them. Employees and intervenants read the
  * active entries they report on or work at.
  */
-import type { Prisma, Site } from '@prisma/client';
+import type { Prisma, Site } from '../generated/prisma/client';
 import {
   categorySchema,
   siteSchema,

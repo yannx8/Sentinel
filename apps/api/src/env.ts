@@ -4,6 +4,7 @@ const schema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().default(4000),
   DATABASE_URL: z.string().min(1),
+  DB_POOL_MAX: z.coerce.number().int().positive().default(10),
   WEB_ORIGIN: z.string().url().default('http://localhost:5173'),
   TRUST_PROXY: z
     .enum(['true', 'false'])

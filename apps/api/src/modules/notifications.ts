@@ -1,4 +1,4 @@
-import type { Prisma } from '@prisma/client';
+import type { Prisma } from '../generated/prisma/client';
 import { cursorQuery, type NotificationDTO } from '@sentinel/shared';
 import { Router, type Request } from 'express';
 import { z } from 'zod';

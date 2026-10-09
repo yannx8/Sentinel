@@ -3,7 +3,7 @@
  * the only credential, so every answer about a bad token is the same and the
  * routes sit behind the public rate limit.
  */
-import type { User } from '@prisma/client';
+import type { User } from '../../generated/prisma/client';
 import {
   acceptInvitationSchema,
   employeeProfileSchema,

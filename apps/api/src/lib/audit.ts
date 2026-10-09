@@ -1,4 +1,4 @@
-import type { Prisma } from '@prisma/client';
+import type { Prisma } from '../generated/prisma/client';
 import type { AuditEventType, ThreadEventType, ThreadPayloads } from '@sentinel/shared';
 import type { Tenant } from '../auth/context';
 import type { Tx } from './prisma';

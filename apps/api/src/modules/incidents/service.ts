@@ -5,7 +5,7 @@
  * version-checked change, so it takes the row lock and concurrent requests queue
  * behind it and fail with CONFLICT_CONCURRENT_UPDATE instead of racing.
  */
-import type { Incident, Prisma } from '@prisma/client';
+import type { Incident, Prisma } from '../../generated/prisma/client';
 import {
   formatReference,
   incidentActions,

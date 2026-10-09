@@ -1,5 +1,5 @@
 import { savedViewSchema, type SavedViewDTO } from '@sentinel/shared';
-import type { SavedView } from '@prisma/client';
+import type { SavedView } from '../generated/prisma/client';
 import { Router } from 'express';
 import { requireRole, tenantOf } from '../auth/context';
 import { AppError, notFound } from '../http/errors';

@@ -18,7 +18,7 @@ English and French throughout, light and dark themes, WCAG 2.2 AA contrast check
 | Layer  | Choice                                                                                                        |
 | ------ | ------------------------------------------------------------------------------------------------------------- |
 | Web    | React 19, Vite, TanStack Router and Query, React Hook Form, Radix, Tailwind v4, Inter                         |
-| API    | Express 5, Prisma 6, PostgreSQL 16, zod, pino                                                                 |
+| API    | Express 5, Prisma 7, PostgreSQL 16, zod, pino                                                                 |
 | Auth   | In-house: scrypt hashes, opaque session tokens, lockout, TOTP for platform admins                             |
 | Shared | `packages/shared`: zod schemas, DTO types, incident state machine, candidate ranking, Thread visibility rules |
 
@@ -26,7 +26,7 @@ Decisions and rules: [docs/PRD.md](docs/PRD.md) (section 12 lists what differs f
 
 ## Getting started
 
-Requirements: Node 22 or newer, pnpm 10.15 (`corepack enable`), Docker (or a local PostgreSQL 16 with the `pg_trgm` extension).
+Requirements: Node 24 or newer, pnpm 10.15 (`corepack enable`), Docker (or a local PostgreSQL 16 with the `pg_trgm` extension).
 
 ```bash
 pnpm install

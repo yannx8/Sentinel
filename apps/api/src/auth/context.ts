@@ -1,5 +1,5 @@
 import type { MembershipRole } from '@sentinel/shared';
-import type { User } from '@prisma/client';
+import type { User } from '../generated/prisma/client';
 import type { NextFunction, Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { AppError, forbidden } from '../http/errors';

@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client';
+import { Prisma } from '../generated/prisma/client';
 import type { ApiErrorBody } from '@sentinel/shared';
 import type { NextFunction, Request, Response } from 'express';
 import { MulterError } from 'multer';

@@ -2,7 +2,7 @@
  * Prisma shapes and pure mappers from incident rows to the shared DTOs.
  * Viewer-dependent fields (phones, notes, actions) are decided here, in one place.
  */
-import type { Prisma } from '@prisma/client';
+import type { Prisma } from '../../generated/prisma/client';
 import {
   incidentActions,
   isLiveAssignment,

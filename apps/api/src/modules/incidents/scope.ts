@@ -3,7 +3,7 @@
  * filtered for them, and the version-checked write every transition goes through.
  * Services never build incident scope ad hoc (docs/PRD.md 5.5).
  */
-import type { Prisma } from '@prisma/client';
+import type { Prisma } from '../../generated/prisma/client';
 import { liveAssignmentStatuses, referencePattern, type ThreadViewer } from '@sentinel/shared';
 import type { Tenant } from '../../auth/context';
 import { prisma, type Tx } from '../../lib/prisma';

@@ -48,6 +48,9 @@ diff_output.txt
 
 /graphify-out/
 
+# Generated Prisma client (pnpm db:generate)
+apps/api/src/generated/
+
 # Expo and local uploads
 .expo/
 uploads/
