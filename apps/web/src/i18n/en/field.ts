@@ -38,6 +38,7 @@ export const field = {
     positionValue: 'Added, accurate to about {meters} m',
     continue: 'Continue',
     send: 'Send report',
+    fromQr: 'Location filled in from the QR code: {site}, {area}.',
     sentTitle: 'Incident reported',
     sentBody: 'A supervisor will review it.',
     viewIncident: 'View incident',

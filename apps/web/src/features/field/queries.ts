@@ -128,3 +128,13 @@ export function useSetAvailability() {
     },
   });
 }
+
+/** The area a QR code named, for the line above the report form. */
+export function useQrArea(areaId: string | undefined) {
+  return useQuery({
+    queryKey: ['areas', areaId],
+    queryFn: ({ signal }) => api.get<{ id: string; name: string; siteId: string }>(`/areas/${areaId}`, { signal }),
+    enabled: !!areaId,
+    retry: false,
+  });
+}

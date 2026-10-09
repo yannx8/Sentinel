@@ -8,6 +8,7 @@ import { tenantOf } from '../auth/context';
 import { notFound } from '../http/errors';
 import { publicLimiter } from '../http/rate-limit';
 import { parse, parseId } from '../http/validate';
+import { recordOrgEvent } from '../lib/audit';
 import { newToken } from '../lib/crypto';
 import { prisma } from '../lib/prisma';
 
@@ -54,8 +55,12 @@ areaRoutes.post('/', async (req, res) => {
   const tenant = tenantOf(req);
   const site = await ownSite(tenant.orgId, parseId((req.params as Record<string, string>).id, 'Site'));
   const input = parse(areaSchema, req.body);
-  const area = await prisma.siteArea.create({
-    data: { organizationId: tenant.orgId, siteId: site.id, name: input.name, publicToken: newToken() },
+  const area = await prisma.$transaction(async (tx) => {
+    const created = await tx.siteArea.create({
+      data: { organizationId: tenant.orgId, siteId: site.id, name: input.name, publicToken: newToken() },
+    });
+    await recordOrgEvent(tx, tenant, 'AREA_CREATED', { areaId: created.id, siteId: site.id, name: created.name });
+    return created;
   });
   res.status(201).json({ data: toAreaDTO(area) });
 });
@@ -65,12 +70,38 @@ areaRoutes.patch('/:areaId', async (req, res) => {
   const site = await ownSite(tenant.orgId, parseId((req.params as Record<string, string>).id, 'Site'));
   const areaId = parseId((req.params as Record<string, string>).areaId, 'Area');
   const input = parse(updateAreaSchema, req.body);
-  const { count } = await prisma.siteArea.updateMany({
-    where: { id: areaId, siteId: site.id, organizationId: tenant.orgId },
-    data: input,
+  const area = await prisma.$transaction(async (tx) => {
+    const current = await tx.siteArea.findFirst({
+      where: { id: areaId, siteId: site.id, organizationId: tenant.orgId },
+    });
+    if (!current) throw notFound('Area');
+    const fields = (['name', 'isActive'] as const).filter(
+      (key) => input[key] !== undefined && input[key] !== current[key],
+    );
+    if (fields.length === 0) return current;
+    const updated = await tx.siteArea.update({ where: { id: current.id }, data: input });
+    await recordOrgEvent(tx, tenant, 'AREA_UPDATED', {
+      areaId: updated.id,
+      siteId: site.id,
+      name: updated.name,
+      fields,
+    });
+    return updated;
   });
-  if (count === 0) throw notFound('Area');
-  res.json({ data: toAreaDTO(await prisma.siteArea.findFirstOrThrow({ where: { id: areaId } })) });
+  res.json({ data: toAreaDTO(area) });
+});
+
+/** Mounted at /v1/areas, any member: the name of an area, scoped to the active organization. */
+export const areaLookupRoutes = Router();
+
+areaLookupRoutes.get('/:id', async (req, res) => {
+  const tenant = tenantOf(req);
+  const area = await prisma.siteArea.findFirst({
+    where: { id: parseId(req.params.id, 'Area'), organizationId: tenant.orgId, isActive: true },
+    select: { id: true, name: true, siteId: true },
+  });
+  if (!area) throw notFound('Area');
+  res.json({ data: area });
 });
 
 /** Mounted at /v1/public/sites. An unknown, inactive or suspended token answers 404, like a cross-tenant id. */

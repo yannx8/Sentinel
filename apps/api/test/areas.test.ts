@@ -40,6 +40,8 @@ describe('QR areas', () => {
     expect((await b.supervisor.get(`/sites/${a.site.id}/areas`)).status).toBe(404);
     expect((await b.supervisor.patch(`/sites/${b.site.id}/areas/${areaId}`, { name: 'Stolen' })).status).toBe(404);
     expect((await a.reporter.get(`/sites/${a.site.id}/areas`)).status).toBe(403);
+    expect((await a.reporter.get(`/areas/${areaId}`)).body.data).toMatchObject({ name: 'Hall', siteId: a.site.id });
+    expect((await b.reporter.get(`/areas/${areaId}`)).status).toBe(404);
 
     const ok = await reportIncident(a.reporter, a.site.id, a.category.id, { areaId });
     expect(ok.id).toBeTruthy();

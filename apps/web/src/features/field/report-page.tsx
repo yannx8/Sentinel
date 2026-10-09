@@ -6,6 +6,7 @@ import { useRef, useState, type FormEvent } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMembership } from '../../app/session';
 import { Button } from '../../components/ui/button';
+import { Banner } from '../../components/ui/feedback';
 import { useT } from '../../i18n';
 import { api, newIdempotencyKey } from '../../lib/api';
 import { applyServerErrors, toastError } from '../../lib/forms';
@@ -14,7 +15,7 @@ import type { GeoFix } from './location-control';
 import { BottomBar } from './parts';
 import type { PreparedPhoto } from './photos';
 import { ReportSent } from './report-sent';
-import { useActiveCategories } from './queries';
+import { useActiveCategories, useActiveSites, useQrArea } from './queries';
 import { WhatSection, WhereSection, type ReportInput, type ReportOutput } from './report-steps';
 
 /** Employees report on one screen. Intervenants do not report and land on their work. */
@@ -31,6 +32,8 @@ function ReportFlow({ onReportAnother }: { onReportAnother: () => void }) {
   const queryClient = useQueryClient();
   const qr = useSearch({ from: '/field/report' });
   const categories = useActiveCategories();
+  const sites = useActiveSites();
+  const qrArea = useQrArea(qr.area);
   const [photos, setPhotos] = useState<PreparedPhoto[]>([]);
   const [fix, setFix] = useState<GeoFix | null>(null);
   const [sent, setSent] = useState<IncidentDetail | null>(null);
@@ -82,6 +85,14 @@ function ReportFlow({ onReportAnother }: { onReportAnother: () => void }) {
   return (
     <form onSubmit={onSubmit} noValidate>
       <h1 className="pb-4 text-2xl font-semibold text-ink">{t('field.report.heading')}</h1>
+      {qrArea.data && (
+        <Banner className="mb-6">
+          {t('field.report.fromQr', {
+            site: sites.data?.find((site) => site.id === qrArea.data.siteId)?.name ?? '',
+            area: qrArea.data.name,
+          })}
+        </Banner>
+      )}
       <div className="grid gap-8">
         <WhatSection form={form} photos={photos} onPhotosChange={setPhotos} />
         <WhereSection form={form} fix={fix} onFixChange={changeFix} />

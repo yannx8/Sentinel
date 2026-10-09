@@ -10,7 +10,7 @@ import { errorHandler, notFoundHandler } from './http/error-handler';
 import { apiLimiter } from './http/rate-limit';
 import { meRoutes } from './modules/me';
 import { registrationRoutes } from './modules/registration';
-import { publicSiteRoutes } from './modules/areas';
+import { areaLookupRoutes, publicSiteRoutes } from './modules/areas';
 import { publicInvitationRoutes } from './modules/people/public-invitations';
 import { invitationRoutes, memberRoutes } from './modules/people/routes';
 import { incidentRoutes } from './modules/incidents/routes';
@@ -95,6 +95,7 @@ export function createApp() {
   tenant.use('/organization', organizationRoutes);
   tenant.use('/membership', membershipRoutes);
   tenant.use('/sites', siteRoutes);
+  tenant.use('/areas', areaLookupRoutes);
   tenant.use('/categories', categoryRoutes);
   tenant.use('/specialties', specialtyRoutes);
   tenant.use('/notifications', notificationRoutes);

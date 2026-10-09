@@ -41,6 +41,7 @@ export const field: Translation<typeof en> = {
     positionValue: 'Ajoutée, précise à environ {meters} m',
     continue: 'Continuer',
     send: 'Envoyer le signalement',
+    fromQr: 'Lieu renseigné par le code QR : {site}, {area}.',
     sentTitle: 'Incident signalé',
     sentBody: "Un superviseur va l'examiner.",
     viewIncident: "Voir l'incident",
